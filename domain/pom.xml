@@ -10,13 +10,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.getjavajob</groupId>
-    <artifactId>common</artifactId>
+    <artifactId>domain</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
             <version>5.5.8</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 
