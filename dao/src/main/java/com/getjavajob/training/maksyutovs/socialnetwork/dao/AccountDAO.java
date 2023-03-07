@@ -5,6 +5,7 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AccountDAO implements CrudDAO<Account, Object> {
@@ -23,7 +24,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
         this.connection = connection;
     }
 
-    AccountDAO(String resourceName) {
+    public AccountDAO(String resourceName) {
         ConnectionData conData = new ConnectionData();
         conData.connect(resourceName);
         connection = conData.getConnection();
@@ -78,6 +79,68 @@ public class AccountDAO implements CrudDAO<Account, Object> {
         account.setRegisteredAt(rs.getString("registeredAt") == null ? new Date(0) :
                 formatter.parse(rs.getString("registeredAt")));
 
+        return account;
+    }
+
+    private Account getAccountData(Account account) {
+        // contacts, friends
+        String queryPhone = "SELECT * FROM PHONE WHERE accId=?;";
+        String queryAddress = "SELECT * FROM ADDRESS WHERE accId=?;";
+        String queryMessenger = "SELECT * FROM MESSENGER WHERE accId=?;";
+        String queryFriend = "SELECT * FROM ACCOUNT a INNER JOIN FRIEND f " +
+                "ON a.ID = f.friendID AND f.accId=?;";
+        ResultSet rs = null;
+        try (PreparedStatement pstPhone = connection.prepareStatement(queryPhone);
+             PreparedStatement pstAddress = connection.prepareStatement(queryAddress);
+             PreparedStatement pstMessenger = connection.prepareStatement(queryMessenger);
+             PreparedStatement pstFriend = connection.prepareStatement(queryFriend)) {
+            pstPhone.setInt(1, account.getId());
+            rs = pstPhone.executeQuery();
+            List<Account.Phone> phones = account.getPhones();
+            while (rs.next()) {
+                phones.add(account.new Phone(rs.getString("phoneNmr"),
+                        Account.PhoneType.valueOf(rs.getString("phoneType"))));
+            }
+
+            pstAddress.setInt(1, account.getId());
+            rs = pstAddress.executeQuery();
+            List<Account.Address> addresses = account.getAddresses();
+            while (rs.next()) {
+                addresses.add(account.new Address(rs.getString("addr"),
+                        Account.AddressType.valueOf(rs.getString("addrType"))));
+            }
+
+            pstMessenger.setInt(1, account.getId());
+            rs = pstMessenger.executeQuery();
+            List<Account.Messenger> messengers = account.getMessengers();
+            while (rs.next()) {
+                messengers.add(account.new Messenger(rs.getString("username"),
+                        Account.MessengerType.valueOf(rs.getString("msngrType"))));
+            }
+
+            pstFriend.setInt(1, account.getId());
+            rs = pstFriend.executeQuery();
+            List<Account.Friend> friends = account.getFriends();
+            while (rs.next()) {
+                Account friendAccount = new Account(rs.getString("firstName"),
+                        rs.getString("lastName"),
+                        rs.getString("username"),
+                        formatter.parse(rs.getString("dateOfBirth")),
+                        rs.getString("email"));
+                friendAccount.setId(rs.getInt("id"));
+                friends.add(account.new Friend(friendAccount));
+            }
+        } catch (SQLException | ParseException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         return account;
     }
 
@@ -205,55 +268,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
             }
             rs = pst.executeQuery();
             if (rs.next()) {
-                account = createAccountFromResult(rs);
-
-                // contacts, friends
-                String queryPhone = "SELECT * FROM PHONE WHERE accId=?;";
-                String queryAddress = "SELECT * FROM ADDRESS WHERE accId=?;";
-                String queryMessenger = "SELECT * FROM MESSENGER WHERE accId=?;";
-                String queryFriend = "SELECT * FROM ACCOUNT a INNER JOIN FRIEND f " +
-                        "ON a.ID = f.friendID AND f.accId=?;";
-                try (PreparedStatement pstPhone = connection.prepareStatement(queryPhone);
-                     PreparedStatement pstAddress = connection.prepareStatement(queryAddress);
-                     PreparedStatement pstMessenger = connection.prepareStatement(queryMessenger);
-                     PreparedStatement pstFriend = connection.prepareStatement(queryFriend)) {
-                    pstPhone.setInt(1, account.getId());
-                    rs = pstPhone.executeQuery();
-                    List<Account.Phone> phones = account.getPhones();
-                    while (rs.next()) {
-                        phones.add(account.new Phone(rs.getString("phoneNmr"),
-                                Account.PhoneType.valueOf(rs.getString("phoneType"))));
-                    }
-
-                    pstAddress.setInt(1, account.getId());
-                    rs = pstAddress.executeQuery();
-                    List<Account.Address> addresses = account.getAddresses();
-                    while (rs.next()) {
-                        addresses.add(account.new Address(rs.getString("addr"),
-                                Account.AddressType.valueOf(rs.getString("addrType"))));
-                    }
-
-                    pstMessenger.setInt(1, account.getId());
-                    rs = pstMessenger.executeQuery();
-                    List<Account.Messenger> messengers = account.getMessengers();
-                    while (rs.next()) {
-                        messengers.add(account.new Messenger(rs.getString("username"),
-                                Account.MessengerType.valueOf(rs.getString("msngrType"))));
-                    }
-
-                    pstFriend.setInt(1, account.getId());
-                    rs = pstFriend.executeQuery();
-                    List<Account.Friend> friends = account.getFriends();
-                    while (rs.next()) {
-                        Account friendAccount = new Account(rs.getString("firstName"),
-                                rs.getString("lastName"),
-                                rs.getString("username"),
-                                formatter.parse(rs.getString("dateOfBirth")),
-                                rs.getString("email"));
-                        friendAccount.setId(rs.getInt("id"));
-                        friends.add(account.new Friend(friendAccount));
-                    }
-                }
+                account = getAccountData(createAccountFromResult(rs));
             }
         } catch (SQLException | ParseException e) {
             e.printStackTrace();
@@ -267,6 +282,33 @@ public class AccountDAO implements CrudDAO<Account, Object> {
             }
         }
         return account;
+    }
+
+    public List<Account> selectAll(String query) {
+        List<Account> accounts = new ArrayList<>();
+        if (query.isEmpty()) {
+            query = "ACCOUNT";
+        }
+        String querySelect = READ + query;
+        ResultSet rs = null;
+        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                Account account = getAccountData(createAccountFromResult(rs));
+                accounts.add(account);
+            }
+        } catch (SQLException | ParseException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return accounts;
     }
 
     @Override
