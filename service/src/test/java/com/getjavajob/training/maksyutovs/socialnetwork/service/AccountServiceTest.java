@@ -31,7 +31,7 @@ class AccountServiceTest {
     @BeforeEach
     void initService() {
         accountService = new AccountService();
-        AccountService.setDao(mockDao);
+        accountService.setDao(mockDao);
     }
 
     @Test
