@@ -88,10 +88,10 @@ public class AccountDAO implements CrudDAO<Account, Object> {
 
     private Account getAccountData(Account account) {
         // contacts, friends
-        String queryPhone = "SELECT * FROM PHONE WHERE accId=?;";
-        String queryAddress = "SELECT * FROM ADDRESS WHERE accId=?;";
-        String queryMessenger = "SELECT * FROM MESSENGER WHERE accId=?;";
-        String queryFriend = "SELECT * FROM ACCOUNT a INNER JOIN FRIEND f " +
+        String queryPhone = "SELECT * FROM Phone WHERE accId=?;";
+        String queryAddress = "SELECT * FROM Address WHERE accId=?;";
+        String queryMessenger = "SELECT * FROM Messenger WHERE accId=?;";
+        String queryFriend = "SELECT * FROM Account a INNER JOIN Friend f " +
                 "ON a.ID = f.friendID AND f.accId=?;";
         ResultSet rs = null;
         try (PreparedStatement pstPhone = connection.prepareStatement(queryPhone);
@@ -151,7 +151,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
     @Override
     public Account insert(String query, Account account) {
         if (query.isEmpty()) {
-            query = "ACCOUNT(firstName,middleName,lastName,username,email," +
+            query = "Account(firstName,middleName,lastName,username,email," +
                     "dateOfBirth,gender,addInfo,passwordHash,registeredAt)" +
                     " VALUES (?,?,?,?,?,?,?,?,?,now());";
         }
@@ -195,17 +195,16 @@ public class AccountDAO implements CrudDAO<Account, Object> {
         T contact = accountData.get(0);
         if (query.isEmpty()) {
             if (contact instanceof Account.Phone) {
-                query = "PHONE(accId,phoneNmr,phoneType) VALUES (?,?,?);";
+                query = "Phone(accId,phoneNmr,phoneType) VALUES (?,?,?);";
                 account = ((Account.Phone) contact).getAccount();
             } else if (contact instanceof Account.Address) {
-                query = "ADDRESS(accId,addr,addrType) VALUES (?,?,?);";
+                query = "Address(accId,addr,addrType) VALUES (?,?,?);";
                 account = ((Account.Address) contact).getAccount();
             } else if (contact instanceof Account.Messenger) {
-                query = "MESSENGER(accId,username,msngrType) VALUES (?,?,?);";
+                query = "Messenger(accId,username,msngrType) VALUES (?,?,?);";
                 account = ((Account.Messenger) contact).getAccount();
             } else if (contact instanceof Account.Friend) {
-                query = "FRIEND(accId,friendID) VALUES (?,?);" +
-                        "INSERT INTO FRIEND(accId,friendID) VALUES (?,?);";
+                query = "Friend(accId,friendID) VALUES (?,?), (?,?);";
                 account = ((Account.Friend) contact).getAccount();
             }
         }
@@ -255,7 +254,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
         Account account = null;
         ResultSet rs = null;
         if (query.isEmpty()) {
-            query = "ACCOUNT WHERE " + field + "=?;";
+            query = "Account WHERE " + field + "=?;";
         }
         String querySelect = READ + query;
         try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
@@ -291,7 +290,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
     public List<Account> selectAll(String query) {
         List<Account> accounts = new ArrayList<>();
         if (query.isEmpty()) {
-            query = "ACCOUNT";
+            query = "Account";
         }
         String querySelect = READ + query;
         ResultSet rs = null;
@@ -318,7 +317,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
     @Override
     public Account update(String query, String field, Object value, Account account) {
         if (query.isEmpty()) {
-            query = "ACCOUNT SET " + field + "=? WHERE EMAIL=?;";
+            query = "Account SET " + field + "=? WHERE EMAIL=?;";
         }
         String queryUpdate = UPDATE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
@@ -356,11 +355,11 @@ public class AccountDAO implements CrudDAO<Account, Object> {
     @Override
     public Account delete(String query, Account account) {
         if (query.isEmpty()) {
-            query = "ACCOUNT WHERE EMAIL=?;" +
-                    "DELETE FROM PHONE WHERE accId=?;" +
-                    "DELETE FROM ADDRESS WHERE accId=?;" +
-                    "DELETE FROM MESSENGER WHERE accId=?;" +
-                    "DELETE FROM FRIEND WHERE accId=? OR friendID=?";
+            query = "Account WHERE EMAIL=?;" +
+                    "DELETE FROM Phone WHERE accId=?;" +
+                    "DELETE FROM Address WHERE accId=?;" +
+                    "DELETE FROM Messenger WHERE accId=?;" +
+                    "DELETE FROM Friend WHERE accId=? OR friendID=?";
         }
         String queryDelete = DELETE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {
@@ -399,16 +398,16 @@ public class AccountDAO implements CrudDAO<Account, Object> {
         T contact = accountData.get(0);
         if (query.isEmpty()) {
             if (contact instanceof Account.Phone) {
-                query = "PHONE WHERE accId=? AND phoneNmr=? AND phoneType=?;";
+                query = "Phone WHERE accId=? AND phoneNmr=? AND phoneType=?;";
                 account = ((Account.Phone) contact).getAccount();
             } else if (contact instanceof Account.Address) {
-                query = "ADDRESS WHERE accId=? AND addr=? AND addrType=?;";
+                query = "Address WHERE accId=? AND addr=? AND addrType=?;";
                 account = ((Account.Address) contact).getAccount();
             } else if (contact instanceof Account.Messenger) {
-                query = "MESSENGER WHERE accId=? AND username=? AND msngrType=?;";
+                query = "Messenger WHERE accId=? AND username=? AND msngrType=?;";
                 account = ((Account.Messenger) contact).getAccount();
             } else if (contact instanceof Account.Friend) {
-                query = "FRIEND WHERE accId=? AND friendID=?;";
+                query = "Friend WHERE accId=? AND friendID=?;";
                 account = ((Account.Friend) contact).getAccount();
             }
         }
