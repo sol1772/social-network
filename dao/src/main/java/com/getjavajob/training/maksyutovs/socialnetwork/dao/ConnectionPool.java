@@ -16,7 +16,7 @@ import static java.util.Objects.requireNonNull;
 
 public class ConnectionPool {
 
-    private static final int INITIAL_POOL_SIZE = 5;
+    private static final int INITIAL_POOL_SIZE = 3;
     private static final String DEF_URL = "jdbc:";
     private final Properties properties = new Properties();
     private final List<Connection> availableConnections = Collections.synchronizedList(new ArrayList<>());
@@ -54,6 +54,7 @@ public class ConnectionPool {
             String host = properties.getProperty("host");
             String port = properties.getProperty("port");
             String database = properties.getProperty("database");
+            Class.forName(properties.getProperty("driver"));
             if (type.equals("remote")) {
                 url = DEF_URL + dbms + "://" + host + ":" + port + "/" + database;
             } else if (type.equals("embedded")) {
@@ -63,7 +64,7 @@ public class ConnectionPool {
             }
             connection = DriverManager.getConnection(url, properties);
             System.out.println("Connected successfully to " + url);
-        } catch (SQLException | IOException e) {
+        } catch (SQLException | IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return connection;

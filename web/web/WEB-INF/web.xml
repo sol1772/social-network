@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <listener>
+        <listener-class>com.getjavajob.training.maksyutovs.socialnetwork.web.listeners.AppContextListener
+        </listener-class>
+    </listener>
+    <servlet>
+        <servlet-name>account-list</servlet-name>
+        <servlet-class>com.getjavajob.training.maksyutovs.socialnetwork.web.servlets.AccountDataServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>account-list</servlet-name>
+        <url-pattern>/accounts</url-pattern>
+    </servlet-mapping>
+
+    <session-config>
+        <session-timeout>60</session-timeout>
+    </session-config>
+
+</web-app>

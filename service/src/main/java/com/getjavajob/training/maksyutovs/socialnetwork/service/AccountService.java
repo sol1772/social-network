@@ -10,21 +10,25 @@ import java.util.Optional;
 
 public class AccountService {
 
-    private static AccountDAO dao;
+    private AccountDAO dao;
 
     public AccountService() {
     }
 
-    public static AccountDAO getDao() {
+    public AccountDAO getDao() {
         return dao;
     }
 
-    public static void setDao(AccountDAO dao) {
-        AccountService.dao = dao;
+    public void setDao(AccountDAO dao) {
+        this.dao = dao;
     }
 
     public Account getAccountByEmail(String email) {
         return dao.select("", "Email", email);
+    }
+
+    public List<Account> getAccounts() {
+        return dao.selectAll("");
     }
 
     public Account registerAccount(Account account) {
@@ -51,8 +55,8 @@ public class AccountService {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount != null) {
             dbAccount = dao.update("", field, value, account);
-        } else {
-            System.out.println("Account with email " + account.getEmail() + " does not exist");
+//        } else {
+//            System.out.println("Account with email " + account.getEmail() + " does not exist");
         }
         return Optional.ofNullable(dbAccount);
     }
@@ -61,8 +65,8 @@ public class AccountService {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount != null) {
             dao.delete("", account);
-        } else {
-            System.out.println("Account with email " + account.getEmail() + " does not exist");
+//        } else {
+//            System.out.println("Account with email " + account.getEmail() + " does not exist");
         }
         return Optional.ofNullable(dbAccount);
     }
@@ -70,12 +74,12 @@ public class AccountService {
     public Optional<Account> addFriend(Account account, Account friend) {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount == null) {
-            System.out.println("Account with email " + account.getEmail() + " does not exist");
-            return Optional.ofNullable(dbAccount);
+//            System.out.println("Account with email " + account.getEmail() + " does not exist");
+            return Optional.empty();
         }
         Account dbFriend = getAccountByEmail(friend.getEmail());
         if (dbFriend == null) {
-            System.out.println("Account with email " + friend.getEmail() + " does not exist");
+//            System.out.println("Account with email " + friend.getEmail() + " does not exist");
             return Optional.of(dbAccount);
         }
         List<Account.Friend> friends = account.getFriends();
@@ -87,12 +91,12 @@ public class AccountService {
     public Optional<Account> deleteFriend(Account account, Account friend) {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount == null) {
-            System.out.println("Account with email " + account.getEmail() + " does not exist");
-            return Optional.ofNullable(dbAccount);
+//            System.out.println("Account with email " + account.getEmail() + " does not exist");
+            return Optional.empty();
         }
         Account dbFriend = getAccountByEmail(friend.getEmail());
         if (dbFriend == null) {
-            System.out.println("Account with email " + friend.getEmail() + " does not exist");
+//            System.out.println("Account with email " + friend.getEmail() + " does not exist");
             return Optional.of(dbAccount);
         }
         List<Account.Friend> friends = account.getFriends();

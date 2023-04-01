@@ -15,6 +15,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
     private static final String UPDATE = "UPDATE ";
     private static final String DELETE = "DELETE FROM ";
     public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    private ConnectionPool pool;
     private Connection connection;
 
     public GroupDAO() {
@@ -25,9 +26,8 @@ public class GroupDAO implements CrudDAO<Group, Object> {
     }
 
     public GroupDAO(String resourceName) {
-        ConnectionData conData = new ConnectionData();
-        conData.connect(resourceName);
-        connection = conData.getConnection();
+        pool = new ConnectionPool(resourceName);
+        connection = pool.getConnection();
     }
 
     public Connection getConnection() {
@@ -60,7 +60,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
     public Group insert(String query, Group group) {
         StringBuilder sb = new StringBuilder(CREATE);
         if (query.isEmpty()) {
-            query = "INTERESTGROUP(title,metaTitle,createdBy,createdAt) VALUES (?,?,?,now());";
+            query = "InterestGroup(title,metaTitle,createdBy,createdAt) VALUES (?,?,?,now());";
         }
         String queryInsert = sb.append(query).toString();
         try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
@@ -98,7 +98,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
 
         StringBuilder sb = new StringBuilder(CREATE);
         if (query.isEmpty()) {
-            query = "GROUP_MEMBER (groupId,accId,roleType) VALUES (?,?,?);";
+            query = "Group_member(groupId,accId,roleType) VALUES (?,?,?);";
         }
         String queryInsert = sb.append(query).toString();
         try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
@@ -133,7 +133,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
         ResultSet rs = null;
         StringBuilder sb = new StringBuilder(READ);
         if (query.isEmpty()) {
-            query = "INTERESTGROUP WHERE " + field + "=?;";
+            query = "InterestGroup WHERE " + field + "=?;";
         }
         String querySelect = sb.append(query).toString();
         try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
@@ -153,7 +153,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
                 group = createGroupFromResult(rs);
 
                 // members
-                String queryMembers = "SELECT * FROM GROUP_MEMBER WHERE groupId=?;";
+                String queryMembers = "SELECT * FROM Group_member WHERE groupId=?;";
                 try (PreparedStatement pstMembers = connection.prepareStatement(queryMembers)) {
                     pstMembers.setInt(1, group.getId());
                     rs = pstMembers.executeQuery();
@@ -184,7 +184,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
     public Group update(String query, String field, Object value, Group group) {
         StringBuilder sb = new StringBuilder(UPDATE);
         if (query.isEmpty()) {
-            query = "INTERESTGROUP SET " + field + "=? WHERE TITLE=?;";
+            query = "InterestGroup SET " + field + "=? WHERE TITLE=?;";
         }
         String queryUpdate = sb.append(query).toString();
         try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
@@ -221,8 +221,8 @@ public class GroupDAO implements CrudDAO<Group, Object> {
     @Override
     public Group delete(String query, Group group) {
         if (query.isEmpty()) {
-            query = "INTERESTGROUP WHERE TITLE=?;" +
-                    "DELETE FROM GROUP_MEMBER WHERE groupId=?;";
+            query = "InterestGroup WHERE TITLE=?;" +
+                    "DELETE FROM Group_member WHERE groupId=?;";
         }
         String queryDelete = DELETE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {
@@ -257,7 +257,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
         }
 
         if (query.isEmpty()) {
-            query = "GROUP_MEMBER WHERE groupId=? AND accId=? AND roleType=?;";
+            query = "Group_member WHERE groupId=? AND accId=? AND roleType=?;";
         }
         String queryDelete = DELETE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {

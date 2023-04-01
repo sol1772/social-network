@@ -15,6 +15,7 @@ public class AccountDAO implements CrudDAO<Account, Object> {
     private static final String UPDATE = "UPDATE ";
     private static final String DELETE = "DELETE FROM ";
     public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    private ConnectionPool pool;
     private Connection connection;
 
     public AccountDAO() {
@@ -25,9 +26,12 @@ public class AccountDAO implements CrudDAO<Account, Object> {
     }
 
     public AccountDAO(String resourceName) {
-        ConnectionData conData = new ConnectionData();
-        conData.connect(resourceName);
-        connection = conData.getConnection();
+        pool = new ConnectionPool(resourceName);
+        connection = pool.getConnection();
+    }
+
+    public ConnectionPool getPool() {
+        return pool;
     }
 
     public Connection getConnection() {
