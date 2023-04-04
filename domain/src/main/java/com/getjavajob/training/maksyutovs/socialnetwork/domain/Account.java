@@ -12,6 +12,7 @@ public class Account {
     private final List<Address> addresses = new ArrayList<>();
     private final List<Messenger> messengers = new ArrayList<>();
     private final List<Friend> friends = new ArrayList<>();
+    private final List<Message> messages = new ArrayList<>();
     private int id;
     private String firstName;
     private String middleName;
@@ -57,6 +58,10 @@ public class Account {
 
     public List<Friend> getFriends() {
         return friends;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
     }
 
     public String getFirstName() {
@@ -151,167 +156,6 @@ public class Account {
 
     public enum Gender {
         M, F
-    }
-
-    public enum PhoneType {
-        PERSONAL, WORK
-    }
-
-    public enum AddressType {
-        HOME, WORK
-    }
-
-    public enum MessengerType {
-        SKYPE, TELEGRAM, WHATSAPP, ICQ
-    }
-
-    public class Phone {
-
-        private String number;
-        private PhoneType phoneType;
-        private int id;
-
-        public Phone() {
-        }
-
-        public Phone(String number, PhoneType phoneType) {
-            this.number = number;
-            this.phoneType = phoneType;
-        }
-
-        public String getNumber() {
-            return number;
-        }
-
-        public void setNumber(String number) {
-            this.number = number;
-        }
-
-        public PhoneType getPhoneType() {
-            return phoneType;
-        }
-
-        public void setPhoneType(PhoneType phoneType) {
-            this.phoneType = phoneType;
-        }
-
-        public int getAccId() {
-            return Account.this.getId();
-        }
-
-        public Account getAccount() {
-            return Account.this;
-        }
-
-    }
-
-    public class Address {
-
-        private String address;
-        private AddressType addrType;
-        private int id;
-
-        public Address() {
-        }
-
-        public Address(String address, AddressType addrType) {
-            this.address = address;
-            this.addrType = addrType;
-        }
-
-        public String getAddress() {
-            return address;
-        }
-
-        public void setAddress(String address) {
-            this.address = address;
-        }
-
-        public AddressType getAddrType() {
-            return addrType;
-        }
-
-        public void setAddrType(AddressType addrType) {
-            this.addrType = addrType;
-        }
-
-        public int getAccId() {
-            return Account.this.getId();
-        }
-
-        public Account getAccount() {
-            return Account.this;
-        }
-
-    }
-
-    public class Messenger {
-
-        private String username;
-        private MessengerType msngrType;
-        private int id;
-
-        public Messenger() {
-        }
-
-        public Messenger(String username, MessengerType msngrType) {
-            this.username = username;
-            this.msngrType = msngrType;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public MessengerType getMsngrType() {
-            return msngrType;
-        }
-
-        public void setMsngrType(MessengerType msngrType) {
-            this.msngrType = msngrType;
-        }
-
-        public int getAccId() {
-            return Account.this.getId();
-        }
-
-        public Account getAccount() {
-            return Account.this;
-        }
-
-    }
-
-    public class Friend {
-
-        private Account friendAccount;
-
-        public Friend() {
-        }
-
-        public Friend(Account friendAccount) {
-            this.friendAccount = friendAccount;
-        }
-
-        public int getFriendId() {
-            return friendAccount.getId();
-        }
-
-        public String getFriendEmail() {
-            return friendAccount.getEmail();
-        }
-
-        public int getAccId() {
-            return Account.this.getId();
-        }
-
-        public Account getAccount() {
-            return Account.this;
-        }
-
     }
 
 }

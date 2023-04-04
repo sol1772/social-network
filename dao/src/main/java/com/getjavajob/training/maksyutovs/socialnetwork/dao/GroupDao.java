@@ -8,7 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class GroupDAO implements CrudDAO<Group, Object> {
+public class GroupDao implements CrudDao<Group, Object> {
 
     private static final String CREATE = "INSERT INTO ";
     private static final String READ = "SELECT * FROM ";
@@ -18,14 +18,14 @@ public class GroupDAO implements CrudDAO<Group, Object> {
     private ConnectionPool pool;
     private Connection connection;
 
-    public GroupDAO() {
+    public GroupDao() {
     }
 
-    public GroupDAO(Connection connection) {
+    public GroupDao(Connection connection) {
         this.connection = connection;
     }
 
-    public GroupDAO(String resourceName) {
+    public GroupDao(String resourceName) {
         pool = new ConnectionPool(resourceName);
         connection = pool.getConnection();
     }
@@ -159,7 +159,7 @@ public class GroupDAO implements CrudDAO<Group, Object> {
                     rs = pstMembers.executeQuery();
                     List<Group.GroupMember> members = group.getMembers();
                     while (rs.next()) {
-                        Account account = new AccountDAO(connection).select("", "id", rs.getInt("accId"));
+                        Account account = new AccountDao(connection).select("", "id", rs.getInt("accId"));
                         members.add(group.new GroupMember(account, Group.Role.valueOf(rs.getString("roleType"))));
                     }
                 } catch (SQLException e) {

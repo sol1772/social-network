@@ -4,10 +4,15 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
     <listener>
         <listener-class>com.getjavajob.training.maksyutovs.socialnetwork.web.listeners.AppContextListener
         </listener-class>
     </listener>
+
     <servlet>
         <servlet-name>account-list</servlet-name>
         <servlet-class>com.getjavajob.training.maksyutovs.socialnetwork.web.servlets.AccountDataServlet</servlet-class>

@@ -16,7 +16,8 @@ import static java.util.Objects.requireNonNull;
 
 public class ConnectionPool {
 
-    private static final int INITIAL_POOL_SIZE = 3;
+    private static final int INITIAL_POOL_SIZE = Runtime.getRuntime().availableProcessors() == 1 ?
+            1 : Runtime.getRuntime().availableProcessors() - 1;
     private static final String DEF_URL = "jdbc:";
     private final Properties properties = new Properties();
     private final List<Connection> availableConnections = Collections.synchronizedList(new ArrayList<>());

@@ -1,7 +1,8 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDAO;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
@@ -10,16 +11,16 @@ import java.util.Optional;
 
 public class AccountService {
 
-    private AccountDAO dao;
+    private AccountDao dao;
 
     public AccountService() {
     }
 
-    public AccountDAO getDao() {
+    public AccountDao getDao() {
         return dao;
     }
 
-    public void setDao(AccountDAO dao) {
+    public void setDao(AccountDao dao) {
         this.dao = dao;
     }
 
@@ -82,8 +83,8 @@ public class AccountService {
 //            System.out.println("Account with email " + friend.getEmail() + " does not exist");
             return Optional.of(dbAccount);
         }
-        List<Account.Friend> friends = account.getFriends();
-        friends.add(account.new Friend(dbFriend));
+        List<Friend> friends = account.getFriends();
+        friends.add(new Friend(account, dbFriend));
         dbAccount = dao.insert("", friends);
         return Optional.ofNullable(dbAccount);
     }
@@ -99,14 +100,14 @@ public class AccountService {
 //            System.out.println("Account with email " + friend.getEmail() + " does not exist");
             return Optional.of(dbAccount);
         }
-        List<Account.Friend> friends = account.getFriends();
+        List<Friend> friends = account.getFriends();
         friends.clear();
-        friends.add(account.new Friend(dbFriend));
+        friends.add(new Friend(account, dbFriend));
         dbAccount = dao.delete("", friends);
         return Optional.ofNullable(dbAccount);
     }
 
-    public List<Account.Friend> getFriends(Account account) {
+    public List<Friend> getFriends(Account account) {
         return getAccountByEmail(account.getEmail()).getFriends();
     }
 

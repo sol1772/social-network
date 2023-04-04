@@ -1,6 +1,6 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.listeners;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDAO;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.ConnectionPool;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 
@@ -18,18 +18,18 @@ public class AppContextListener implements ServletContextListener {
         ServletContext ctx = servletContextEvent.getServletContext();
 
         String resourceName = "/mysql.properties";
-        AccountDAO dao = new AccountDAO(resourceName);
+        AccountDao dao = new AccountDao(resourceName);
         accountService.setDao(dao);
 
         ctx.setAttribute("AccountService", accountService);
-        ctx.setAttribute("AccountDAO", dao);
+        ctx.setAttribute("AccountDao", dao);
         System.out.println("Database connection initialized for Application.");
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         ServletContext ctx = servletContextEvent.getServletContext();
-        AccountDAO dao = (AccountDAO) ctx.getAttribute("AccountDAO");
+        AccountDao dao = (AccountDao) ctx.getAttribute("AccountDao");
         ConnectionPool pool = dao.getPool();
         Connection connection = dao.getConnection();
         pool.returnConnection(connection);

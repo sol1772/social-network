@@ -1,6 +1,6 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
-public interface CrudDAO<T, V> {
+public interface CrudDao<T, V> {
 
     T insert(String query, T type);
 

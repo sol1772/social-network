@@ -1,6 +1,9 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.servlets;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.Address;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.AddressType;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.Phone;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 
 import javax.servlet.ServletConfig;
@@ -37,13 +40,13 @@ public class AccountDataServlet extends HttpServlet {
         sb.append("Accounts List");
         for (Account account : accounts) {
             sb.append("<p>").append(account.getFirstName()).append(" ").append(account.getLastName()).append("<br>");
-            for (Account.Phone phone : account.getPhones()) {
+            for (Phone phone : account.getPhones()) {
                 sb.append(phone.getNumber()).append(" (").append(phone.getPhoneType().toString().toLowerCase()).append(")");
                 sb.append("<br>");
             }
-            List<Account.Address> homeAddresses = account.getAddresses().stream().filter(
-                    address -> address.getAddrType() == Account.AddressType.HOME).collect(Collectors.toList());
-            for (Account.Address address : homeAddresses) {
+            List<Address> homeAddresses = account.getAddresses().stream().filter(
+                    address -> address.getAddrType() == AddressType.HOME).collect(Collectors.toList());
+            for (Address address : homeAddresses) {
                 sb.append(address.getAddress());
                 sb.append("</p>");
             }
