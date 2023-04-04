@@ -1,7 +1,8 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDAO;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +26,7 @@ class AccountServiceTest {
 
     public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     @Mock
-    private AccountDAO mockDao;
+    private AccountDao mockDao;
     private AccountService accountService;
 
     @BeforeEach
@@ -79,8 +80,8 @@ class AccountServiceTest {
                 formatter.parse("2006-04-26"), "info@valievakamila.ru");
         Account friend = new Account("Alina", "Zagitova", "alina_zagitova",
                 new SimpleDateFormat("yyyy-MM-dd").parse("2002-05-18"), "info@alinazagitova.ru");
-        List<Account.Friend> friends = account.getFriends();
-        friends.add(account.new Friend(friend));
+        List<Friend> friends = account.getFriends();
+        friends.add(new Friend(account, friend));
 
         lenient().when(mockDao.insert("", friends)).thenReturn(account);
         Optional<Account> savedAccount = accountService.addFriend(account, friend);
@@ -93,8 +94,8 @@ class AccountServiceTest {
                 formatter.parse("2006-04-26"), "info@valievakamila.ru");
         Account friend = new Account("Alina", "Zagitova", "alina_zagitova",
                 new SimpleDateFormat("yyyy-MM-dd").parse("2002-05-18"), "info@alinazagitova.ru");
-        List<Account.Friend> friends = account.getFriends();
-        friends.add(account.new Friend(friend));
+        List<Friend> friends = account.getFriends();
+        friends.add(new Friend(account, friend));
 
         lenient().when(mockDao.delete("", friends)).thenReturn(account);
         Optional<Account> savedAccount = accountService.deleteFriend(account, friend);
@@ -107,8 +108,8 @@ class AccountServiceTest {
                 formatter.parse("2006-04-26"), "info@valievakamila.ru");
         Account friend = new Account("Alina", "Zagitova", "alina_zagitova",
                 new SimpleDateFormat("yyyy-MM-dd").parse("2002-05-18"), "info@alinazagitova.ru");
-        List<Account.Friend> friends = account.getFriends();
-        friends.add(account.new Friend(friend));
+        List<Friend> friends = account.getFriends();
+        friends.add(new Friend(account, friend));
 
         lenient().when(mockDao.insert("", friends)).thenReturn(account);
         when(mockDao.select(anyString(), anyString(), anyString())).thenReturn(account);

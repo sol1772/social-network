@@ -1,6 +1,6 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
@@ -15,17 +15,17 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class AccountDAOTest {
+class AccountDaoTest {
 
     private static final String resourceName = "/h2.properties";
-    private static AccountDAO dao;
+    private static AccountDao dao;
     private static Connection con;
     private static Statement st;
     private static ResultSet rs;
 
     @BeforeAll
     static void connect() {
-        dao = new AccountDAO(resourceName);
+        dao = new AccountDao(resourceName);
         con = dao.getConnection();
         try {
             con.setAutoCommit(false);
@@ -91,6 +91,17 @@ class AccountDAOTest {
                     "    roleType ENUM('ADMIN', 'MODER', 'MEMBER')," +
                     "    PRIMARY KEY(id)," +
                     "    CONSTRAINT Uq_members UNIQUE (accId, groupId)" +
+                    ");" +
+                    "CREATE TABLE if not exists Message (" +
+                    "    id INT AUTO_INCREMENT," +
+                    "    accId INT," +
+                    "    trgtId INT," +
+                    "    txtContent VARCHAR (500) NOT NULL," +
+                    "    mediaContent MEDIUMBLOB," +
+                    "    msgType ENUM('PERSONAL', 'PUBLIC')," +
+                    "    createdAt DATETIME NOT NULL," +
+                    "    updatedAt DATETIME," +
+                    "    PRIMARY KEY(id)" +
                     ");";
             st.executeUpdate(query);
             con.commit();
@@ -189,21 +200,21 @@ class AccountDAOTest {
         assertNotNull(account);
 
         Account dbAccount;
-        List<Account.Phone> phones = account.getPhones();
-        phones.add(account.new Phone("+79161234567", Account.PhoneType.PERSONAL));
-        phones.add(account.new Phone("+74951234567", Account.PhoneType.WORK));
+        List<Phone> phones = account.getPhones();
+        phones.add(new Phone(account, "+79161234567", PhoneType.PERSONAL));
+        phones.add(new Phone(account, "+74951234567", PhoneType.WORK));
         dbAccount = dao.insert("", phones);
         assertEquals(phones.size(), dbAccount.getPhones().size());
 
-        List<Account.Address> addresses = account.getAddresses();
-        addresses.add(account.new Address("Kazan", Account.AddressType.HOME));
-        addresses.add(account.new Address("Moscow", Account.AddressType.WORK));
+        List<Address> addresses = account.getAddresses();
+        addresses.add(new Address(account, "Kazan", AddressType.HOME));
+        addresses.add(new Address(account, "Moscow", AddressType.WORK));
         dbAccount = dao.insert("", addresses);
         assertEquals(addresses.size(), dbAccount.getAddresses().size());
 
-        List<Account.Messenger> messengers = account.getMessengers();
-        messengers.add(account.new Messenger("kamilavalieva", Account.MessengerType.SKYPE));
-        messengers.add(account.new Messenger("@kamilavalieva26official", Account.MessengerType.TELEGRAM));
+        List<Messenger> messengers = account.getMessengers();
+        messengers.add(new Messenger(account, "kamilavalieva", MessengerType.SKYPE));
+        messengers.add(new Messenger(account, "@kamilavalieva26official", MessengerType.TELEGRAM));
         dbAccount = dao.insert("", messengers);
         assertEquals(messengers.size(), dbAccount.getMessengers().size());
     }
@@ -228,10 +239,39 @@ class AccountDAOTest {
                 friendAccount = dao.select("", "Email", email2);
                 System.out.println("Created friend account " + friendAccount);
             }
-            List<Account.Friend> friends = account.getFriends();
-            friends.add(account.new Friend(friendAccount));
+            List<Friend> friends = account.getFriends();
+            friends.add(new Friend(account, friendAccount));
             Account dbAccount = dao.insert("", friends);
             assertEquals(friends.size(), dbAccount.getFriends().size());
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Order(3)
+    @Test
+    void insertMessages() {
+        System.out.println("---------------------------------");
+        System.out.println("Test AccountDAO.insert(Messages)");
+        Account account;
+        try {
+            String email = "info@valievakamila.ru";
+            account = dao.select("", "Email", email);
+            assertNotNull(account);
+            String email2 = "info@alinazagitova.ru";
+            Account targetAccount = dao.select("", "Email", email2);
+            if (targetAccount == null) {
+                targetAccount = new Account("Alina", "Zagitova", "alina_zagitova",
+                        dao.formatter.parse("2002-05-18"), email2);
+                targetAccount.setGender(Account.Gender.F);
+                dao.insert("", targetAccount);
+                targetAccount = dao.select("", "Email", email2);
+                System.out.println("Created target account " + targetAccount);
+            }
+            List<Message> messages = account.getMessages();
+            messages.add(new Message(account, targetAccount, MessageType.PERSONAL, "Hello! How are you?"));
+            Account dbAccount = dao.insert("", messages);
+            assertEquals(messages.size(), dbAccount.getMessages().size());
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
@@ -265,9 +305,9 @@ class AccountDAOTest {
         String query = "PHONE SET phoneNmr='+79876543210' WHERE ACCID=" + account.getId()
                 + " AND phoneType='personal';";
         dbAccount = dao.update(query, "", "", account);
-        List<Account.Phone> phones = dbAccount.getPhones();
+        List<Phone> phones = dbAccount.getPhones();
         assertEquals("+79876543210", Objects.requireNonNull(phones.stream().filter(phone ->
-                Account.PhoneType.PERSONAL.equals(phone.getPhoneType())).findAny().orElse(null)).getNumber());
+                PhoneType.PERSONAL.equals(phone.getPhoneType())).findAny().orElse(null)).getNumber());
         System.out.println("Updated account " + account);
     }
 
@@ -280,9 +320,9 @@ class AccountDAOTest {
         Account account = dao.select("", "Email", email);
         assertNotNull(account);
 
-        List<Account.Phone> phones = account.getPhones();
+        List<Phone> phones = account.getPhones();
         phones.clear();
-        phones.add(account.new Phone("+74951234567", Account.PhoneType.WORK));
+        phones.add(new Phone(account, "+74951234567", PhoneType.WORK));
         Account dbAccount = dao.delete("", phones);
         assertEquals(1, dbAccount.getPhones().size());
         System.out.println("Deleted contact");
@@ -300,10 +340,10 @@ class AccountDAOTest {
         Account friend = dao.select("", "Email", email2);
         assertNotNull(friend);
 
-        List<Account.Friend> friends = account.getFriends();
+        List<Friend> friends = account.getFriends();
         int initialQuantity = friends.size();
         friends.clear();
-        friends.add(account.new Friend(friend));
+        friends.add(new Friend(account, friend));
         Account dbAccount = dao.delete("", friends);
         assertEquals(initialQuantity - 1, dbAccount.getFriends().size());
         System.out.println("Deleted friend");

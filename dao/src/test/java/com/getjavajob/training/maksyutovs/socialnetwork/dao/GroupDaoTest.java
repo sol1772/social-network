@@ -15,17 +15,17 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class GroupDAOTest {
+class GroupDaoTest {
 
     private static final String resourceName = "/h2.properties";
-    private static GroupDAO dao;
+    private static GroupDao dao;
     private static Connection con;
     private static Statement st;
     private static ResultSet rs;
 
     @BeforeAll
     static void connect() {
-        dao = new GroupDAO(resourceName);
+        dao = new GroupDao(resourceName);
         con = dao.getConnection();
         try {
             con.setAutoCommit(false);
@@ -105,7 +105,7 @@ class GroupDAOTest {
         System.out.println("---------------------------------");
         System.out.println("Test GroupDAO.insert(Group)");
         Group group;
-        AccountDAO accountDAO = new AccountDAO(con);
+        AccountDao accountDAO = new AccountDao(con);
         try {
             truncateTables();
             // registering new group
@@ -136,7 +136,7 @@ class GroupDAOTest {
         System.out.println("---------------------------------");
         System.out.println("Test GroupDAO.insert(Members)");
         Group group;
-        AccountDAO accountDAO = new AccountDAO(con);
+        AccountDao accountDAO = new AccountDao(con);
         try {
             group = dao.select("", "Title", "Figure skating");
             if (group == null) {
@@ -205,7 +205,7 @@ class GroupDAOTest {
         assertEquals(valueToChange, dbGroup.getMetaTitle());
 
         // updating members via query
-        AccountDAO accountDAO = new AccountDAO(con);
+        AccountDao accountDAO = new AccountDao(con);
         String email = "dari@tat.ru";
         Account account = accountDAO.select("", "Email", email);
         assertNotNull(account);
@@ -230,7 +230,7 @@ class GroupDAOTest {
         List<Group.GroupMember> members = group.getMembers();
         int initialQuantity = members.size();
         members.clear();
-        AccountDAO accountDAO = new AccountDAO(con);
+        AccountDao accountDAO = new AccountDao(con);
         String email = "dari@tat.ru";
         Account account = accountDAO.select("", "Email", email);
         assertNotNull(account);

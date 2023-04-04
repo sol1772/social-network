@@ -71,7 +71,7 @@ class ConnectionPoolTest {
             System.out.println(name + " connected (OK)");
             successfulConnections.getAndIncrement();
 
-            AccountDAO dao = new AccountDAO(con);
+            AccountDao dao = new AccountDao(con);
             dao.selectAll("");
 
             System.out.println(name + " released");
