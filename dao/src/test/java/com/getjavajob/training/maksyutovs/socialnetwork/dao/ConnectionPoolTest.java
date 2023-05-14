@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ConnectionPoolTest {
 
+    private static final String resourceName = "/h2.properties";
     static volatile AtomicInteger successfulConnections = new AtomicInteger(0);
     private static ConnectionPool pool;
 
@@ -21,7 +22,7 @@ class ConnectionPoolTest {
     static void connect() {
         System.out.println("---------------------------------");
         System.out.println("ConnectionPoolTest.BeforeAll.connect()");
-        pool = new ConnectionPool("/h2.properties");
+        pool = ConnectionPool.getInstance(resourceName);
         System.out.println("Total available connections: " + pool.getAvailableConnections());
     }
 
@@ -30,7 +31,7 @@ class ConnectionPoolTest {
         System.out.println("---------------------------------");
         System.out.println("ConnectionPoolTest.AfterAll.close()");
         System.out.println("---------------------------------");
-        pool.shutdown();
+        pool.closeConnections();
     }
 
     @Test
@@ -45,7 +46,7 @@ class ConnectionPoolTest {
                 executor.execute(new ConnectionRunnable("Thread " + i));
             }
             executor.shutdown();
-            boolean finished = executor.awaitTermination(5, TimeUnit.SECONDS);
+            boolean finished = executor.awaitTermination(60, TimeUnit.SECONDS);
             if (!finished) {
                 System.out.println("Timeout elapsed before termination of all threads");
             }

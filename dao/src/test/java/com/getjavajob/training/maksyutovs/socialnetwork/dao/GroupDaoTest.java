@@ -1,11 +1,9 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
@@ -18,15 +16,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class GroupDaoTest {
 
     private static final String resourceName = "/h2.properties";
+    private static final String TITLE = "title";
+    private static final String EMAIL = "email";
     private static GroupDao dao;
     private static Connection con;
     private static Statement st;
-    private static ResultSet rs;
 
     @BeforeAll
     static void connect() {
         dao = new GroupDao(resourceName);
-        con = dao.getConnection();
+        con = con == null ? dao.getPool().getConnection() : con;
         try {
             con.setAutoCommit(false);
             st = con.createStatement();
@@ -64,26 +63,21 @@ class GroupDaoTest {
     @AfterAll
     static void closeConnection() {
         try {
-            if (rs != null) {
-                rs.close();
-            }
             if (st != null) {
                 st.close();
-            }
-            if (con != null) {
-                con.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        dao.getPool().closeConnections();
     }
 
     void truncateTables() {
-        String query = "TRUNCATE TABLE INTERESTGROUP";
+        String query = "TRUNCATE TABLE InterestGroup";
         try {
             con.setAutoCommit(false);
             st.executeUpdate(query);
-            query = "TRUNCATE TABLE GROUP_MEMBER";
+            query = "TRUNCATE TABLE Group_member";
             st.executeUpdate(query);
             System.out.println("'InterestGroup' and 'Group_member' tables truncated before adding a new group");
         } catch (SQLException e) {
@@ -113,13 +107,13 @@ class GroupDaoTest {
             group.setMetaTitle("Figure skating fans group");
             // admin of the group
             String email = "info@alinazagitova.ru";
-            Account account = accountDAO.select("", "Email", email);
+            Account account = accountDAO.select("", EMAIL, email);
             if (account == null) {
                 account = new Account("Alina", "Zagitova", "alina_zagitova",
                         dao.formatter.parse("2002-05-18"), email);
-                account.setGender(Account.Gender.F);
+                account.setGender(Gender.F);
                 accountDAO.insert("", account);
-                account = accountDAO.select("", "Email", email);
+                account = accountDAO.select("", EMAIL, email);
             }
             group.setCreatedBy(account.getId());
             Group dbGroup = dao.insert("", group);
@@ -138,40 +132,42 @@ class GroupDaoTest {
         Group group;
         AccountDao accountDAO = new AccountDao(con);
         try {
-            group = dao.select("", "Title", "Figure skating");
+            group = dao.select("", TITLE, "Figure skating");
             if (group == null) {
                 // registering new group
                 group = new Group("Figure skating");
                 group.setMetaTitle("Figure skating fans group");
                 // admin of the group
                 String email = "info@alinazagitova.ru";
-                Account account = accountDAO.select("", "Email", email);
+                Account account = accountDAO.select("", EMAIL, email);
                 if (account == null) {
                     account = new Account("Alina", "Zagitova", "alina_zagitova",
                             dao.formatter.parse("2002-05-18"), email);
-                    account.setGender(Account.Gender.F);
+                    account.setGender(Gender.F);
+                    account.setPasswordHash(account.hashPassword("ComplicatedPassword_2"));
                     accountDAO.insert("", account);
-                    account = accountDAO.select("", "Email", email);
+                    account = accountDAO.select("", EMAIL, email);
                 }
                 group.setCreatedBy(account.getId());
                 dao.insert("", group);
                 System.out.println("Created group " + group);
             }
 
-            List<Group.GroupMember> members = group.getMembers();
+            List<GroupMember> members = group.getMembers();
             Account account1 = accountDAO.select("", "id", group.getCreatedBy());
-            members.add(group.new GroupMember(account1, Group.Role.ADMIN));
+            members.add(new GroupMember(group, account1, Role.ADMIN));
             // moderator of the group
             String email2 = "dari@tat.ru";
-            Account account2 = accountDAO.select("", "Email", email2);
+            Account account2 = accountDAO.select("", EMAIL, email2);
             if (account2 == null) {
                 account2 = new Account("Darina", "Sabitova", "darisabitova",
                         dao.formatter.parse("2007-01-12"), email2);
-                account2.setGender(Account.Gender.F);
+                account2.setGender(Gender.F);
+                account2.setPasswordHash(account2.hashPassword("ComplicatedPassword_3"));
                 accountDAO.insert("", account2);
-                account2 = accountDAO.select("", "Email", email2);
+                account2 = accountDAO.select("", EMAIL, email2);
             }
-            members.add(group.new GroupMember(account2, Group.Role.MEMBER));
+            members.add(new GroupMember(group, account2, Role.MEMBER));
             Group dbGroup = dao.insert("", members);
             assertEquals(members.size(), dbGroup.getMembers().size());
             System.out.println("Added members: " + account1 + " and " + account2);
@@ -186,7 +182,7 @@ class GroupDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test GroupDAO.select()");
         String title = "Figure skating";
-        Group group = dao.select("", "Title", title);
+        Group group = dao.select("", TITLE, title);
         assertNotNull(group);
         assertEquals(title, group.getTitle());
     }
@@ -197,7 +193,7 @@ class GroupDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test GroupDAO.update()");
         String title = "Figure skating";
-        Group group = dao.select("", "Title", title);
+        Group group = dao.select("", TITLE, title);
         assertNotNull(group);
         // updating a field
         String valueToChange = "Figure skating fans group 2023";
@@ -207,14 +203,13 @@ class GroupDaoTest {
         // updating members via query
         AccountDao accountDAO = new AccountDao(con);
         String email = "dari@tat.ru";
-        Account account = accountDAO.select("", "Email", email);
+        Account account = accountDAO.select("", EMAIL, email);
         assertNotNull(account);
         String query = "Group_member SET roleType='moder' WHERE groupId=" + group.getId()
                 + " AND accId=" + account.getId() + ";";
         dbGroup = dao.update(query, "", "", group);
-        List<Group.GroupMember> members = dbGroup.getMembers();
-        assertEquals(Group.Role.MODER, Objects.requireNonNull(members.stream().filter
-                (member -> member.getAccount().getId() == account.getId()).findAny().orElse(null)).getRole());
+        assertEquals(Role.MODER, Objects.requireNonNull(dbGroup.getMembers().stream().filter(member ->
+                Objects.equals(member.getAccount().getEmail(), email)).findAny().orElse(null)).getRole());
         System.out.println("Updated group " + group);
     }
 
@@ -224,17 +219,17 @@ class GroupDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test GroupDAO.delete(Members)");
         String title = "Figure skating";
-        Group group = dao.select("", "Title", title);
+        Group group = dao.select("", TITLE, title);
         assertNotNull(group);
 
-        List<Group.GroupMember> members = group.getMembers();
+        List<GroupMember> members = group.getMembers();
         int initialQuantity = members.size();
         members.clear();
         AccountDao accountDAO = new AccountDao(con);
         String email = "dari@tat.ru";
-        Account account = accountDAO.select("", "Email", email);
+        Account account = accountDAO.select("", EMAIL, email);
         assertNotNull(account);
-        members.add(group.new GroupMember(account, Group.Role.MODER));
+        members.add(new GroupMember(group, account, Role.MODER));
         Group dbGroup = dao.delete("", members);
         assertEquals(initialQuantity - 1, dbGroup.getMembers().size());
         System.out.println("Deleted member " + account);
@@ -246,7 +241,7 @@ class GroupDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test GroupDAO.delete()");
         String title = "Figure skating";
-        Group group = dao.select("", "Title", title);
+        Group group = dao.select("", TITLE, title);
         assertNotNull(group);
 
         Group dbGroup = dao.delete("", group);
