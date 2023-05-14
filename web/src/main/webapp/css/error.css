@@ -1,0 +1,24 @@
+h1, h2 {
+    color: darkgreen;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+h3 {
+    color: red;
+    text-align: center;
+    text-transform: none;
+}
+
+div {
+    width: 50%;
+    background-color: lightblue;
+    padding: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+a.link {
+    display: block;
+    text-align: center;
+}

@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccountDaoTest {
 
     private static final String resourceName = "/h2.properties";
+    private static final String EMAIL = "email";
     private static AccountDao dao;
     private static Connection con;
     private static Statement st;
@@ -26,7 +27,7 @@ class AccountDaoTest {
     @BeforeAll
     static void connect() {
         dao = new AccountDao(resourceName);
-        con = dao.getConnection();
+        con = con == null ? dao.getPool().getConnection() : con;
         try {
             con.setAutoCommit(false);
             st = con.createStatement();
@@ -43,6 +44,7 @@ class AccountDaoTest {
                     "    addInfo VARCHAR(100)," +
                     "    passwordHash VARCHAR(128)," +
                     "    registeredAt DATETIME," +
+                    "    image BLOB," +
                     "    PRIMARY KEY(id)" +
                     "); " +
                     "CREATE TABLE if not exists Phone (" +
@@ -82,6 +84,7 @@ class AccountDaoTest {
                     "    title VARCHAR(50) NOT NULL UNIQUE, " +
                     "    metaTitle VARCHAR(100), " +
                     "    createdAt DATETIME," +
+                    "    image BLOB," +
                     "    PRIMARY KEY(id)" +
                     "); " +
                     "CREATE TABLE if not exists Group_member (" +
@@ -97,8 +100,8 @@ class AccountDaoTest {
                     "    accId INT," +
                     "    trgtId INT," +
                     "    txtContent VARCHAR (500) NOT NULL," +
-                    "    mediaContent MEDIUMBLOB," +
-                    "    msgType ENUM('PERSONAL', 'PUBLIC')," +
+                    "    mediaContent BLOB," +
+                    "    msgType ENUM('PERSONAL', 'PUBLIC', 'GROUP')," +
                     "    createdAt DATETIME NOT NULL," +
                     "    updatedAt DATETIME," +
                     "    PRIMARY KEY(id)" +
@@ -115,6 +118,15 @@ class AccountDaoTest {
                     ex.printStackTrace();
                 }
             }
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            dao.getPool().returnConnection(con);
         }
     }
 
@@ -127,12 +139,10 @@ class AccountDaoTest {
             if (st != null) {
                 st.close();
             }
-            if (con != null) {
-                con.close();
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        dao.getPool().closeConnections();
     }
 
     void truncateTables() {
@@ -178,7 +188,7 @@ class AccountDaoTest {
             account = new Account("Kamila", "Valieva", "kamila_valieva",
                     dao.formatter.parse("2006-04-26"), "info@valievakamila.ru");
             account.setMiddleName("Valerievna");
-            account.setGender(Account.Gender.F);
+            account.setGender(Gender.F);
             account.setAddInfo("some info");
             account.setPasswordHash(account.hashPassword("ComplicatedPassword_1"));
             Account dbAccount = dao.insert("", account);
@@ -196,7 +206,7 @@ class AccountDaoTest {
         System.out.println("Test AccountDAO.insert(Contacts)");
         Account account;
         String email = "info@valievakamila.ru";
-        account = dao.select("", "Email", email);
+        account = dao.select("", EMAIL, email);
         assertNotNull(account);
 
         Account dbAccount;
@@ -227,16 +237,17 @@ class AccountDaoTest {
         Account account;
         try {
             String email = "info@valievakamila.ru";
-            account = dao.select("", "Email", email);
+            account = dao.select("", EMAIL, email);
             assertNotNull(account);
             String email2 = "info@alinazagitova.ru";
-            Account friendAccount = dao.select("", "Email", email2);
+            Account friendAccount = dao.select("", EMAIL, email2);
             if (friendAccount == null) {
                 friendAccount = new Account("Alina", "Zagitova", "alina_zagitova",
                         dao.formatter.parse("2002-05-18"), email2);
-                friendAccount.setGender(Account.Gender.F);
+                friendAccount.setGender(Gender.F);
+                friendAccount.setPasswordHash(account.hashPassword("ComplicatedPassword_2"));
                 dao.insert("", friendAccount);
-                friendAccount = dao.select("", "Email", email2);
+                friendAccount = dao.select("", EMAIL, email2);
                 System.out.println("Created friend account " + friendAccount);
             }
             List<Friend> friends = account.getFriends();
@@ -256,16 +267,16 @@ class AccountDaoTest {
         Account account;
         try {
             String email = "info@valievakamila.ru";
-            account = dao.select("", "Email", email);
+            account = dao.select("", EMAIL, email);
             assertNotNull(account);
             String email2 = "info@alinazagitova.ru";
-            Account targetAccount = dao.select("", "Email", email2);
+            Account targetAccount = dao.select("", EMAIL, email2);
             if (targetAccount == null) {
                 targetAccount = new Account("Alina", "Zagitova", "alina_zagitova",
                         dao.formatter.parse("2002-05-18"), email2);
-                targetAccount.setGender(Account.Gender.F);
+                targetAccount.setGender(Gender.F);
                 dao.insert("", targetAccount);
-                targetAccount = dao.select("", "Email", email2);
+                targetAccount = dao.select("", EMAIL, email2);
                 System.out.println("Created target account " + targetAccount);
             }
             List<Message> messages = account.getMessages();
@@ -283,7 +294,7 @@ class AccountDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test AccountDAO.select()");
         String email = "info@valievakamila.ru";
-        Account account = dao.select("", "Email", email);
+        Account account = dao.select("", EMAIL, email);
         assertNotNull(account);
         assertEquals(email, account.getEmail());
     }
@@ -294,7 +305,7 @@ class AccountDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test AccountDAO.update()");
         String email = "info@valievakamila.ru";
-        Account account = dao.select("", "Email", email);
+        Account account = dao.select("", EMAIL, email);
         assertNotNull(account);
         // updating a field
         String valueToChange = "Some info about Kamila Valieva";
@@ -317,7 +328,7 @@ class AccountDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test AccountDAO.delete(Contacts)");
         String email = "info@valievakamila.ru";
-        Account account = dao.select("", "Email", email);
+        Account account = dao.select("", EMAIL, email);
         assertNotNull(account);
 
         List<Phone> phones = account.getPhones();
@@ -334,10 +345,10 @@ class AccountDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test AccountDAO.delete(Friends)");
         String email = "info@valievakamila.ru";
-        Account account = dao.select("", "Email", email);
+        Account account = dao.select("", EMAIL, email);
         assertNotNull(account);
         String email2 = "info@alinazagitova.ru";
-        Account friend = dao.select("", "Email", email2);
+        Account friend = dao.select("", EMAIL, email2);
         assertNotNull(friend);
 
         List<Friend> friends = account.getFriends();
@@ -355,7 +366,7 @@ class AccountDaoTest {
         System.out.println("---------------------------------");
         System.out.println("Test AccountDAO.delete(Account)");
         String email = "info@valievakamila.ru";
-        Account account = dao.select("", "Email", email);
+        Account account = dao.select("", EMAIL, email);
         assertNotNull(account);
 
         Account dbAccount = dao.delete("", account);

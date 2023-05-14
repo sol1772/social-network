@@ -30,4 +30,8 @@ public class Friend {
         return account;
     }
 
+    public Account getFriendAccount() {
+        return friendAccount;
+    }
+
 }

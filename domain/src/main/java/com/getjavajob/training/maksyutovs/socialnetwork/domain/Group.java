@@ -12,6 +12,8 @@ public class Group {
     private String title;
     private String metaTitle;
     private Date createdAt;
+    private byte[] image;
+
 
     public Group() {
     }
@@ -64,45 +66,17 @@ public class Group {
         this.createdAt = createdAt;
     }
 
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
     @Override
     public String toString() {
         return title;
-    }
-
-    public enum Role {
-        ADMIN, MODER, MEMBER
-    }
-
-    public class GroupMember {
-
-        private int id;
-        private com.getjavajob.training.maksyutovs.socialnetwork.domain.Account account;
-        private Role role;
-
-        public GroupMember() {
-        }
-
-        public GroupMember(com.getjavajob.training.maksyutovs.socialnetwork.domain.Account account, Role role) {
-            this.account = account;
-            this.role = role;
-        }
-
-        public com.getjavajob.training.maksyutovs.socialnetwork.domain.Account getAccount() {
-            return account;
-        }
-
-        public Role getRole() {
-            return role;
-        }
-
-        public int getGroupId() {
-            return Group.this.getId();
-        }
-
-        public Group getGroup() {
-            return Group.this;
-        }
-
     }
 
 }

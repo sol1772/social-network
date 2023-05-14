@@ -1,0 +1,44 @@
+h1 {
+    color: darkgreen;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+h2, h3, h4, h5 {
+    color: darkgreen;
+    text-align: center;
+}
+
+div {
+    width: 50%;
+    text-align: center;
+    background-color: lightblue;
+    padding: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table {
+    alignment: center;
+    color: navy;
+    border: 2px;
+    width: 80%;
+    padding: 4px;
+    border-collapse: collapse;
+    margin: auto;
+}
+
+td, th {
+    padding: 3px; /* Поля вокруг содержимого таблицы */
+    border: 1px solid black; /* Параметры рамки */
+}
+
+a.disabled {
+    pointer-events: none; /* делаем элемент неактивным для взаимодействия */
+    cursor: default; /*  курсор в виде стрелки */
+    color: #888; /* цвет текста серый */
+}
+
+input[type=number] {
+    width: 50px;
+}

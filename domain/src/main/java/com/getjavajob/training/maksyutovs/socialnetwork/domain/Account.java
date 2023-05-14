@@ -2,11 +2,12 @@ package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class Account {
+public class Account implements Serializable {
 
     private final List<Phone> phones = new ArrayList<>();
     private final List<Address> addresses = new ArrayList<>();
@@ -21,9 +22,10 @@ public class Account {
     private Date dateOfBirth;
     private Gender gender;
     private String email;
-    private String addInfo;
     private String passwordHash;
+    private String addInfo;
     private Date registeredAt;
+    private byte[] image;
 
     public Account() {
     }
@@ -136,6 +138,14 @@ public class Account {
         this.registeredAt = registeredAt;
     }
 
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -151,11 +161,7 @@ public class Account {
 
     @Override
     public String toString() {
-        return userName + "(" + email + ")";
-    }
-
-    public enum Gender {
-        M, F
+        return userName + " (" + email + ")";
     }
 
 }
