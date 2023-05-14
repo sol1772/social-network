@@ -16,29 +16,31 @@ import static java.util.Objects.requireNonNull;
 
 public class ConnectionPool {
 
-    private static final int INITIAL_POOL_SIZE = Runtime.getRuntime().availableProcessors() == 1 ?
-            1 : Runtime.getRuntime().availableProcessors() - 1;
     private static final String DEF_URL = "jdbc:";
+    private static final List<Connection> availableConnections = Collections.synchronizedList(new ArrayList<>());
+    private static ConnectionPool pool;
+    private final int initialPoolSize = Runtime.getRuntime().availableProcessors() == 1 ?
+            1 : Runtime.getRuntime().availableProcessors() - 1;
+    private final String resourceName;
     private final Properties properties = new Properties();
-    private final List<Connection> availableConnections = Collections.synchronizedList(new ArrayList<>());
-    private Semaphore semaphore = new Semaphore(INITIAL_POOL_SIZE, true);
-    private String resourceName;
+    private Semaphore semaphore = new Semaphore(initialPoolSize, true);
 
-    public ConnectionPool() {
-        for (int i = 0; i < INITIAL_POOL_SIZE; i++) {
+    private ConnectionPool() {
+        throw new AssertionError("Default constructor is non instantiable");
+    }
+
+    private ConnectionPool(String resourceName) {
+        this.resourceName = resourceName;
+        for (int i = 0; i < initialPoolSize; i++) {
             availableConnections.add(createNewConnectionForPool());
         }
     }
 
-    public ConnectionPool(String resourceName) {
-        this.resourceName = resourceName;
-        for (int i = 0; i < INITIAL_POOL_SIZE; i++) {
-            availableConnections.add(createNewConnectionForPool());
+    public static synchronized ConnectionPool getInstance(String resourceName) {
+        if (pool == null) {
+            pool = new ConnectionPool(resourceName);
         }
-    }
-
-    public void setResourceName(String resourceName) {
-        this.resourceName = resourceName;
+        return pool;
     }
 
     public synchronized int getAvailableConnections() {
@@ -122,8 +124,7 @@ public class ConnectionPool {
         }
     }
 
-    public void shutdown() {
-        semaphore = new Semaphore(0);
+    public void closeConnections() {
         for (Connection connection : availableConnections) {
             if (nonNull(connection)) {
                 try {
@@ -133,6 +134,11 @@ public class ConnectionPool {
                 }
             }
         }
+    }
+
+    public void shutdown() {
+        semaphore = new Semaphore(0);
+        closeConnections();
         availableConnections.clear();
     }
 

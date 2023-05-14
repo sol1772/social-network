@@ -2,6 +2,7 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -15,6 +16,12 @@ public class AccountDao implements CrudDao<Account, Object> {
     private static final String READ = "SELECT * FROM ";
     private static final String UPDATE = "UPDATE ";
     private static final String DELETE = "DELETE FROM ";
+    private static final String FIRST_NAME = "firstName";
+    private static final String LAST_NAME = "lastName";
+    private static final String USERNAME = "username";
+    private static final String BIRTHDATE = "dateOfBirth";
+    private static final String EMAIL = "email";
+    private static final String TRANSACTION_ERROR = "Transaction is being rolled back";
     public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     public final DateTimeFormatter formatterT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private ConnectionPool pool;
@@ -25,11 +32,11 @@ public class AccountDao implements CrudDao<Account, Object> {
 
     public AccountDao(Connection connection) {
         this.connection = connection;
+        this.pool = ConnectionPool.getInstance("");
     }
 
     public AccountDao(String resourceName) {
-        pool = new ConnectionPool(resourceName);
-        connection = pool.getConnection();
+        this.pool = ConnectionPool.getInstance(resourceName);
     }
 
     public ConnectionPool getPool() {
@@ -44,55 +51,26 @@ public class AccountDao implements CrudDao<Account, Object> {
         this.connection = connection;
     }
 
-    private Account clone(Account account) {
-        Account dbAccount = new Account(account.getFirstName(), account.getLastName(), account.getUserName(),
-                account.getDateOfBirth(), account.getEmail());
-        dbAccount.setId(account.getId());
-        dbAccount.setPasswordHash(account.getPasswordHash());
-        dbAccount.setMiddleName(account.getMiddleName());
-        dbAccount.setGender(account.getGender());
-        dbAccount.setAddInfo(account.getAddInfo());
-        dbAccount.setRegisteredAt(account.getRegisteredAt());
-
-        for (Phone phone : account.getPhones()) {
-            dbAccount.getPhones().add(new Phone(dbAccount, phone.getNumber(), phone.getPhoneType()));
-        }
-        for (Address address : account.getAddresses()) {
-            dbAccount.getAddresses().add(new Address(dbAccount, address.getAddress(), address.getAddrType()));
-        }
-        for (Messenger messenger : account.getMessengers()) {
-            dbAccount.getMessengers().add(new Messenger(dbAccount, messenger.getUsername(), messenger.getMsngrType()));
-        }
-        for (Friend friend : account.getFriends()) {
-            dbAccount.getFriends().add(new Friend(dbAccount, friend.getAccount()));
-        }
-        for (Message message : account.getMessages()) {
-            dbAccount.getMessages().add(new Message(dbAccount, message.getTargetAccount(), message.getMsgType(),
-                    message.getTxtContent()));
-        }
-
-        return dbAccount;
-    }
-
-    private Account createAccountFromResult(ResultSet rs) throws SQLException, ParseException {
-        Account account = new Account(rs.getString("firstName"),
-                rs.getString("lastName"),
-                rs.getString("username"),
-                formatter.parse(rs.getString("dateOfBirth")),
-                rs.getString("email"));
+    Account createAccountFromResult(ResultSet rs) throws SQLException, ParseException {
+        Account account = new Account(rs.getString(FIRST_NAME),
+                rs.getString(LAST_NAME),
+                rs.getString(USERNAME),
+                formatter.parse(rs.getString(BIRTHDATE)),
+                rs.getString(EMAIL));
         account.setId(rs.getInt("id"));
         account.setPasswordHash(rs.getString("passwordHash"));
         account.setMiddleName(rs.getString("middleName"));
         account.setGender(rs.getString("gender") == null ?
-                Account.Gender.M : Account.Gender.valueOf(rs.getString("gender")));
+                Gender.M : Gender.valueOf(rs.getString("gender")));
         account.setAddInfo(rs.getString("addInfo"));
         account.setRegisteredAt(rs.getString("registeredAt") == null ? new Date(0) :
                 formatter.parse(rs.getString("registeredAt")));
-
+        account.setImage(rs.getBytes("image"));
         return account;
     }
 
-    private Account getAccountData(Account account) {
+    Account getAccountData(Account account) {
+        connection = connection == null ? pool.getConnection() : connection;
         // contacts, friends
         String queryPhone = "SELECT * FROM Phone WHERE accId=?;";
         String queryAddress = "SELECT * FROM Address WHERE accId=?;";
@@ -127,7 +105,7 @@ public class AccountDao implements CrudDao<Account, Object> {
             rs = pstMessenger.executeQuery();
             List<Messenger> messengers = account.getMessengers();
             while (rs.next()) {
-                messengers.add(new Messenger(account, rs.getString("username"),
+                messengers.add(new Messenger(account, rs.getString(USERNAME),
                         MessengerType.valueOf(rs.getString("msngrType"))));
             }
 
@@ -135,11 +113,11 @@ public class AccountDao implements CrudDao<Account, Object> {
             rs = pstFriend.executeQuery();
             List<Friend> friends = account.getFriends();
             while (rs.next()) {
-                Account friendAccount = new Account(rs.getString("firstName"),
-                        rs.getString("lastName"),
-                        rs.getString("username"),
-                        formatter.parse(rs.getString("dateOfBirth")),
-                        rs.getString("email"));
+                Account friendAccount = new Account(rs.getString(FIRST_NAME),
+                        rs.getString(LAST_NAME),
+                        rs.getString(USERNAME),
+                        formatter.parse(rs.getString(BIRTHDATE)),
+                        rs.getString(EMAIL));
                 friendAccount.setId(rs.getInt("id"));
                 friends.add(new Friend(account, friendAccount));
             }
@@ -148,13 +126,15 @@ public class AccountDao implements CrudDao<Account, Object> {
             rs = pstMessage.executeQuery();
             List<Message> messages = account.getMessages();
             while (rs.next()) {
-                Account targetAccount = new Account(rs.getString("firstName"),
-                        rs.getString("lastName"),
-                        rs.getString("username"),
-                        formatter.parse(rs.getString("dateOfBirth")),
-                        rs.getString("email"));
-                messages.add(new Message(account, targetAccount, MessageType.valueOf(rs.getString("msgType")),
-                        rs.getString("txtContent")));
+                Account targetAccount = new Account(rs.getString(FIRST_NAME),
+                        rs.getString(LAST_NAME),
+                        rs.getString(USERNAME),
+                        formatter.parse(rs.getString(BIRTHDATE)),
+                        rs.getString(EMAIL));
+                Message message = new Message(account, targetAccount,
+                        MessageType.valueOf(rs.getString("msgType")), rs.getString("txtContent"));
+                message.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
+                messages.add(message);
             }
         } catch (SQLException | ParseException e) {
             e.printStackTrace();
@@ -166,16 +146,18 @@ public class AccountDao implements CrudDao<Account, Object> {
                     e.printStackTrace();
                 }
             }
+            pool.returnConnection(connection);
         }
         return account;
     }
 
     @Override
     public Account insert(String query, Account account) {
+        connection = connection == null ? pool.getConnection() : connection;
         if (query.isEmpty()) {
             query = "Account(firstName,middleName,lastName,username,email," +
-                    "dateOfBirth,gender,addInfo,passwordHash,registeredAt)" +
-                    " VALUES (?,?,?,?,?,?,?,?,?,now());";
+                    "dateOfBirth,gender,addInfo,passwordHash,registeredAt,image)" +
+                    " VALUES (?,?,?,?,?,?,?,?,?,now(),?);";
         }
         String queryInsert = CREATE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
@@ -187,28 +169,30 @@ public class AccountDao implements CrudDao<Account, Object> {
                 pst.setString(4, account.getUserName());
                 pst.setString(5, account.getEmail());
                 pst.setString(6, formatter.format(account.getDateOfBirth()));
-                pst.setString(7, String.valueOf(account.getGender() != null ? account.getGender().toString().charAt(0) : 'M'));
+                pst.setString(7, String.valueOf(account.getGender() != null ?
+                        account.getGender().toString().charAt(0) : 'M'));
                 pst.setString(8, account.getAddInfo());
                 pst.setString(9, account.getPasswordHash());
+                pst.setBytes(10, account.getImage());
             }
             pst.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
-            if (connection != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                System.err.print(TRANSACTION_ERROR);
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
+        } finally {
+            pool.returnConnection(connection);
         }
-
-        return select("", "Email", account.getEmail());
+        return select("", EMAIL, account.getEmail());
     }
 
     public <T> Account insert(String query, List<T> accountData) {
+        connection = connection == null ? pool.getConnection() : connection;
         Account account = null;
         if (accountData.isEmpty()) {
             return null;
@@ -256,7 +240,7 @@ public class AccountDao implements CrudDao<Account, Object> {
                         pst.setInt(4, account.getId());
                     } else if (data instanceof Message) {
                         pst.setInt(2, ((Message) data).getTrgtId());
-                        pst.setString(3, ((Message) data).getTxtContent());
+                        pst.setString(3, ((Message) data).getTextContent());
                         pst.setBytes(4, ((Message) data).getMediaContent());
                         pst.setString(5, ((Message) data).getMsgType().toString());
                     }
@@ -266,21 +250,21 @@ public class AccountDao implements CrudDao<Account, Object> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            if (connection != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                System.err.print(TRANSACTION_ERROR);
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
+        } finally {
+            pool.returnConnection(connection);
         }
-
-        return select("", "Email", account.getEmail());
+        return select("", EMAIL, account.getEmail());
     }
 
     @Override
     public Account select(String query, String field, Object value) {
+        connection = connection == null ? pool.getConnection() : connection;
         Account account = null;
         ResultSet rs = null;
         if (query.isEmpty()) {
@@ -289,14 +273,10 @@ public class AccountDao implements CrudDao<Account, Object> {
         String querySelect = READ + query;
         try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
             if (querySelect.contains("?")) {
-                try {
+                if (value instanceof String) {
                     pst.setString(1, (String) value);
-                } catch (ClassCastException e) {
-                    try {
-                        pst.setInt(1, (int) value);
-                    } catch (ClassCastException ex) {
-                        ex.printStackTrace();
-                    }
+                } else if (value instanceof Integer) {
+                    pst.setInt(1, (int) value);
                 }
             }
             rs = pst.executeQuery();
@@ -313,11 +293,13 @@ public class AccountDao implements CrudDao<Account, Object> {
                     e.printStackTrace();
                 }
             }
+            pool.returnConnection(connection);
         }
         return account;
     }
 
     public List<Account> selectAll(String query) {
+        connection = connection == null ? pool.getConnection() : connection;
         List<Account> accounts = new ArrayList<>();
         if (query.isEmpty()) {
             query = "Account";
@@ -340,53 +322,114 @@ public class AccountDao implements CrudDao<Account, Object> {
                     e.printStackTrace();
                 }
             }
+            pool.returnConnection(connection);
+        }
+        return accounts;
+    }
+
+    public List<Account> selectByString(String substring, int start, int total) {
+        connection = connection == null ? pool.getConnection() : connection;
+        List<Account> accounts = new ArrayList<>();
+        String searchString = "%" + substring + "%";
+        String querySelect = READ + "Account WHERE firstName LIKE ? OR lastName LIKE ? ORDER BY lastName" +
+                (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
+        ResultSet rs = null;
+        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
+            pst.setString(1, searchString);
+            pst.setString(2, searchString);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                Account account = getAccountData(createAccountFromResult(rs));
+                accounts.add(account);
+            }
+        } catch (SQLException | ParseException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            pool.returnConnection(connection);
         }
         return accounts;
     }
 
     @Override
     public Account update(String query, String field, Object value, Account account) {
+        connection = connection == null ? pool.getConnection() : connection;
         if (query.isEmpty()) {
-            query = "Account SET " + field + "=? WHERE EMAIL=?;";
+            query = "Account SET " + field + "=? WHERE email=?;";
         }
         String queryUpdate = UPDATE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
             connection.setAutoCommit(false);
             if (queryUpdate.contains("?")) {
-                try {
+                if (value instanceof String) {
                     pst.setString(1, (String) value);
-                    pst.setString(2, account.getEmail());
-                } catch (ClassCastException e) {
-                    try {
-                        pst.setInt(1, (int) value);
-                        pst.setString(2, account.getEmail());
-                    } catch (ClassCastException ex) {
-                        ex.printStackTrace();
-                    }
+                } else if (value instanceof Integer) {
+                    pst.setInt(1, (int) value);
+                } else if (value instanceof InputStream) {
+                    pst.setBinaryStream(1, (InputStream) value);
                 }
+                pst.setString(2, account.getEmail());
             }
             pst.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
-            if (connection != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                System.err.print(TRANSACTION_ERROR);
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
+        } finally {
+            pool.returnConnection(connection);
         }
+        return select("", EMAIL, account.getEmail());
+    }
 
-        return select("", "Email", account.getEmail());
+    public Account update(Account account) {
+        connection = connection == null ? pool.getConnection() : connection;
+        String query = "Account SET firstName=?,middleName=?,lastName=?,username=?,dateOfBirth=?,gender=?,addInfo=?" +
+                " WHERE email=?)";
+        String queryUpdate = UPDATE + query;
+        try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
+            connection.setAutoCommit(false);
+            pst.setString(1, account.getFirstName());
+            pst.setString(2, account.getMiddleName());
+            pst.setString(3, account.getLastName());
+            pst.setString(4, account.getUserName());
+            pst.setString(5, formatter.format(account.getDateOfBirth()));
+            pst.setString(6, String.valueOf(account.getGender() != null ?
+                    account.getGender().toString().charAt(0) : 'M'));
+            pst.setString(7, account.getAddInfo());
+            pst.setString(8, account.getEmail());
+            pst.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                System.err.print(TRANSACTION_ERROR);
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+            pool.returnConnection(connection);
+        }
+        return select("", EMAIL, account.getEmail());
     }
 
     @Override
     public Account delete(String query, Account account) {
+        connection = connection == null ? pool.getConnection() : connection;
         List<String> queries = new ArrayList<>();
         if (query.isEmpty()) {
-            queries.add("Account WHERE EMAIL=?;");
+            queries.add("Account WHERE email=?;");
             queries.add("Phone WHERE accId=?;");
             queries.add("Address WHERE accId=?;");
             queries.add("Messenger WHERE accId=?;");
@@ -405,7 +448,7 @@ public class AccountDao implements CrudDao<Account, Object> {
                         pst.setString(1, account.getEmail());
                     } else {
                         pst.setInt(1, accountId);
-                        if (queryDelete.contains("Friend") | queryDelete.contains("Message")) {
+                        if (queryDelete.contains("Friend") || queryDelete.contains("Message")) {
                             pst.setInt(2, accountId);
                         }
                     }
@@ -414,21 +457,21 @@ public class AccountDao implements CrudDao<Account, Object> {
                 connection.commit();
             } catch (SQLException e) {
                 e.printStackTrace();
-                if (connection != null) {
-                    try {
-                        System.err.print("Transaction is being rolled back");
-                        connection.rollback();
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
+                try {
+                    System.err.print(TRANSACTION_ERROR);
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
+            } finally {
+                pool.returnConnection(connection);
             }
         }
-
         return select("", "Email", account.getEmail());
     }
 
     public <T> Account delete(String query, List<T> accountData) {
+        connection = connection == null ? pool.getConnection() : connection;
         Account account = null;
         if (accountData.isEmpty()) {
             return null;
@@ -482,17 +525,16 @@ public class AccountDao implements CrudDao<Account, Object> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            if (connection != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                System.err.print(TRANSACTION_ERROR);
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
+        } finally {
+            pool.returnConnection(connection);
         }
-
-        return select("", "Email", account.getEmail());
+        return select("", EMAIL, account.getEmail());
     }
 
 }

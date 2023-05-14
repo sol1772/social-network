@@ -1,8 +1,8 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
@@ -16,6 +16,10 @@ public class AccountService {
     public AccountService() {
     }
 
+    public AccountService(AccountDao dao) {
+        this.dao = dao;
+    }
+
     public AccountDao getDao() {
         return dao;
     }
@@ -25,28 +29,42 @@ public class AccountService {
     }
 
     public Account getAccountByEmail(String email) {
-        return dao.select("", "Email", email);
+        return dao.select("", "email", email);
+    }
+
+    public Account getAccountById(int id) {
+        return dao.select("", "id", id);
     }
 
     public List<Account> getAccounts() {
         return dao.selectAll("");
     }
 
+    public List<Account> getAccountsByString(String substring, int start, int total) {
+        return dao.selectByString(substring, start, total);
+    }
+
     public Account registerAccount(Account account) {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount == null) {
             dbAccount = dao.insert("", account);
-            if (!account.getPhones().isEmpty()) {
-                dbAccount = dao.insert("", account.getPhones());
+            for (Phone phone : account.getPhones()) {
+                dbAccount.getPhones().add(new Phone(dbAccount, phone.getNumber(), phone.getPhoneType()));
             }
-            if (!account.getAddresses().isEmpty()) {
-                dbAccount = dao.insert("", account.getAddresses());
+            if (!dbAccount.getPhones().isEmpty()) {
+                dbAccount = dao.insert("", dbAccount.getPhones());
             }
-            if (!account.getMessengers().isEmpty()) {
-                dbAccount = dao.insert("", account.getMessengers());
+            for (Address address : account.getAddresses()) {
+                dbAccount.getAddresses().add(new Address(dbAccount, address.getAddress(), address.getAddrType()));
             }
-            if (!account.getFriends().isEmpty()) {
-                dbAccount = dao.insert("", account.getFriends());
+            if (!dbAccount.getAddresses().isEmpty()) {
+                dbAccount = dao.insert("", dbAccount.getAddresses());
+            }
+            for (Messenger messenger : account.getMessengers()) {
+                dbAccount.getMessengers().add(new Messenger(dbAccount, messenger.getUsername(), messenger.getMsngrType()));
+            }
+            if (!dbAccount.getMessengers().isEmpty()) {
+                dbAccount = dao.insert("", dbAccount.getMessengers());
             }
         }
         return dbAccount;
@@ -56,8 +74,14 @@ public class AccountService {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount != null) {
             dbAccount = dao.update("", field, value, account);
-//        } else {
-//            System.out.println("Account with email " + account.getEmail() + " does not exist");
+        }
+        return Optional.ofNullable(dbAccount);
+    }
+
+    public Optional<Account> editAccount(Account account) {
+        Account dbAccount = getAccountByEmail(account.getEmail());
+        if (dbAccount != null) {
+            dbAccount = dao.update(account);
         }
         return Optional.ofNullable(dbAccount);
     }
@@ -66,8 +90,6 @@ public class AccountService {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount != null) {
             dao.delete("", account);
-//        } else {
-//            System.out.println("Account with email " + account.getEmail() + " does not exist");
         }
         return Optional.ofNullable(dbAccount);
     }
@@ -75,12 +97,10 @@ public class AccountService {
     public Optional<Account> addFriend(Account account, Account friend) {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount == null) {
-//            System.out.println("Account with email " + account.getEmail() + " does not exist");
             return Optional.empty();
         }
         Account dbFriend = getAccountByEmail(friend.getEmail());
         if (dbFriend == null) {
-//            System.out.println("Account with email " + friend.getEmail() + " does not exist");
             return Optional.of(dbAccount);
         }
         List<Friend> friends = account.getFriends();
@@ -92,12 +112,10 @@ public class AccountService {
     public Optional<Account> deleteFriend(Account account, Account friend) {
         Account dbAccount = getAccountByEmail(account.getEmail());
         if (dbAccount == null) {
-//            System.out.println("Account with email " + account.getEmail() + " does not exist");
             return Optional.empty();
         }
         Account dbFriend = getAccountByEmail(friend.getEmail());
         if (dbFriend == null) {
-//            System.out.println("Account with email " + friend.getEmail() + " does not exist");
             return Optional.of(dbAccount);
         }
         List<Friend> friends = account.getFriends();
@@ -118,10 +136,10 @@ public class AccountService {
 
     public boolean changePassword(String oldPassword, String newPassword, Account account) {
         boolean passwordChanged = false;
-        if (passwordIsValid(oldPassword, account)) {
+        if (StringUtils.isEmpty(account.getPasswordHash()) || passwordIsValid(oldPassword, account)) {
             account.setPasswordHash(account.hashPassword(newPassword));
             Account dbAccount = dao.update("", "passwordHash", account.getPasswordHash(), account);
-            passwordChanged = (Objects.equals(dbAccount.getPasswordHash(), account.getPasswordHash()));
+            passwordChanged = Objects.equals(dbAccount.getPasswordHash(), account.getPasswordHash());
         } else {
             System.out.println("Old password is not valid!");
         }

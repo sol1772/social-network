@@ -1,0 +1,46 @@
+h1, h2 {
+    color: darkgreen;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+h3 {
+    color: midnightblue;
+    text-align: left;
+    text-transform: none;
+}
+
+.head {
+    display: flex;
+    justify-content: normal;
+    align-items: unset;
+    text-align: center;
+}
+
+.head-cont {
+    color: darkgreen;
+    float: left;
+    text-align: left;
+}
+
+.head-logo {
+    float: right;
+    width: 150px;
+    margin-left: auto;
+    margin-right: 100px;
+    margin-top: 20px;
+    text-align: justify-all;
+}
+
+div.wrapper {
+    width: 50%;
+    background-color: lightblue;
+    padding: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+a {
+    display: block;
+    text-align: center;
+}

@@ -7,8 +7,9 @@ public class Message {
     private Account account;
     private int id;
     private Account targetAccount;
+    private Group targetGroup;
     private MessageType msgType;
-    private String txtContent;
+    private String textContent;
     private byte[] mediaContent;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -16,11 +17,35 @@ public class Message {
     public Message() {
     }
 
+    public Message(Account account, MessageType msgType, String txtContent) {
+        this.account = account;
+        this.msgType = msgType;
+        this.textContent = txtContent;
+    }
+
     public Message(Account account, Account targetAccount, MessageType msgType, String txtContent) {
         this.account = account;
         this.targetAccount = targetAccount;
         this.msgType = msgType;
-        this.txtContent = txtContent;
+        this.textContent = txtContent;
+    }
+
+    public Message(Account account, Group targetGroup, MessageType msgType, String txtContent) {
+        this.account = account;
+        this.targetGroup = targetGroup;
+        this.msgType = msgType;
+        this.textContent = txtContent;
+    }
+
+    public Message(Account account, Account targetAccount, Group targetGroup, MessageType msgType, String textContent,
+                   byte[] mediaContent, LocalDateTime createdAt) {
+        this.account = account;
+        this.targetAccount = targetAccount;
+        this.targetGroup = targetGroup;
+        this.msgType = msgType;
+        this.textContent = textContent;
+        this.mediaContent = mediaContent;
+        this.createdAt = createdAt;
     }
 
     public Account getAccount() {
@@ -47,6 +72,14 @@ public class Message {
         this.targetAccount = targetAccount;
     }
 
+    public Group getTargetGroup() {
+        return targetGroup;
+    }
+
+    public void setTargetGroup(Group targetGroup) {
+        this.targetGroup = targetGroup;
+    }
+
     public MessageType getMsgType() {
         return msgType;
     }
@@ -55,12 +88,12 @@ public class Message {
         this.msgType = msgType;
     }
 
-    public String getTxtContent() {
-        return txtContent;
+    public String getTextContent() {
+        return this.textContent;
     }
 
-    public void setTxtContent(String txtContent) {
-        this.txtContent = txtContent;
+    public void setTextContent(String txtContent) {
+        this.textContent = txtContent;
     }
 
     public byte[] getMediaContent() {

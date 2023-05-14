@@ -12,13 +12,13 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @WebServlet
-public class AccountDataServlet extends HttpServlet {
+public class AccountListServlet extends HttpServlet {
 
     private AccountService accountService;
 
@@ -31,13 +31,11 @@ public class AccountDataServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         resp.setContentType("text/html;charset=utf-8");
-
-        HttpSession session = req.getSession();
-        session.invalidate();
+        resp.setCharacterEncoding("UTF-8");
 
         List<Account> accounts = accountService.getAccounts();
         StringBuilder sb = new StringBuilder();
-        sb.append("Accounts List");
+        sb.append("<b>Accounts List</b>");
         for (Account account : accounts) {
             sb.append("<p>").append(account.getFirstName()).append(" ").append(account.getLastName()).append("<br>");
             for (Phone phone : account.getPhones()) {
@@ -53,7 +51,7 @@ public class AccountDataServlet extends HttpServlet {
         }
 
         try {
-            resp.getOutputStream().write(("<html><body>" + sb + "</body></html>").getBytes());
+            resp.getOutputStream().write(("<html><body>" + sb + "</body></html>").getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
