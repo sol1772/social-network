@@ -74,11 +74,11 @@ public class AccountEditServlet extends HttpServlet {
         HttpSession session = req.getSession();
         Account account = (Account) session.getAttribute(ACCOUNT);
 
-        String command = req.getParameter("submit");
-        if (StringUtils.isEmpty(command)) {
-            doGet(req, resp);
-        } else {
-            try {
+        try {
+            String command = req.getParameter("submit");
+            if (StringUtils.isEmpty(command)) {
+                doGet(req, resp);
+            } else {
                 if (command.equals("Save")) {
                     fillAccountFromRequest(account, req);
                     accountService.editAccount(account);
@@ -88,9 +88,9 @@ public class AccountEditServlet extends HttpServlet {
                     req.setAttribute("groups", groupService.getGroupsByAccount(account));
                     req.getRequestDispatcher("/account.jsp").forward(req, resp);
                 }
-            } catch (IOException | ParseException e) {
-                e.printStackTrace();
             }
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
         }
     }
 

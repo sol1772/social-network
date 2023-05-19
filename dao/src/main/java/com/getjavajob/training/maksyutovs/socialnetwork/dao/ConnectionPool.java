@@ -5,22 +5,23 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
 
 public class ConnectionPool {
 
+    static final Logger LOGGER = Logger.getLogger(ConnectionPool.class.getName());
     private static final String DEF_URL = "jdbc:";
-    private static final List<Connection> availableConnections = Collections.synchronizedList(new ArrayList<>());
     private static ConnectionPool pool;
     private final int initialPoolSize = Runtime.getRuntime().availableProcessors() == 1 ?
             1 : Runtime.getRuntime().availableProcessors() - 1;
+    private final BlockingQueue<Connection> availableConnections = new LinkedBlockingQueue<>(initialPoolSize);
+    private final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
     private final String resourceName;
     private final Properties properties = new Properties();
     private Semaphore semaphore = new Semaphore(initialPoolSize, true);
@@ -66,14 +67,23 @@ public class ConnectionPool {
                 url = DEF_URL + dbms + ":" + host + database;
             }
             connection = DriverManager.getConnection(url, properties);
-            System.out.println("Connected successfully to " + url);
+            LOGGER.log(Level.CONFIG, String.format("Connected successfully to %s", url), connection);
         } catch (SQLException | IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
         }
         return connection;
     }
 
     public Connection getConnection() {
+        Connection connection = connectionHolder.get();
+        if (connection == null) {
+            connection = getConnectionFromPool();
+            connectionHolder.set(connection);
+        }
+        return connection;
+    }
+
+    private Connection getConnectionFromPool() {
         Connection connection = null;
         try {
             semaphore.acquire();
@@ -81,25 +91,17 @@ public class ConnectionPool {
                 throw new IllegalStateException("No available connections");
             }
             synchronized (availableConnections) {
-                connection = availableConnections.get(0);
-                if (nonNull(connection)) {
-                    if (!connection.isValid(0)) {
-                        availableConnections.remove(0);
-                        connection = createNewConnectionForPool();
-                    } else {
-                        return availableConnections.remove(0);
-                    }
-                } else {
-                    availableConnections.remove(0);
+                connection = availableConnections.take();
+                if (!connection.isValid(0)) {
+                    connection.close();
                     connection = createNewConnectionForPool();
                 }
             }
-            requireNonNull(connection).setAutoCommit(false);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Interrupted!", e);
             Thread.currentThread().interrupt();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
         }
         return connection;
     }
@@ -107,30 +109,34 @@ public class ConnectionPool {
     public void returnConnection(Connection connection) {
         try {
             synchronized (availableConnections) {
-                if (nonNull(connection)) {
-                    if (!connection.isValid(0)) {
-                        connection.close();
-                        availableConnections.add(createNewConnectionForPool());
-                    } else {
-                        availableConnections.add(connection);
-                    }
-                } else {
+                connectionHolder.remove();
+                if (connection == null) {
                     availableConnections.add(createNewConnectionForPool());
+                } else if (!connection.isValid(0)) {
+                    connection.close();
+                    availableConnections.add(createNewConnectionForPool());
+                } else if (!availableConnections.contains(connection)) {
+                    availableConnections.put(connection);
                 }
             }
-            semaphore.release();
+            if (semaphore.availablePermits() < initialPoolSize) {
+                semaphore.release();
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+        } catch (InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Interrupted!", e);
+            Thread.currentThread().interrupt();
         }
     }
 
     public void closeConnections() {
         for (Connection connection : availableConnections) {
-            if (nonNull(connection)) {
+            if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, e.getMessage(), e);
                 }
             }
         }
