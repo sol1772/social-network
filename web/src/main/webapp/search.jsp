@@ -1,11 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="searchString" scope="request" class="java.lang.String"/>
 <jsp:useBean id="accountsTotal" scope="request" class="java.lang.String"/>
 <jsp:useBean id="accountsPages" scope="request" class="java.lang.String"/>
 <jsp:useBean id="groupsTotal" scope="request" class="java.lang.String"/>
 <jsp:useBean id="groupsPages" scope="request" class="java.lang.String"/>
+<jsp:useBean id="username" scope="session" class="java.lang.String"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -123,6 +125,10 @@
             </form>
         </c:otherwise>
     </c:choose>
+    <br>
+    <c:if test="${StringUtils.isEmpty(username)}">
+        <a class="link" href="login">Login</a><br>
+    </c:if>
 </div>
 </body>
 </html>

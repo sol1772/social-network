@@ -8,9 +8,12 @@ import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AppContextListener implements ServletContextListener {
 
+    static final Logger LOGGER = Logger.getLogger(AppContextListener.class.getName());
     private static final String RESOURCE_NAME = "/mysql.properties";
     private final AccountService accountService = new AccountService(new AccountDao(RESOURCE_NAME));
     private final GroupService groupService = new GroupService(new GroupDao(RESOURCE_NAME));
@@ -20,7 +23,7 @@ public class AppContextListener implements ServletContextListener {
         ServletContext ctx = servletContextEvent.getServletContext();
         ctx.setAttribute("AccountService", accountService);
         ctx.setAttribute("GroupService", groupService);
-        System.out.println("Database connection initialized for Application.");
+        LOGGER.log(Level.CONFIG, "Database connection initialized for Application.");
     }
 
     @Override
@@ -29,7 +32,7 @@ public class AppContextListener implements ServletContextListener {
         dao.getPool().returnConnection(dao.getConnection());
         GroupDao groupDao = groupService.getDao();
         groupDao.getPool().returnConnection(groupDao.getConnection());
-        System.out.println("Database connections closed for Application.");
+        LOGGER.log(Level.CONFIG, "Database connections closed for Application.");
     }
 
 }
