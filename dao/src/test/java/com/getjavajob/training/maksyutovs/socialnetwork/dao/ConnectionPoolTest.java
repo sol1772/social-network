@@ -14,29 +14,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ConnectionPoolTest {
 
-    private static final String resourceName = "/h2.properties";
+    private static final String RESOURCE_NAME = "/h2.properties";
+    private static final String DELIMITER = "----------------------------------";
     static volatile AtomicInteger successfulConnections = new AtomicInteger(0);
     private static ConnectionPool pool;
 
     @BeforeAll
     static void connect() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("ConnectionPoolTest.BeforeAll.connect()");
-        pool = ConnectionPool.getInstance(resourceName);
+        pool = ConnectionPool.getInstance(RESOURCE_NAME);
         System.out.println("Total available connections: " + pool.getAvailableConnections());
     }
 
     @AfterAll
     static void close() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("ConnectionPoolTest.AfterAll.close()");
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         pool.closeConnections();
     }
 
     @Test
     void testConnections() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("ConnectionPoolTest.testConnections()");
         int numberOfThreads = Runtime.getRuntime().availableProcessors();
         System.out.println("Number of threads: " + numberOfThreads);

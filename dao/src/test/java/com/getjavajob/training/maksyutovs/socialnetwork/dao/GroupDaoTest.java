@@ -15,20 +15,23 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GroupDaoTest {
 
-    private static final String resourceName = "/h2.properties";
+    private static final String RESOURCE_NAME = "/h2.properties";
     private static final String TITLE = "title";
     private static final String EMAIL = "email";
-    private static GroupDao dao;
+    private static final String DELIMITER = "----------------------------------";
+    private static final GroupDao dao = new GroupDao(RESOURCE_NAME);
+    private static final ConnectionPool pool = dao.getPool();
+    private static final AccountDao accountDAO = new AccountDao(pool);
     private static Connection con;
     private static Statement st;
 
     @BeforeAll
-    static void connect() {
-        dao = new GroupDao(resourceName);
-        con = con == null ? dao.getPool().getConnection() : con;
+    static void initiateTables() {
         try {
+            con = pool.getConnection();
             con.setAutoCommit(false);
             st = con.createStatement();
+            // creating tables if not exist
             String query = "CREATE TABLE if not exists InterestGroup (" +
                     "    id INT AUTO_INCREMENT," +
                     "    createdBy INT, " +
@@ -46,17 +49,16 @@ class GroupDaoTest {
                     "    CONSTRAINT Uq_members UNIQUE (accId, groupId)" +
                     ");";
             st.executeUpdate(query);
+            // truncating tables
+            query = "TRUNCATE TABLE InterestGroup";
+            st.executeUpdate(query);
+            query = "TRUNCATE TABLE Group_member";
+            st.executeUpdate(query);
+            System.out.println("'InterestGroup' and 'Group_member' tables truncated before adding a new group");
             con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
-            if (con != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    con.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            rollbackTransaction(con);
         }
     }
 
@@ -66,29 +68,22 @@ class GroupDaoTest {
             if (st != null) {
                 st.close();
             }
+            if (con != null) {
+                pool.returnConnection(con);
+            }
+            pool.closeConnections();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        dao.getPool().closeConnections();
     }
 
-    void truncateTables() {
-        String query = "TRUNCATE TABLE InterestGroup";
-        try {
-            con.setAutoCommit(false);
-            st.executeUpdate(query);
-            query = "TRUNCATE TABLE Group_member";
-            st.executeUpdate(query);
-            System.out.println("'InterestGroup' and 'Group_member' tables truncated before adding a new group");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (con != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    con.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+    static void rollbackTransaction(Connection con) {
+        if (con != null) {
+            try {
+                System.err.print("Transaction is being rolled back");
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -96,14 +91,13 @@ class GroupDaoTest {
     @Order(1)
     @Test
     void insert() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.insert(Group)");
-        Group group;
-        AccountDao accountDAO = new AccountDao(con);
         try {
-            truncateTables();
+            con = pool.getConnection();
+            con.setAutoCommit(false);
             // registering new group
-            group = new Group("Figure skating");
+            Group group = new Group("Figure skating");
             group.setMetaTitle("Figure skating fans group");
             // admin of the group
             String email = "info@alinazagitova.ru";
@@ -118,21 +112,25 @@ class GroupDaoTest {
             group.setCreatedBy(account.getId());
             Group dbGroup = dao.insert("", group);
             assertNotNull(dbGroup);
+            con.commit();
             System.out.println("Created group " + group);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            rollbackTransaction(con);
         }
     }
 
     @Order(2)
     @Test
     void insertMembers() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.insert(Members)");
-        Group group;
-        AccountDao accountDAO = new AccountDao(con);
         try {
-            group = dao.select("", TITLE, "Figure skating");
+            con = pool.getConnection();
+            con.setAutoCommit(false);
+            Group group = dao.select("", TITLE, "Figure skating");
             if (group == null) {
                 // registering new group
                 group = new Group("Figure skating");
@@ -170,16 +168,20 @@ class GroupDaoTest {
             members.add(new GroupMember(group, account2, Role.MEMBER));
             Group dbGroup = dao.insert("", members);
             assertEquals(members.size(), dbGroup.getMembers().size());
+            con.commit();
             System.out.println("Added members: " + account1 + " and " + account2);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            rollbackTransaction(con);
         }
     }
 
     @Order(3)
     @Test
     void select() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.select()");
         String title = "Figure skating";
         Group group = dao.select("", TITLE, title);
@@ -190,63 +192,85 @@ class GroupDaoTest {
     @Order(4)
     @Test
     void update() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.update()");
-        String title = "Figure skating";
-        Group group = dao.select("", TITLE, title);
-        assertNotNull(group);
-        // updating a field
-        String valueToChange = "Figure skating fans group 2023";
-        Group dbGroup = dao.update("", "metaTitle", valueToChange, group);
-        assertEquals(valueToChange, dbGroup.getMetaTitle());
+        try {
+            con = pool.getConnection();
+            con.setAutoCommit(false);
+            String title = "Figure skating";
+            Group group = dao.select("", TITLE, title);
+            assertNotNull(group);
+            // updating a field
+            String valueToChange = "Figure skating fans group 2023";
+            Group dbGroup = dao.update("", "metaTitle", valueToChange, group);
+            assertEquals(valueToChange, dbGroup.getMetaTitle());
 
-        // updating members via query
-        AccountDao accountDAO = new AccountDao(con);
-        String email = "dari@tat.ru";
-        Account account = accountDAO.select("", EMAIL, email);
-        assertNotNull(account);
-        String query = "Group_member SET roleType='moder' WHERE groupId=" + group.getId()
-                + " AND accId=" + account.getId() + ";";
-        dbGroup = dao.update(query, "", "", group);
-        assertEquals(Role.MODER, Objects.requireNonNull(dbGroup.getMembers().stream().filter(member ->
-                Objects.equals(member.getAccount().getEmail(), email)).findAny().orElse(null)).getRole());
-        System.out.println("Updated group " + group);
+            // updating members via query
+            String email = "dari@tat.ru";
+            Account account = accountDAO.select("", EMAIL, email);
+            assertNotNull(account);
+            String query = "Group_member SET roleType='moder' WHERE groupId=" + group.getId()
+                    + " AND accId=" + account.getId() + ";";
+            dbGroup = dao.update(query, "", "", group);
+            assertEquals(Role.MODER, Objects.requireNonNull(dbGroup.getMembers().stream().filter(member ->
+                    Objects.equals(member.getAccount().getEmail(), email)).findAny().orElse(null)).getRole());
+            con.commit();
+            System.out.println("Updated group " + group);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            rollbackTransaction(con);
+        }
     }
 
     @Order(5)
     @Test
     void deleteMembers() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.delete(Members)");
-        String title = "Figure skating";
-        Group group = dao.select("", TITLE, title);
-        assertNotNull(group);
+        try {
+            con = pool.getConnection();
+            con.setAutoCommit(false);
+            String title = "Figure skating";
+            Group group = dao.select("", TITLE, title);
+            assertNotNull(group);
 
-        List<GroupMember> members = group.getMembers();
-        int initialQuantity = members.size();
-        members.clear();
-        AccountDao accountDAO = new AccountDao(con);
-        String email = "dari@tat.ru";
-        Account account = accountDAO.select("", EMAIL, email);
-        assertNotNull(account);
-        members.add(new GroupMember(group, account, Role.MODER));
-        Group dbGroup = dao.delete("", members);
-        assertEquals(initialQuantity - 1, dbGroup.getMembers().size());
-        System.out.println("Deleted member " + account);
+            List<GroupMember> members = group.getMembers();
+            int initialQuantity = members.size();
+            members.clear();
+            String email = "dari@tat.ru";
+            Account account = accountDAO.select("", EMAIL, email);
+            assertNotNull(account);
+            members.add(new GroupMember(group, account, Role.MODER));
+            Group dbGroup = dao.delete("", members);
+            assertEquals(initialQuantity - 1, dbGroup.getMembers().size());
+            con.commit();
+            System.out.println("Deleted member " + account);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            rollbackTransaction(con);
+        }
     }
 
     @Order(6)
     @Test
     void delete() {
-        System.out.println("---------------------------------");
+        System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.delete()");
-        String title = "Figure skating";
-        Group group = dao.select("", TITLE, title);
-        assertNotNull(group);
+        try {
+            con = pool.getConnection();
+            con.setAutoCommit(false);
+            String title = "Figure skating";
+            Group group = dao.select("", TITLE, title);
+            assertNotNull(group);
 
-        Group dbGroup = dao.delete("", group);
-        assertNull(dbGroup);
-        System.out.println("Deleted group " + group);
+            Group dbGroup = dao.delete("", group);
+            assertNull(dbGroup);
+            con.commit();
+            System.out.println("Deleted group " + group);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            rollbackTransaction(con);
+        }
     }
 
 }
