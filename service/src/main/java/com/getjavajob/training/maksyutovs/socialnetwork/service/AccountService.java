@@ -93,7 +93,7 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbAccount = getAccountByEmail(account.getEmail());
+            dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount == null) {
                 dbAccount = dao.insert("", account);
                 for (Phone phone : account.getPhones()) {
@@ -130,7 +130,7 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbAccount = getAccountByEmail(account.getEmail());
+            dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount != null) {
                 dbAccount = dao.update("", field, value, account);
                 connection.commit();
@@ -149,7 +149,7 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbAccount = getAccountByEmail(account.getEmail());
+            dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount != null) {
                 dbAccount = dao.update(account);
                 connection.commit();
@@ -168,7 +168,7 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbAccount = getAccountByEmail(account.getEmail());
+            dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount != null) {
                 dao.delete("", account);
                 connection.commit();
@@ -187,11 +187,11 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbAccount = getAccountByEmail(account.getEmail());
+            dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount == null) {
                 return Optional.empty();
             }
-            Account dbFriend = getAccountByEmail(friend.getEmail());
+            Account dbFriend = dao.select("", "email", friend.getEmail());
             if (dbFriend == null) {
                 return Optional.of(dbAccount);
             }
@@ -213,11 +213,11 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbAccount = getAccountByEmail(account.getEmail());
+            dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount == null) {
                 return Optional.empty();
             }
-            Account dbFriend = getAccountByEmail(friend.getEmail());
+            Account dbFriend = dao.select("", "email", friend.getEmail());
             if (dbFriend == null) {
                 return Optional.of(dbAccount);
             }
@@ -252,7 +252,7 @@ public class AccountService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            Account dbAccount = getAccountByEmail(account.getEmail());
+            Account dbAccount = dao.select("", "email", account.getEmail());
             if (dbAccount == null) {
                 return false;
             }

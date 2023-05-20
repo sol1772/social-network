@@ -89,7 +89,7 @@ public class GroupService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbGroup = getGroupByTitle(group.getTitle());
+            dbGroup = dao.select("", "title", group.getTitle());
             if (dbGroup == null) {
                 dbGroup = dao.insert("", group);
             }
@@ -114,7 +114,7 @@ public class GroupService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbGroup = getGroupByTitle(group.getTitle());
+            dbGroup = dao.select("", "title", group.getTitle());
             if (dbGroup != null) {
                 dbGroup = dao.update("", field, value, group);
             }
@@ -133,7 +133,7 @@ public class GroupService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbGroup = getGroupByTitle(group.getTitle());
+            dbGroup = dao.select("", "title", group.getTitle());
             if (dbGroup != null) {
                 dbGroup = dao.update(group);
             }

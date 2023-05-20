@@ -81,8 +81,9 @@ public class AccountEditServlet extends HttpServlet {
             } else {
                 if (command.equals("Save")) {
                     fillAccountFromRequest(account, req);
-                    accountService.editAccount(account);
-                    resp.sendRedirect(req.getContextPath() + "/account?id=" + account.getId());
+                    Account dbAccount = accountService.editAccount(account).orElseThrow();
+                    req.setAttribute(ACCOUNT, dbAccount);
+                    resp.sendRedirect(req.getContextPath() + "/account?id=" + dbAccount.getId());
                 } else if (command.equals("Cancel")) {
                     req.setAttribute(ACCOUNT, account);
                     req.setAttribute("groups", groupService.getGroupsByAccount(account));

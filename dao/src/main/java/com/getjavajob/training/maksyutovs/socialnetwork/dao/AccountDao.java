@@ -367,7 +367,7 @@ public class AccountDao implements CrudDao<Account, Object> {
     public Account update(Account account) {
         connection = pool.getConnection();
         String query = "Account SET firstName=?,middleName=?,lastName=?,username=?,dateOfBirth=?,gender=?,addInfo=?" +
-                " WHERE email=?)";
+                " WHERE email=?;";
         String queryUpdate = UPDATE + query;
         try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
             pst.setString(1, account.getFirstName());
