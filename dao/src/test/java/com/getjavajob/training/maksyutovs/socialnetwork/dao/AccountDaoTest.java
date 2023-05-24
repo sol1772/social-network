@@ -3,14 +3,17 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,15 +21,27 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccountDaoTest {
 
     private static final String RESOURCE_NAME = "/h2.properties";
+    private static final Properties properties = new Properties();
     private static final String EMAIL = "email";
     private static final String DELIMITER = "----------------------------------";
-    private static final AccountDao dao = new AccountDao(RESOURCE_NAME);
-    private static final ConnectionPool pool = dao.getPool();
+    private static AccountDao dao;
+    private static ConnectionPool pool;
     private static Connection con;
     private static Statement st;
     private static ResultSet rs;
 
     @BeforeAll
+    static void connect() {
+        try (InputStream is = ConnectionPoolTest.class.getResourceAsStream(RESOURCE_NAME)) {
+            properties.load(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        dao = new AccountDao(properties);
+        pool = dao.getPool();
+        initiateTables();
+    }
+
     static void initiateTables() {
         try {
             con = pool.getConnection();
@@ -179,7 +194,7 @@ class AccountDaoTest {
             con = pool.getConnection();
             con.setAutoCommit(false);
             Account account = new Account("Kamila", "Valieva", "kamila_valieva",
-                    dao.formatter.parse("2006-04-26"), "info@valievakamila.ru");
+                    LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
             account.setMiddleName("Valerievna");
             account.setGender(Gender.F);
             account.setAddInfo("some info");
@@ -188,8 +203,6 @@ class AccountDaoTest {
             assertNotNull(dbAccount);
             con.commit();
             System.out.println("Created account " + account);
-        } catch (ParseException e) {
-            e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
             rollbackTransaction(con);
@@ -248,7 +261,7 @@ class AccountDaoTest {
             Account friendAccount = dao.select("", EMAIL, email2);
             if (friendAccount == null) {
                 friendAccount = new Account("Alina", "Zagitova", "alina_zagitova",
-                        dao.formatter.parse("2002-05-18"), email2);
+                        LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email2);
                 friendAccount.setGender(Gender.F);
                 friendAccount.setPasswordHash(account.hashPassword("ComplicatedPassword_2"));
                 dao.insert("", friendAccount);
@@ -260,8 +273,6 @@ class AccountDaoTest {
             Account dbAccount = dao.insert("", friends);
             assertEquals(friends.size(), dbAccount.getFriends().size());
             con.commit();
-        } catch (ParseException e) {
-            e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
             rollbackTransaction(con);
@@ -283,7 +294,7 @@ class AccountDaoTest {
             Account targetAccount = dao.select("", EMAIL, email2);
             if (targetAccount == null) {
                 targetAccount = new Account("Alina", "Zagitova", "alina_zagitova",
-                        dao.formatter.parse("2002-05-18"), email2);
+                        LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email2);
                 targetAccount.setGender(Gender.F);
                 dao.insert("", targetAccount);
                 targetAccount = dao.select("", EMAIL, email2);
@@ -294,8 +305,6 @@ class AccountDaoTest {
             Account dbAccount = dao.insert("", messages);
             assertEquals(messages.size(), dbAccount.getMessages().size());
             con.commit();
-        } catch (ParseException e) {
-            System.out.println(e.getMessage());
         } catch (SQLException e) {
             e.printStackTrace();
             rollbackTransaction(con);
@@ -330,7 +339,7 @@ class AccountDaoTest {
             assertEquals(valueToChange, dbAccount.getAddInfo());
 
             // updating contacts via query
-            String query = "PHONE SET phoneNmr='+79876543210' WHERE ACCID=" + account.getId()
+            String query = "PHONE SET phoneNmr='+79876543210' WHERE accId=" + account.getId()
                     + " AND phoneType='personal';";
             dbAccount = dao.update(query, "", "", account);
             List<Phone> phones = dbAccount.getPhones();

@@ -4,7 +4,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ConnectionPoolTest {
 
     private static final String RESOURCE_NAME = "/h2.properties";
+    private static final Properties properties = new Properties();
     private static final String DELIMITER = "----------------------------------";
     static volatile AtomicInteger successfulConnections = new AtomicInteger(0);
     private static ConnectionPool pool;
@@ -23,7 +27,12 @@ class ConnectionPoolTest {
     static void connect() {
         System.out.println(DELIMITER);
         System.out.println("ConnectionPoolTest.BeforeAll.connect()");
-        pool = ConnectionPool.getInstance(RESOURCE_NAME);
+        try (InputStream is = ConnectionPoolTest.class.getResourceAsStream(RESOURCE_NAME)) {
+            properties.load(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        pool = ConnectionPool.getInstance(properties);
         System.out.println("Total available connections: " + pool.getAvailableConnections());
     }
 

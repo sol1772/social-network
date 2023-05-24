@@ -3,12 +3,15 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,16 +19,29 @@ import static org.junit.jupiter.api.Assertions.*;
 class GroupDaoTest {
 
     private static final String RESOURCE_NAME = "/h2.properties";
+    private static final Properties properties = new Properties();
     private static final String TITLE = "title";
     private static final String EMAIL = "email";
     private static final String DELIMITER = "----------------------------------";
-    private static final GroupDao dao = new GroupDao(RESOURCE_NAME);
-    private static final ConnectionPool pool = dao.getPool();
-    private static final AccountDao accountDAO = new AccountDao(pool);
+    private static GroupDao dao;
+    private static ConnectionPool pool;
+    private static AccountDao accountDAO;
     private static Connection con;
     private static Statement st;
 
     @BeforeAll
+    static void connect() {
+        try (InputStream is = ConnectionPoolTest.class.getResourceAsStream(RESOURCE_NAME)) {
+            properties.load(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        dao = new GroupDao(properties);
+        pool = dao.getPool();
+        accountDAO = new AccountDao(pool);
+        initiateTables();
+    }
+
     static void initiateTables() {
         try {
             con = pool.getConnection();
@@ -104,7 +120,7 @@ class GroupDaoTest {
             Account account = accountDAO.select("", EMAIL, email);
             if (account == null) {
                 account = new Account("Alina", "Zagitova", "alina_zagitova",
-                        dao.formatter.parse("2002-05-18"), email);
+                        LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email);
                 account.setGender(Gender.F);
                 accountDAO.insert("", account);
                 account = accountDAO.select("", EMAIL, email);
@@ -114,8 +130,6 @@ class GroupDaoTest {
             assertNotNull(dbGroup);
             con.commit();
             System.out.println("Created group " + group);
-        } catch (ParseException e) {
-            e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
             rollbackTransaction(con);
@@ -140,7 +154,7 @@ class GroupDaoTest {
                 Account account = accountDAO.select("", EMAIL, email);
                 if (account == null) {
                     account = new Account("Alina", "Zagitova", "alina_zagitova",
-                            dao.formatter.parse("2002-05-18"), email);
+                            LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email);
                     account.setGender(Gender.F);
                     account.setPasswordHash(account.hashPassword("ComplicatedPassword_2"));
                     accountDAO.insert("", account);
@@ -159,7 +173,7 @@ class GroupDaoTest {
             Account account2 = accountDAO.select("", EMAIL, email2);
             if (account2 == null) {
                 account2 = new Account("Darina", "Sabitova", "darisabitova",
-                        dao.formatter.parse("2007-01-12"), email2);
+                        LocalDate.parse("2007-01-12", Utils.DATE_FORMATTER), email2);
                 account2.setGender(Gender.F);
                 account2.setPasswordHash(account2.hashPassword("ComplicatedPassword_3"));
                 accountDAO.insert("", account2);
@@ -170,8 +184,6 @@ class GroupDaoTest {
             assertEquals(members.size(), dbGroup.getMembers().size());
             con.commit();
             System.out.println("Added members: " + account1 + " and " + account2);
-        } catch (ParseException e) {
-            e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
             rollbackTransaction(con);
