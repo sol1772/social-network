@@ -5,6 +5,7 @@
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="group" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Group"/>
 <jsp:useBean id="owner" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
+<jsp:useBean id="username" scope="session" class="java.lang.String"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +26,8 @@
                 <p><i>Title: </i>${group.title}</p>
                 <p><i>About: </i>${StringUtils.isEmpty(group.metaTitle)?"---" : group.metaTitle}</p>
                 <p><i>Owner: </i>${owner.firstName} ${owner.lastName}</p>
-                <p><i>Date of creation: </i><fmt:formatDate type="date" value="${group.createdAt}"/></p>
+                <fmt:parseDate value="${group.createdAt}" pattern="yyyy-MM-dd" var="createdAt" type="date"/>
+                <p><i>Date of creation: </i><fmt:formatDate pattern="dd.MM.yyyy" value="${createdAt}"/></p>
                 <c:if test="${!group.members.isEmpty()}">
                     <p><i>Members:</i></p>
                     <c:forEach items="${group.members}" var="member">

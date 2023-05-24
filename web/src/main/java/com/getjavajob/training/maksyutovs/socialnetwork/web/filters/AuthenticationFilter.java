@@ -11,14 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 @WebFilter
 public class AuthenticationFilter implements Filter {
 
-    private static final String RESOURCE_NAME = "/config.properties";
-    private final Properties properties = new Properties();
     private Set<String> authorizationUrls;
     private AccountService accountService;
 
@@ -26,15 +23,10 @@ public class AuthenticationFilter implements Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
         ServletContext sc = filterConfig.getServletContext();
         accountService = (AccountService) sc.getAttribute("AccountService");
+        accountService = (AccountService) sc.getAttribute("AccountService");
+        Properties properties = (Properties) sc.getAttribute("ConfigProperties");
 
-        String authPattern = "";
-        try (InputStream fis = this.getClass().getResourceAsStream(RESOURCE_NAME)) {
-            properties.load(fis);
-            authPattern = properties.getProperty("authorizationUrls");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        String authPattern = properties.getProperty("authorizationUrls");
         if (!StringUtils.isEmpty(authPattern)) {
             authorizationUrls = new HashSet<>(Arrays.asList(authPattern.split("\\s*,\\s*")));
         }

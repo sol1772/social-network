@@ -3,18 +3,21 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 
 import java.io.InputStream;
-import java.sql.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AccountDao implements CrudDao<Account, Object> {
 
-    static final Logger LOGGER = Logger.getLogger(AccountDao.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AccountDao.class.getName());
     private static final String CREATE = "INSERT INTO ";
     private static final String READ = "SELECT * FROM ";
     private static final String UPDATE = "UPDATE ";
@@ -24,16 +27,14 @@ public class AccountDao implements CrudDao<Account, Object> {
     private static final String USERNAME = "username";
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String EMAIL = "email";
-    public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-    public final DateTimeFormatter formatterT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private ConnectionPool pool;
     private Connection connection;
 
     public AccountDao() {
     }
 
-    public AccountDao(String resourceName) {
-        this.pool = ConnectionPool.getInstance(resourceName);
+    public AccountDao(Properties properties) {
+        this.pool = ConnectionPool.getInstance(properties);
     }
 
     public AccountDao(ConnectionPool pool) {
@@ -42,7 +43,7 @@ public class AccountDao implements CrudDao<Account, Object> {
 
     public AccountDao(Connection connection) {
         this.connection = connection;
-        this.pool = ConnectionPool.getInstance("");
+        this.pool = ConnectionPool.getInstance(new Properties());
     }
 
     public ConnectionPool getPool() {
@@ -71,11 +72,11 @@ public class AccountDao implements CrudDao<Account, Object> {
         }
     }
 
-    Account createAccountFromResult(ResultSet rs) throws SQLException, ParseException {
+    Account createAccountFromResult(ResultSet rs) throws SQLException {
         Account account = new Account(rs.getString(FIRST_NAME),
                 rs.getString(LAST_NAME),
                 rs.getString(USERNAME),
-                formatter.parse(rs.getString(BIRTHDATE)),
+                LocalDate.parse(rs.getString(BIRTHDATE), Utils.DATE_FORMATTER),
                 rs.getString(EMAIL));
         account.setId(rs.getInt("id"));
         account.setPasswordHash(rs.getString("passwordHash"));
@@ -83,8 +84,9 @@ public class AccountDao implements CrudDao<Account, Object> {
         account.setGender(rs.getString("gender") == null ?
                 Gender.M : Gender.valueOf(rs.getString("gender")));
         account.setAddInfo(rs.getString("addInfo"));
-        account.setRegisteredAt(rs.getString("registeredAt") == null ? new Date(0) :
-                formatter.parse(rs.getString("registeredAt")));
+        String registeredAt = rs.getString("registeredAt");
+        account.setRegisteredAt(registeredAt == null ? LocalDateTime.of(0, 1, 1, 0, 0) :
+                LocalDateTime.parse(registeredAt.substring(0, Utils.DATE_TIME_PATTERN.length()), Utils.DATE_TIME_FORMATTER));
         account.setImage(rs.getBytes("image"));
         return account;
     }
@@ -136,7 +138,7 @@ public class AccountDao implements CrudDao<Account, Object> {
                 Account friendAccount = new Account(rs.getString(FIRST_NAME),
                         rs.getString(LAST_NAME),
                         rs.getString(USERNAME),
-                        formatter.parse(rs.getString(BIRTHDATE)),
+                        LocalDate.parse(rs.getString(BIRTHDATE), Utils.DATE_FORMATTER),
                         rs.getString(EMAIL));
                 friendAccount.setId(rs.getInt("id"));
                 friends.add(new Friend(account, friendAccount));
@@ -149,14 +151,14 @@ public class AccountDao implements CrudDao<Account, Object> {
                 Account targetAccount = new Account(rs.getString(FIRST_NAME),
                         rs.getString(LAST_NAME),
                         rs.getString(USERNAME),
-                        formatter.parse(rs.getString(BIRTHDATE)),
+                        LocalDate.parse(rs.getString(BIRTHDATE), Utils.DATE_FORMATTER),
                         rs.getString(EMAIL));
                 Message message = new Message(account, targetAccount,
                         MessageType.valueOf(rs.getString("msgType")), rs.getString("txtContent"));
                 message.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
                 messages.add(message);
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);
@@ -181,7 +183,7 @@ public class AccountDao implements CrudDao<Account, Object> {
                 pst.setString(3, account.getLastName());
                 pst.setString(4, account.getUserName());
                 pst.setString(5, account.getEmail());
-                pst.setString(6, formatter.format(account.getDateOfBirth()));
+                pst.setString(6, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
                 pst.setString(7, String.valueOf(account.getGender() != null ?
                         account.getGender().toString().charAt(0) : 'M'));
                 pst.setString(8, account.getAddInfo());
@@ -281,7 +283,7 @@ public class AccountDao implements CrudDao<Account, Object> {
             if (rs.next()) {
                 account = getAccountData(createAccountFromResult(rs));
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);
@@ -304,7 +306,7 @@ public class AccountDao implements CrudDao<Account, Object> {
                 Account account = getAccountData(createAccountFromResult(rs));
                 accounts.add(account);
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);
@@ -328,13 +330,37 @@ public class AccountDao implements CrudDao<Account, Object> {
                 Account account = getAccountData(createAccountFromResult(rs));
                 accounts.add(account);
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);
             connection = null;
         }
         return accounts;
+    }
+
+    public int selectCountByString(String substring, int start, int total) {
+        connection = pool.getConnection();
+        int rows = 0;
+        String searchString = "%" + substring + "%";
+        String querySelect = READ + "Account WHERE firstName LIKE ? OR lastName LIKE ? ORDER BY lastName" +
+                (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
+        querySelect = querySelect.replace("SELECT *", "SELECT COUNT(*) AS count");
+        ResultSet rs = null;
+        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
+            pst.setString(1, searchString);
+            pst.setString(2, searchString);
+            rs = pst.executeQuery();
+            if (rs.next()) {
+                rows = rs.getInt("count");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            closeResultSet(rs);
+            connection = null;
+        }
+        return rows;
     }
 
     @Override
@@ -374,7 +400,7 @@ public class AccountDao implements CrudDao<Account, Object> {
             pst.setString(2, account.getMiddleName());
             pst.setString(3, account.getLastName());
             pst.setString(4, account.getUserName());
-            pst.setString(5, formatter.format(account.getDateOfBirth()));
+            pst.setString(5, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
             pst.setString(6, String.valueOf(account.getGender() != null ?
                     account.getGender().toString().charAt(0) : 'M'));
             pst.setString(7, account.getAddInfo());

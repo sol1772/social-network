@@ -3,8 +3,9 @@ package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Account implements Serializable {
@@ -19,18 +20,18 @@ public class Account implements Serializable {
     private String middleName;
     private String lastName;
     private String userName;
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
     private Gender gender;
     private String email;
     private String passwordHash;
     private String addInfo;
-    private Date registeredAt;
+    private LocalDateTime registeredAt;
     private byte[] image;
 
     public Account() {
     }
 
-    public Account(String firstName, String lastName, String userName, Date dateOfBirth, String email) {
+    public Account(String firstName, String lastName, String userName, LocalDate dateOfBirth, String email) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.userName = userName;
@@ -98,11 +99,11 @@ public class Account implements Serializable {
         this.userName = userName;
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -130,11 +131,11 @@ public class Account implements Serializable {
         this.addInfo = addInfo;
     }
 
-    public Date getRegisteredAt() {
+    public LocalDateTime getRegisteredAt() {
         return registeredAt;
     }
 
-    public void setRegisteredAt(Date registeredAt) {
+    public void setRegisteredAt(LocalDateTime registeredAt) {
         this.registeredAt = registeredAt;
     }
 

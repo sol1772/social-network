@@ -7,31 +7,33 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Role;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.sql.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GroupDao implements CrudDao<Group, Object> {
 
-    static final Logger LOGGER = Logger.getLogger(GroupDao.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GroupDao.class.getName());
     private static final String CREATE = "INSERT INTO ";
     private static final String READ = "SELECT * FROM ";
     private static final String UPDATE = "UPDATE ";
     private static final String DELETE = "DELETE FROM ";
     private static final String TITLE = "title";
-    public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     private ConnectionPool pool;
     private Connection connection;
 
     public GroupDao() {
     }
 
-    public GroupDao(String resourceName) {
-        this.pool = ConnectionPool.getInstance(resourceName);
+    public GroupDao(Properties properties) {
+        this.pool = ConnectionPool.getInstance(properties);
     }
 
     public GroupDao(ConnectionPool pool) {
@@ -40,7 +42,7 @@ public class GroupDao implements CrudDao<Group, Object> {
 
     public GroupDao(Connection connection) {
         this.connection = connection;
-        this.pool = ConnectionPool.getInstance("");
+        this.pool = ConnectionPool.getInstance(new Properties());
     }
 
     public ConnectionPool getPool() {
@@ -61,13 +63,14 @@ public class GroupDao implements CrudDao<Group, Object> {
         }
     }
 
-    private Group createGroupFromResult(ResultSet rs) throws SQLException, ParseException {
+    private Group createGroupFromResult(ResultSet rs) throws SQLException {
         Group group = new Group(rs.getString(TITLE));
         group.setId(rs.getInt("id"));
         group.setCreatedBy(rs.getInt("createdBy"));
         group.setMetaTitle(rs.getString("metaTitle"));
-        group.setCreatedAt(rs.getString("createdAt") == null ? new Date(0) :
-                formatter.parse(rs.getString("createdAt")));
+        String createdAt = rs.getString("createdAt");
+        group.setCreatedAt(createdAt == null ? LocalDateTime.of(0, 1, 1, 0, 0) :
+                LocalDateTime.parse(createdAt.substring(0, Utils.DATE_TIME_PATTERN.length()), Utils.DATE_TIME_FORMATTER));
         group.setImage(rs.getBytes("image"));
         return group;
     }
@@ -158,7 +161,7 @@ public class GroupDao implements CrudDao<Group, Object> {
                     }
                 }
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);
@@ -181,13 +184,36 @@ public class GroupDao implements CrudDao<Group, Object> {
                 Group group = createGroupFromResult(rs);
                 groups.add(group);
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);
             connection = null;
         }
         return groups;
+    }
+
+    public int selectCountByString(String substring, int start, int total) {
+        connection = pool.getConnection();
+        int rows = 0;
+        String searchString = "%" + substring + "%";
+        String querySelect = READ + "InterestGroup WHERE title LIKE ? ORDER BY title " +
+                (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
+        querySelect = querySelect.replace("SELECT *", "SELECT COUNT(*) AS count");
+        ResultSet rs = null;
+        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
+            pst.setString(1, searchString);
+            rs = pst.executeQuery();
+            if (rs.next()) {
+                rows = rs.getInt("count");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            closeResultSet(rs);
+            connection = null;
+        }
+        return rows;
     }
 
     public List<Group> selectByAccount(Account account) {
@@ -203,7 +229,7 @@ public class GroupDao implements CrudDao<Group, Object> {
                 Group group = createGroupFromResult(rs);
                 groups.add(group);
             }
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeResultSet(rs);

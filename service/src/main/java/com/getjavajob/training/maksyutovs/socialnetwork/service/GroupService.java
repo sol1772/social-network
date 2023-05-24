@@ -15,7 +15,8 @@ import java.util.logging.Logger;
 
 public class GroupService {
 
-    static final Logger LOGGER = Logger.getLogger(GroupService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GroupService.class.getName());
+    private static final String TITLE = "title";
     private GroupDao dao;
     private ConnectionPool pool;
 
@@ -58,7 +59,7 @@ public class GroupService {
 
     public Group getGroupByTitle(String title) {
         connection = pool.getConnection();
-        Group dbGroup = dao.select("", "title", title);
+        Group dbGroup = dao.select("", TITLE, title);
         pool.returnConnection(connection);
         return dbGroup;
     }
@@ -77,6 +78,13 @@ public class GroupService {
         return groups;
     }
 
+    public int getGroupsCountByString(String substring, int start, int total) {
+        connection = pool.getConnection();
+        int rows = dao.selectCountByString(substring, start, total);
+        pool.returnConnection(connection);
+        return rows;
+    }
+
     public List<Group> getGroupsByAccount(Account account) {
         connection = pool.getConnection();
         List<Group> groups = dao.selectByAccount(account);
@@ -89,7 +97,7 @@ public class GroupService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbGroup = dao.select("", "title", group.getTitle());
+            dbGroup = dao.select("", TITLE, group.getTitle());
             if (dbGroup == null) {
                 dbGroup = dao.insert("", group);
             }
@@ -114,7 +122,7 @@ public class GroupService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbGroup = dao.select("", "title", group.getTitle());
+            dbGroup = dao.select("", TITLE, group.getTitle());
             if (dbGroup != null) {
                 dbGroup = dao.update("", field, value, group);
             }
@@ -133,7 +141,7 @@ public class GroupService {
         try {
             connection = pool.getConnection();
             connection.setAutoCommit(false);
-            dbGroup = dao.select("", "title", group.getTitle());
+            dbGroup = dao.select("", TITLE, group.getTitle());
             if (dbGroup != null) {
                 dbGroup = dao.update(group);
             }

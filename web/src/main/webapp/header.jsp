@@ -20,10 +20,11 @@
             <a href="account?id=${sessionScope.account.id}">User: ${username}</a>
         </span>
     </c:if>
-    <form class="search" action="search?page=1" method="post"
+    <form class="search" action="search" method="get"
           style="float: right; margin-left: 10px; margin-right: 10px;">
-        <input type="search" name="searchString" id="search" placeholder="Search"><label for="search"></label>
+        <input type="search" name="q" id="search" placeholder="Search"><label for="search"></label>
         <button type="submit"><i class="fa fa-search"></i></button>
+        <input type="hidden" name="page" value=1>
     </form>
 </div>
 </body>

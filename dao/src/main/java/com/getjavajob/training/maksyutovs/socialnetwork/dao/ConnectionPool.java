@@ -1,7 +1,5 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -15,31 +13,30 @@ import java.util.logging.Logger;
 
 public class ConnectionPool {
 
-    static final Logger LOGGER = Logger.getLogger(ConnectionPool.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ConnectionPool.class.getName());
     private static final String DEF_URL = "jdbc:";
     private static ConnectionPool pool;
     private final int initialPoolSize = Runtime.getRuntime().availableProcessors() == 1 ?
             1 : Runtime.getRuntime().availableProcessors() - 1;
     private final BlockingQueue<Connection> availableConnections = new LinkedBlockingQueue<>(initialPoolSize);
     private final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
-    private final String resourceName;
-    private final Properties properties = new Properties();
+    private final Properties properties;
     private Semaphore semaphore = new Semaphore(initialPoolSize, true);
 
     private ConnectionPool() {
         throw new AssertionError("Default constructor is non instantiable");
     }
 
-    private ConnectionPool(String resourceName) {
-        this.resourceName = resourceName;
+    private ConnectionPool(Properties properties) {
+        this.properties = properties;
         for (int i = 0; i < initialPoolSize; i++) {
             availableConnections.add(createNewConnectionForPool());
         }
     }
 
-    public static synchronized ConnectionPool getInstance(String resourceName) {
+    public static synchronized ConnectionPool getInstance(Properties properties) {
         if (pool == null) {
-            pool = new ConnectionPool(resourceName);
+            pool = new ConnectionPool(properties);
         }
         return pool;
     }
@@ -51,8 +48,7 @@ public class ConnectionPool {
     private Connection createNewConnectionForPool() {
         Connection connection = null;
         String url;
-        try (InputStream fis = this.getClass().getResourceAsStream(resourceName)) {
-            properties.load(fis);
+        try {
             String type = properties.getProperty("type");
             String dbms = properties.getProperty("dbms");
             String host = properties.getProperty("host");
@@ -68,7 +64,7 @@ public class ConnectionPool {
             }
             connection = DriverManager.getConnection(url, properties);
             LOGGER.log(Level.CONFIG, String.format("Connected successfully to %s", url), connection);
-        } catch (SQLException | IOException | ClassNotFoundException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
         }
         return connection;

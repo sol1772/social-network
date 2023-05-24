@@ -2,12 +2,13 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<jsp:useBean id="searchString" scope="request" class="java.lang.String"/>
+<jsp:useBean id="q" scope="request" class="java.lang.String"/>
 <jsp:useBean id="accountsTotal" scope="request" class="java.lang.String"/>
 <jsp:useBean id="accountsPages" scope="request" class="java.lang.String"/>
 <jsp:useBean id="groupsTotal" scope="request" class="java.lang.String"/>
 <jsp:useBean id="groupsPages" scope="request" class="java.lang.String"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
+<jsp:useBean id="error" scope="request" class="java.lang.String"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -20,15 +21,25 @@
 <jsp:include page="header.jsp"/>
 <div>
     <h1>Social network</h1>
-    <h2>Account/group search</h2>
+    <h2>Account / group search</h2>
     <c:choose>
-        <c:when test="${fn:length(requestScope.accounts)==0}">
-            <h4>Accounts not found by substring '${searchString}'</h4>
+        <c:when test="${requestScope.accountsTotal==0}">
+            <h4>Accounts not found by substring '${q}'</h4>
         </c:when>
         <c:otherwise>
             <table>
-                <caption><h4>Accounts found by substring '${searchString}': ${accountsTotal},
-                    page ${pageContext.request.getParameter("page")} of ${accountsPages}</h4></caption>
+                <caption>
+                    <h4>Accounts found by substring '${q}': ${accountsTotal},
+                        <c:choose>
+                            <c:when test="${fn:length(requestScope.accounts)==0}">
+                                page ${pageContext.request.getParameter("page")} exceeds number of pages ${accountsPages}
+                            </c:when>
+                            <c:otherwise>
+                                page ${pageContext.request.getParameter("page")} of ${accountsPages}
+                            </c:otherwise>
+                        </c:choose>
+                    </h4>
+                </caption>
                 <tr>
                     <th>Id</th>
                     <th>Name</th>
@@ -43,45 +54,59 @@
                 </c:forEach>
             </table>
             <br>
-            <form action="search" method="post" name='accountsForm'>
-                <a href='search?page=1&searchString=${searchString}'>Page 1 ||</a>
+            <form action="search" method="get" name='accountsForm'>
+                <a href='search?q=${q}&page=1'>Page 1 ||</a>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page')==1}">
                         <a href='search' class="disabled">Previous ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?page=${(pageContext.request.getParameter('page')-1).toString()}&searchString=${searchString}'>
+                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
                             Previous ||</a>
                     </c:otherwise>
                 </c:choose>
+                <input type="hidden" name="q" value=${q}>
                 <label for="num"></label>
                 <input type="number" id="num" name="page" style="width: 50px"
-                       oninput='document.forms["accountsForm"].submit(); return false'
+                       oninput="function submitForm() {
+                               const value = document.getElementById('page').value;
+                               return value <= ${accountsPages};
+                               }
+                               return submitForm()"
                        value=${pageContext.request.getParameter("page")} min="1" max=${accountsPages}>
-                <input type="hidden" name="searchString" value=${searchString}>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page').toString().equals(accountsPages)}">
                         <a href='search' class="disabled">Next ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?page=${(pageContext.request.getParameter('page')+1).toString()}&searchString=${searchString}'>
+                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
                             Next ||</a>
                     </c:otherwise>
                 </c:choose>
-                <a href='search?page=${accountsPages}&searchString=${searchString}'>Page ${accountsPages}</a>
+                <a href='search?q=${q}&page=${accountsPages}'>Page ${accountsPages}</a>
             </form>
         </c:otherwise>
     </c:choose>
 
     <br><br>
     <c:choose>
-        <c:when test="${fn:length(requestScope.groups)==0}">
-            <h4>Groups not found by substring '${searchString}'</h4>
+        <c:when test="${requestScope.groupsTotal==0}">
+            <h4>Groups not found by substring '${q}'</h4>
         </c:when>
         <c:otherwise>
             <table>
-                <caption><h4>Groups found by substring '${searchString}': ${groupsTotal},
-                    page ${pageContext.request.getParameter("page")} of ${groupsPages}</h4></caption>
+                <caption>
+                    <h4>Groups found by substring '${q}': ${groupsTotal},
+                        <c:choose>
+                            <c:when test="${fn:length(requestScope.groups)==0}">
+                                page ${pageContext.request.getParameter("page")} exceeds number of pages ${groupsPages}
+                            </c:when>
+                            <c:otherwise>
+                                page ${pageContext.request.getParameter("page")} of ${groupsPages}
+                            </c:otherwise>
+                        </c:choose>
+                    </h4>
+                </caption>
                 <tr>
                     <th>Id</th>
                     <th>Title</th>
@@ -96,36 +121,43 @@
                 </c:forEach>
             </table>
             <br>
-            <form action="search" method="post" name='groupsForm'>
-                <a href='search?page=1&searchString=${searchString}'>Page 1 ||</a>
+            <form action="search" method="get" name='groupsForm'>
+                <a href='search?q=${q}&page=1'>Page 1 ||</a>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page')==1}">
                         <a href='search' class="disabled">Previous ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?page=${(pageContext.request.getParameter('page')-1).toString()}&searchString=${searchString}'>
+                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
                             Previous ||</a>
                     </c:otherwise>
                 </c:choose>
+                <input type="hidden" name="q" value=${q}>
                 <label for="numGr"></label>
                 <input type="number" id="numGr" name="page" style="width: 50px"
-                       oninput='document.forms["groupsForm"].submit(); return false'
+                       oninput="function submitForm() {
+                               const value = document.getElementById('page').value;
+                               return value <= ${groupsPages};
+                               }
+                               return submitForm()"
                        value=${pageContext.request.getParameter("page")} min="1" max=${groupsPages}>
-                <input type="hidden" name="searchString" value=${searchString}>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page').toString().equals(groupsPages)}">
                         <a href='search' class="disabled">Next ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?page=${(pageContext.request.getParameter('page')+1).toString()}&searchString=${searchString}'>
+                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
                             Next ||</a>
                     </c:otherwise>
                 </c:choose>
-                <a href='search?page=${groupsPages}&searchString=${searchString}'>Page ${groupsPages}</a>
+                <a href='search?q=${q}&page=${groupsPages}'>Page ${groupsPages}</a>
             </form>
         </c:otherwise>
     </c:choose>
     <br>
+    <p class="error" style="color: red">
+        ${error}
+    </p>
     <c:if test="${StringUtils.isEmpty(username)}">
         <a class="link" href="login">Login</a><br>
     </c:if>

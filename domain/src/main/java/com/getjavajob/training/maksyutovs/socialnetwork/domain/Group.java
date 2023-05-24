@@ -1,7 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Group {
@@ -11,7 +11,7 @@ public class Group {
     private int createdBy;
     private String title;
     private String metaTitle;
-    private Date createdAt;
+    private LocalDateTime createdAt;
     private byte[] image;
 
 
@@ -58,11 +58,11 @@ public class Group {
         this.createdBy = createdBy;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

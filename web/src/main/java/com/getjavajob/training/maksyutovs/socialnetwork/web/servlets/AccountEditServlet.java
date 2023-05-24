@@ -1,5 +1,6 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.servlets;
 
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.Utils;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Gender;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
@@ -15,8 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 
 @WebServlet
 public class AccountEditServlet extends HttpServlet {
@@ -31,7 +31,6 @@ public class AccountEditServlet extends HttpServlet {
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String GENDER = "gender";
     private static final String EDIT = "/account-edit.jsp";
-    public final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
 
     private AccountService accountService;
@@ -58,7 +57,7 @@ public class AccountEditServlet extends HttpServlet {
                 req.setAttribute(USERNAME, account.getUserName());
                 req.setAttribute(EMAIL, account.getEmail());
                 req.setAttribute(ABOUT, account.getAddInfo());
-                req.setAttribute(BIRTHDATE, formatter.format(account.getDateOfBirth()));
+                req.setAttribute(BIRTHDATE, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
                 req.setAttribute(GENDER, String.valueOf(account.getGender() != null ?
                         account.getGender().toString().charAt(0) : 'M'));
                 req.getRequestDispatcher(EDIT).forward(req, resp);
@@ -90,12 +89,12 @@ public class AccountEditServlet extends HttpServlet {
                     req.getRequestDispatcher("/account.jsp").forward(req, resp);
                 }
             }
-        } catch (IOException | ParseException e) {
+        } catch (ServletException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    void fillAccountFromRequest(Account account, HttpServletRequest req) throws ParseException {
+    void fillAccountFromRequest(Account account, HttpServletRequest req) {
         String firstName = req.getParameter(FIRSTNAME);
         account.setFirstName(StringUtils.isEmpty(firstName) ? account.getFirstName() : firstName);
         String lastName = req.getParameter(LASTNAME);
@@ -108,7 +107,7 @@ public class AccountEditServlet extends HttpServlet {
         account.setAddInfo(StringUtils.isEmpty(addInfo) ? "" : addInfo);
         String dateOfBirth = req.getParameter(BIRTHDATE);
         account.setDateOfBirth(StringUtils.isEmpty(dateOfBirth) ? account.getDateOfBirth()
-                : formatter.parse(dateOfBirth));
+                : LocalDate.parse(dateOfBirth, Utils.DATE_FORMATTER));
         String gender = req.getParameter(GENDER);
         account.setGender(StringUtils.isEmpty(gender) ? account.getGender() : Gender.valueOf(gender));
     }

@@ -24,7 +24,8 @@
                 <p><i>Surname: </i>${account.lastName}</p>
                 <p><i>Name: </i>${account.firstName}</p>
                 <p><i>Middle name: </i>${account.middleName}</p>
-                <p><i>Date of birth: </i><fmt:formatDate type="date" value="${account.dateOfBirth}"/></p>
+                <fmt:parseDate value="${account.dateOfBirth}" pattern="yyyy-MM-dd" var="dateOfBirth" type="date"/>
+                <p><i>Date of birth: </i><fmt:formatDate pattern="dd.MM.yyyy" value="${dateOfBirth}"/></p>
                 <p><i>E-mail: </i>${account.email}</p>
                 <c:forEach items="${account.phones}" var="phone">
                     <p><i>${CaseUtils.toCamelCase(phone.phoneType.toString(), true, ' ')} phone: </i>${phone.number}</p>
