@@ -30,8 +30,8 @@ public class RegistrationServlet extends HttpServlet {
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String GENDER = "gender";
     private static final String ABOUT = "addInfo";
-    private static final String REG = "/registration.jsp";
-    private static final String LOGIN = "/login.jsp";
+    private static final String REG = "/WEB-INF/jsp/registration.jsp";
+    private static final String LOGIN = "/WEB-INF/jsp/login.jsp";
     private AccountService accountService;
 
     @Override

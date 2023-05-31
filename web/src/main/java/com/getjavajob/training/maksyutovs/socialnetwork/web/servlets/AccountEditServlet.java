@@ -30,7 +30,7 @@ public class AccountEditServlet extends HttpServlet {
     private static final String ABOUT = "addInfo";
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String GENDER = "gender";
-    private static final String EDIT = "/account-edit.jsp";
+    private static final String EDIT = "/WEB-INF/jsp/account-edit.jsp";
 
 
     private AccountService accountService;
@@ -86,7 +86,7 @@ public class AccountEditServlet extends HttpServlet {
                 } else if (command.equals("Cancel")) {
                     req.setAttribute(ACCOUNT, account);
                     req.setAttribute("groups", groupService.getGroupsByAccount(account));
-                    req.getRequestDispatcher("/account.jsp").forward(req, resp);
+                    req.getRequestDispatcher("/WEB-INF/jsp/account.jsp").forward(req, resp);
                 }
             }
         } catch (ServletException | IOException e) {

@@ -1,6 +1,8 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.dao.ConnectionPool;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.DaoException;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.DaoRuntimeException;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.DataSourceHolder;
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.GroupDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
@@ -8,6 +10,7 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.GroupMember;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -18,16 +21,14 @@ public class GroupService {
     private static final Logger LOGGER = Logger.getLogger(GroupService.class.getName());
     private static final String TITLE = "title";
     private GroupDao dao;
-    private ConnectionPool pool;
-
-    private Connection connection;
+    private DataSourceHolder dataSourceHolder;
 
     public GroupService() {
     }
 
     public GroupService(GroupDao dao) {
         this.dao = dao;
-        this.pool = dao.getPool();
+        this.dataSourceHolder = dao.getDataSourceHolder();
     }
 
     public GroupDao getDao() {
@@ -36,14 +37,6 @@ public class GroupService {
 
     public void setDao(GroupDao dao) {
         this.dao = dao;
-    }
-
-    public ConnectionPool getPool() {
-        return pool;
-    }
-
-    public void setPool(ConnectionPool pool) {
-        this.pool = pool;
     }
 
     void rollbackTransaction(Connection con) {
@@ -58,99 +51,142 @@ public class GroupService {
     }
 
     public Group getGroupByTitle(String title) {
-        connection = pool.getConnection();
-        Group dbGroup = dao.select("", TITLE, title);
-        pool.returnConnection(connection);
+        Group dbGroup = null;
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            dbGroup = dao.select("", TITLE, title);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
         return dbGroup;
     }
 
     public Group getGroupById(int id) {
-        connection = pool.getConnection();
-        Group dbGroup = dao.select("", "id", id);
-        pool.returnConnection(connection);
+        Group dbGroup = null;
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            dbGroup = dao.select("", "id", id);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
         return dbGroup;
     }
 
     public List<Group> getGroupsByString(String substring, int start, int total) {
-        connection = pool.getConnection();
-        List<Group> groups = dao.selectByString(substring, start, total);
-        pool.returnConnection(connection);
+        List<Group> groups = Collections.emptyList();
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            groups = dao.selectByString(substring, start, total);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
         return groups;
     }
 
     public int getGroupsCountByString(String substring, int start, int total) {
-        connection = pool.getConnection();
-        int rows = dao.selectCountByString(substring, start, total);
-        pool.returnConnection(connection);
+        int rows = 0;
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            rows = dao.selectCountByString(substring, start, total);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
         return rows;
     }
 
     public List<Group> getGroupsByAccount(Account account) {
-        connection = pool.getConnection();
-        List<Group> groups = dao.selectByAccount(account);
-        pool.returnConnection(connection);
+        List<Group> groups = Collections.emptyList();
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            groups = dao.selectByAccount(account);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
         return groups;
     }
 
     public Group createGroup(Group group) {
         Group dbGroup = null;
-        try {
-            connection = pool.getConnection();
+        try (Connection connection = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
-            dbGroup = dao.select("", TITLE, group.getTitle());
-            if (dbGroup == null) {
-                dbGroup = dao.insert("", group);
+            try {
+                dbGroup = dao.select("", TITLE, group.getTitle());
+                if (dbGroup == null) {
+                    dbGroup = dao.insert("", group);
+                }
+                for (GroupMember member : group.getMembers()) {
+                    dbGroup.getMembers().add(new GroupMember(dbGroup, member.getAccount(), member.getRole()));
+                }
+                if (!dbGroup.getMembers().isEmpty()) {
+                    dbGroup = dao.insert("", dbGroup.getMembers());
+                }
+                connection.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(connection);
+            } finally {
+                connection.setAutoCommit(initialAutoCommit);
             }
-            for (GroupMember member : group.getMembers()) {
-                dbGroup.getMembers().add(new GroupMember(dbGroup, member.getAccount(), member.getRole()));
-            }
-            if (!dbGroup.getMembers().isEmpty()) {
-                dbGroup = dao.insert("", dbGroup.getMembers());
-            }
-            connection.commit();
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
-            rollbackTransaction(connection);
         } finally {
-            pool.returnConnection(connection);
+            dataSourceHolder.returnConnection();
         }
         return dbGroup;
     }
 
     public Optional<Group> editGroup(Group group, String field, Object value) {
         Group dbGroup = null;
-        try {
-            connection = pool.getConnection();
+        try (Connection connection = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
-            dbGroup = dao.select("", TITLE, group.getTitle());
-            if (dbGroup != null) {
-                dbGroup = dao.update("", field, value, group);
+            try {
+                dbGroup = dao.select("", TITLE, group.getTitle());
+                if (dbGroup != null) {
+                    dbGroup = dao.update("", field, value, group);
+                }
+                connection.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(connection);
+            } finally {
+                connection.setAutoCommit(initialAutoCommit);
             }
-            connection.commit();
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
-            rollbackTransaction(connection);
         } finally {
-            pool.returnConnection(connection);
+            dataSourceHolder.returnConnection();
         }
         return Optional.ofNullable(dbGroup);
     }
 
     public Optional<Group> editGroup(Group group) {
         Group dbGroup = null;
-        try {
-            connection = pool.getConnection();
+        try (Connection connection = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
-            dbGroup = dao.select("", TITLE, group.getTitle());
-            if (dbGroup != null) {
-                dbGroup = dao.update(group);
+            try {
+                dbGroup = dao.select("", TITLE, group.getTitle());
+                if (dbGroup != null) {
+                    dbGroup = dao.update(group);
+                }
+                connection.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(connection);
+            } finally {
+                connection.setAutoCommit(initialAutoCommit);
             }
-            connection.commit();
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
-            rollbackTransaction(connection);
         } finally {
-            pool.returnConnection(connection);
+            dataSourceHolder.returnConnection();
         }
         return Optional.ofNullable(dbGroup);
     }

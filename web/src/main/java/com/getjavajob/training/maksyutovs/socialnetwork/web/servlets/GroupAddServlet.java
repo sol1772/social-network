@@ -19,7 +19,7 @@ import java.io.IOException;
 @WebServlet
 public class GroupAddServlet extends HttpServlet {
 
-    private static final String ADD = "/group-add.jsp";
+    private static final String ADD = "/WEB-INF/jsp/group-add.jsp";
     private static final String TITLE = "title";
     private static final String ERROR = "error";
     private GroupService groupService;

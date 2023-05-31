@@ -17,7 +17,7 @@ public class LoginServlet extends HttpServlet {
     private static final String EMAIL = "email";
     private static final String PASS = "password";
     private static final String ERROR = "error";
-    private static final String LOGIN = "/login.jsp";
+    private static final String LOGIN = "/WEB-INF/jsp/login.jsp";
     private AccountService accountService;
 
     @Override
@@ -82,7 +82,6 @@ public class LoginServlet extends HttpServlet {
         } catch (ServletException | IOException e) {
             e.printStackTrace();
         }
-
     }
 
 }
