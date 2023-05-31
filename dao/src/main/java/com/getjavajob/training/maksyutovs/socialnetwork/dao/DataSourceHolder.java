@@ -55,6 +55,7 @@ public class DataSourceHolder {
         dataSource.setDriverClassName(properties.getProperty("driver"));
         dataSource.setUsername(properties.getProperty("user"));
         dataSource.setPassword(properties.getProperty("password"));
+        dataSource.setMaxTotal(Integer.parseInt(properties.getProperty("maxTotal")));
         String type = properties.getProperty("type");
         String dbms = properties.getProperty("dbms");
         String host = properties.getProperty("host");
@@ -71,7 +72,6 @@ public class DataSourceHolder {
         dataSource.setUrl(url);
         setDataSource(dataSource);
     }
-
 
     public Connection getConnection() {
         Connection connection = connectionHolder.get();
