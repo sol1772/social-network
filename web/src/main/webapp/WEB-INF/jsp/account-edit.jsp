@@ -26,23 +26,23 @@
             <input type="text" name="firstName" required id="firstName" value=${firstName}>
         </div>
         <div class="field">
-            <label for="lastName">Last name *</label><br>
+            <label for="lastName">Last name *</label>
             <input type="text" name="lastName" required id="lastName" value=${lastName}>
         </div>
         <div class="field">
-            <label for="middleName">Middle name</label><br>
+            <label for="middleName">Middle name</label>
             <input type="text" name="middleName" id="middleName" value=${middleName}>
         </div>
         <div class="field">
-            <label for="username">Username *</label><br>
+            <label for="username">Username *</label>
             <input type="text" name="username" required id="username" value=${username}>
         </div>
         <div class="field">
-            <label for="addInfo">About</label><br>
+            <label for="addInfo">About</label>
             <textarea rows="2" cols="40" name="addInfo" id="addInfo">${addInfo}</textarea>
         </div>
         <div class="field">
-            <label for="dateOfBirth">Date of birth *</label><br>
+            <label for="dateOfBirth">Date of birth *</label>
             <input type="date" name="dateOfBirth" required id="dateOfBirth" value=${dateOfBirth}>
         </div>
         <div class="field">
