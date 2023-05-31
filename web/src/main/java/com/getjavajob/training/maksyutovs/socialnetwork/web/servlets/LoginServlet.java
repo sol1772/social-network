@@ -51,6 +51,7 @@ public class LoginServlet extends HttpServlet {
             if (email.isEmpty()) {
                 req.setAttribute(ERROR, "Enter email");
                 req.getRequestDispatcher(LOGIN).forward(req, resp);
+                return;
             }
             Account account = accountService.getAccountByEmail(email);
             if (account == null) {

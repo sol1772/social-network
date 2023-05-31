@@ -22,49 +22,52 @@
     <h2>Account registration</h2>
     <form name="reg_form" action="registration" method="post">
         <div class="field">
-            <input type="text" name="firstName" id="firstName" placeholder="Required" value=${firstName}>
             <label for="firstName">First name *</label>
+            <input type="text" name="firstName" id="firstName" placeholder="Required" value=${firstName}>
         </div>
         <div class="field">
+            <label for="lastName">Last name *</label>
             <input type="text" name="lastName" id="lastName" placeholder="Required" value=${lastName}>
-            <label for="lastName">Last name *</label><br>
         </div>
         <div class="field">
+            <label for="middleName">Middle name</label>
             <input type="text" name="middleName" id="middleName" value=${middleName}>
-            <label for="middleName">Middle name</label><br>
         </div>
         <div class="field">
+            <label for="username">Username *</label>
             <input type="text" name="username" id="username" placeholder="Required" value=${username}>
-            <label for="username">Username *</label><br>
         </div>
         <div class="field">
+            <label for="email">E-mail *</label>
             <input type="text" name="email" id="email" placeholder="Required" value=${email}>
-            <label for="email">E-mail *</label><br>
         </div>
         <div class="field">
+            <label for="password">Password *</label>
             <input type="password" name="password" id="password" placeholder="Required">
-            <label for="password">Password *</label><br>
         </div>
         <div class="field">
+            <label for="personalPhone">Home phone</label>
             <input type="text" name="personalPhone" id="personalPhone">
-            <label for="personalPhone">Home phone</label><br>
         </div>
         <div class="field">
-            <input type="text" name="workPhone" id="workPhone"><label for="workPhone">Work phone</label><br>
+            <label for="workPhone">Work phone</label>
+            <input type="text" name="workPhone" id="workPhone">
         </div>
         <div class="field">
-            <input type="text" name="homeAddress" id="homeAddress"><label for="homeAddress">Home address</label><br>
+            <label for="homeAddress">Home address</label>
+            <input type="text" name="homeAddress" id="homeAddress">
         </div>
         <div class="field">
-            <input type="text" name="workAddress" id="workAddress"><label for="workAddress">Work address</label><br>
+            <label for="workAddress">Work address</label>
+            <input type="text" name="workAddress" id="workAddress">
         </div>
         <div class="field">
+            <label for="addInfo">About</label>
             <textarea rows="2" cols="40" name="addInfo" id="addInfo">${addInfo}</textarea>
-            <label for="addInfo">About</label><br>
         </div>
         <div class="field">
+            <label for="dateOfBirth">Date of birth *</label>
             <input type="date" name="dateOfBirth" id="dateOfBirth" value=${dateOfBirth}>
-            <label for="dateOfBirth">Date of birth *</label><br>
         </div>
         <div class="field">
             <label>Gender *</label>

@@ -22,28 +22,28 @@
     <h2>Account edit</h2>
     <form action="account-edit" method="post">
         <div class="field">
-            <input type="text" name="firstName" required id="firstName" value=${firstName}>
             <label for="firstName">First name *</label>
+            <input type="text" name="firstName" required id="firstName" value=${firstName}>
         </div>
         <div class="field">
-            <input type="text" name="lastName" required id="lastName" value=${lastName}>
             <label for="lastName">Last name *</label><br>
+            <input type="text" name="lastName" required id="lastName" value=${lastName}>
         </div>
         <div class="field">
-            <input type="text" name="middleName" id="middleName" value=${middleName}>
             <label for="middleName">Middle name</label><br>
+            <input type="text" name="middleName" id="middleName" value=${middleName}>
         </div>
         <div class="field">
-            <input type="text" name="username" required id="username" value=${username}>
             <label for="username">Username *</label><br>
+            <input type="text" name="username" required id="username" value=${username}>
         </div>
         <div class="field">
-            <textarea rows="2" cols="40" name="addInfo" id="addInfo">${addInfo}</textarea>
             <label for="addInfo">About</label><br>
+            <textarea rows="2" cols="40" name="addInfo" id="addInfo">${addInfo}</textarea>
         </div>
         <div class="field">
-            <input type="date" name="dateOfBirth" required id="dateOfBirth" value=${dateOfBirth}>
             <label for="dateOfBirth">Date of birth *</label><br>
+            <input type="date" name="dateOfBirth" required id="dateOfBirth" value=${dateOfBirth}>
         </div>
         <div class="field">
             <label>Gender *</label>
