@@ -42,11 +42,11 @@ public class AccountServlet extends HttpServlet {
             }
             if (account == null) {
                 req.setAttribute("exceptionMessage", "Account not found");
-                req.getRequestDispatcher("/error.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(req, resp);
             } else {
                 req.setAttribute("account", account);
                 req.setAttribute("groups", groupService.getGroupsByAccount(account));
-                req.getRequestDispatcher("/account.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/jsp/account.jsp").forward(req, resp);
             }
         } catch (NumberFormatException | IOException e) {
             e.printStackTrace();

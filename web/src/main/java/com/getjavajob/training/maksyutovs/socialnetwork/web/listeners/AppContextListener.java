@@ -24,8 +24,8 @@ public class AppContextListener implements ServletContextListener {
 
     public AppContextListener() {
         loadConfigProperties();
-        accountService = new AccountService(new AccountDao(properties));
-        groupService = new GroupService(new GroupDao(properties));
+        accountService = new AccountService(new AccountDao());
+        groupService = new GroupService(new GroupDao());
     }
 
     @Override
@@ -39,10 +39,6 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        AccountDao dao = accountService.getDao();
-        dao.getPool().returnConnection(dao.getConnection());
-        GroupDao groupDao = groupService.getDao();
-        groupDao.getPool().returnConnection(groupDao.getConnection());
         LOGGER.log(Level.CONFIG, "Database connections closed for Application.");
     }
 

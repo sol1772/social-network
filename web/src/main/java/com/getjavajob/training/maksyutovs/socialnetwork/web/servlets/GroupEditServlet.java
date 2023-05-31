@@ -19,7 +19,7 @@ import java.io.IOException;
 @WebServlet
 public class GroupEditServlet extends HttpServlet {
 
-    private static final String EDIT = "/group-edit.jsp";
+    private static final String EDIT = "/WEB-INF/jsp/group-edit.jsp";
     private static final String TITLE = "title";
     private static final String ERROR = "error";
     private GroupService groupService;
@@ -36,7 +36,7 @@ public class GroupEditServlet extends HttpServlet {
         Group group = groupService.getGroupById(id);
         if (group == null) {
             req.setAttribute(ERROR, "Group not found");
-            req.getRequestDispatcher("/error.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(req, resp);
         }
         req.setAttribute("group", group);
         req.getRequestDispatcher(EDIT).forward(req, resp);

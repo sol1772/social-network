@@ -51,7 +51,7 @@
                         }
                     </script>
                     <p style="color: darkgreen">${requestScope.message}</p>
-                    <input type="hidden" name="path" value="/group.jsp">
+                    <input type="hidden" name="path" value="group">
                     <input type="hidden" name="id" value=${group.id}>
                 </form>
             </c:if>

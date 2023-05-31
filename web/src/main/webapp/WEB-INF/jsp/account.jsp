@@ -55,7 +55,7 @@
                         }
                     </script>
                     <p style="color: darkgreen">${requestScope.message}</p>
-                    <input type="hidden" name="path" value="/account.jsp">
+                    <input type="hidden" name="path" value="account">
                 </form>
             </c:if>
         </div>

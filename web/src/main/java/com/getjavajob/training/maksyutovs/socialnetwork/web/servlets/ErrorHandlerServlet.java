@@ -53,7 +53,7 @@ public class ErrorHandlerServlet extends HttpServlet {
             req.setAttribute(URI, reqUri);
             req.setAttribute(STATUS, statusCode.toString());
         }
-        req.getRequestDispatcher("/error.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(req, resp);
     }
 
 }

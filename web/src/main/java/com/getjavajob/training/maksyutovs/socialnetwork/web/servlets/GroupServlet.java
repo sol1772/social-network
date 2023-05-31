@@ -33,11 +33,11 @@ public class GroupServlet extends HttpServlet {
             Group group = groupService.getGroupById(id);
             if (group == null) {
                 req.setAttribute("error", "Group not found");
-                req.getRequestDispatcher("/error.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(req, resp);
             } else {
                 req.setAttribute("group", group);
                 req.setAttribute("owner", accountService.getAccountById(group.getCreatedBy()));
-                req.getRequestDispatcher("/group.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/jsp/group.jsp").forward(req, resp);
             }
         } catch (NumberFormatException e) {
             e.printStackTrace();

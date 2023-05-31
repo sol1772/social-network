@@ -14,68 +14,73 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AccountDaoTest {
 
+    private static final Logger LOGGER = Logger.getLogger(AccountDaoTest.class.getName());
     private static final String RESOURCE_NAME = "/h2.properties";
     private static final Properties properties = new Properties();
     private static final String EMAIL = "email";
     private static final String DELIMITER = "----------------------------------";
     private static AccountDao dao;
-    private static ConnectionPool pool;
-    private static Connection con;
-    private static Statement st;
-    private static ResultSet rs;
+    private static DataSourceHolder dataSourceHolder;
 
     @BeforeAll
     static void connect() {
-        try (InputStream is = ConnectionPoolTest.class.getResourceAsStream(RESOURCE_NAME)) {
+        try (InputStream is = AccountDaoTest.class.getResourceAsStream(RESOURCE_NAME)) {
             properties.load(is);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage());
         }
         dao = new AccountDao(properties);
-        pool = dao.getPool();
+        dataSourceHolder = dao.getDataSourceHolder();
         initiateTables();
     }
 
     static void initiateTables() {
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            st = con.createStatement();
+            try (Statement st = con.createStatement()) {
+                // creating tables if not exist
+                String query = getQueryCreateTables();
+                st.executeUpdate(query);
 
-            // creating tables if not exist
-            String query = getQueryCreateTables();
-            st.executeUpdate(query);
+                // getting tables
+                query = "SELECT Concat('TRUNCATE TABLE ',table_schema,'.',TABLE_NAME, ';') AS QueryText " +
+                        "FROM INFORMATION_SCHEMA.TABLES where table_schema = 'PUBLIC'";
+                ResultSet rs = st.executeQuery(query);
+                List<String> queries = new ArrayList<>();
+                while (rs.next()) {
+                    queries.add(rs.getObject("QueryText").toString());
+                }
 
-            // getting tables
-            query = "SELECT Concat('TRUNCATE TABLE ',table_schema,'.',TABLE_NAME, ';') AS QueryText " +
-                    "FROM INFORMATION_SCHEMA.TABLES where table_schema = 'PUBLIC'";
-            rs = st.executeQuery(query);
-            List<String> queries = new ArrayList<>();
-            while (rs.next()) {
-                queries.add(rs.getObject("QueryText").toString());
-            }
-
-            // truncating tables
-            for (String q : queries) {
-                st.executeUpdate(q);
-            }
-            con.commit();
-            if (queries.size() == 0) {
-                System.out.println("No tables to truncate");
-            } else {
-                System.out.println("All tables truncated before inserting new records");
+                // truncating tables
+                for (String q : queries) {
+                    st.executeUpdate(q);
+                }
+                con.commit();
+                rs.close();
+                if (queries.size() == 0) {
+                    LOGGER.log(Level.INFO, "No tables to truncate");
+                } else {
+                    LOGGER.log(Level.INFO, "All tables truncated before inserting new records");
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
-            pool.returnConnection(con);
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -158,29 +163,16 @@ class AccountDaoTest {
 
     @AfterAll
     static void closeConnection() {
-        try {
-            if (rs != null) {
-                rs.close();
-            }
-            if (st != null) {
-                st.close();
-            }
-            if (con != null) {
-                pool.returnConnection(con);
-            }
-            pool.closeConnections();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        dataSourceHolder.returnConnection();
     }
 
     static void rollbackTransaction(Connection con) {
         if (con != null) {
             try {
-                System.err.print("Transaction is being rolled back");
+                LOGGER.log(Level.WARNING, "Transaction is being rolled back");
                 con.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+            } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
             }
         }
     }
@@ -190,22 +182,30 @@ class AccountDaoTest {
     void insert() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Account)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            Account account = new Account("Kamila", "Valieva", "kamila_valieva",
-                    LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
-            account.setMiddleName("Valerievna");
-            account.setGender(Gender.F);
-            account.setAddInfo("some info");
-            account.setPasswordHash(account.hashPassword("ComplicatedPassword_1"));
-            Account dbAccount = dao.insert("", account);
-            assertNotNull(dbAccount);
-            con.commit();
-            System.out.println("Created account " + account);
+            try {
+                Account account = new Account("Kamila", "Valieva", "kamila_valieva",
+                        LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
+                account.setMiddleName("Valerievna");
+                account.setGender(Gender.F);
+                account.setAddInfo("some info");
+                account.setPasswordHash(account.hashPassword("ComplicatedPassword_1"));
+                Account dbAccount = dao.insert("", account);
+                assertNotNull(dbAccount);
+                con.commit();
+                System.out.println("Created account " + account);
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -214,35 +214,43 @@ class AccountDaoTest {
     void insertContacts() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Contacts)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
 
-            Account dbAccount;
-            List<Phone> phones = account.getPhones();
-            phones.add(new Phone(account, "+79161234567", PhoneType.PERSONAL));
-            phones.add(new Phone(account, "+74951234567", PhoneType.WORK));
-            dbAccount = dao.insert("", phones);
-            assertEquals(phones.size(), dbAccount.getPhones().size());
+                Account dbAccount;
+                List<Phone> phones = account.getPhones();
+                phones.add(new Phone(account, "+79161234567", PhoneType.PERSONAL));
+                phones.add(new Phone(account, "+74951234567", PhoneType.WORK));
+                dbAccount = dao.insert("", phones);
+                assertEquals(phones.size(), dbAccount.getPhones().size());
 
-            List<Address> addresses = account.getAddresses();
-            addresses.add(new Address(account, "Kazan", AddressType.HOME));
-            addresses.add(new Address(account, "Moscow", AddressType.WORK));
-            dbAccount = dao.insert("", addresses);
-            assertEquals(addresses.size(), dbAccount.getAddresses().size());
+                List<Address> addresses = account.getAddresses();
+                addresses.add(new Address(account, "Kazan", AddressType.HOME));
+                addresses.add(new Address(account, "Moscow", AddressType.WORK));
+                dbAccount = dao.insert("", addresses);
+                assertEquals(addresses.size(), dbAccount.getAddresses().size());
 
-            List<Messenger> messengers = account.getMessengers();
-            messengers.add(new Messenger(account, "kamilavalieva", MessengerType.SKYPE));
-            messengers.add(new Messenger(account, "@kamilavalieva26official", MessengerType.TELEGRAM));
-            dbAccount = dao.insert("", messengers);
-            assertEquals(messengers.size(), dbAccount.getMessengers().size());
-            con.commit();
+                List<Messenger> messengers = account.getMessengers();
+                messengers.add(new Messenger(account, "kamilavalieva", MessengerType.SKYPE));
+                messengers.add(new Messenger(account, "@kamilavalieva26official", MessengerType.TELEGRAM));
+                dbAccount = dao.insert("", messengers);
+                assertEquals(messengers.size(), dbAccount.getMessengers().size());
+                con.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -251,31 +259,39 @@ class AccountDaoTest {
     void insertFriends() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Friends)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
-            String email2 = "info@alinazagitova.ru";
-            Account friendAccount = dao.select("", EMAIL, email2);
-            if (friendAccount == null) {
-                friendAccount = new Account("Alina", "Zagitova", "alina_zagitova",
-                        LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email2);
-                friendAccount.setGender(Gender.F);
-                friendAccount.setPasswordHash(account.hashPassword("ComplicatedPassword_2"));
-                dao.insert("", friendAccount);
-                friendAccount = dao.select("", EMAIL, email2);
-                System.out.println("Created friend account " + friendAccount);
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
+                String email2 = "info@alinazagitova.ru";
+                Account friendAccount = dao.select("", EMAIL, email2);
+                if (friendAccount == null) {
+                    friendAccount = new Account("Alina", "Zagitova", "alina_zagitova",
+                            LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email2);
+                    friendAccount.setGender(Gender.F);
+                    friendAccount.setPasswordHash(account.hashPassword("ComplicatedPassword_2"));
+                    dao.insert("", friendAccount);
+                    friendAccount = dao.select("", EMAIL, email2);
+                    System.out.println("Created friend account " + friendAccount);
+                }
+                List<Friend> friends = account.getFriends();
+                friends.add(new Friend(account, friendAccount));
+                Account dbAccount = dao.insert("", friends);
+                assertEquals(friends.size(), dbAccount.getFriends().size());
+                con.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
             }
-            List<Friend> friends = account.getFriends();
-            friends.add(new Friend(account, friendAccount));
-            Account dbAccount = dao.insert("", friends);
-            assertEquals(friends.size(), dbAccount.getFriends().size());
-            con.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -284,30 +300,38 @@ class AccountDaoTest {
     void insertMessages() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Messages)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
-            String email2 = "info@alinazagitova.ru";
-            Account targetAccount = dao.select("", EMAIL, email2);
-            if (targetAccount == null) {
-                targetAccount = new Account("Alina", "Zagitova", "alina_zagitova",
-                        LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email2);
-                targetAccount.setGender(Gender.F);
-                dao.insert("", targetAccount);
-                targetAccount = dao.select("", EMAIL, email2);
-                System.out.println("Created target account " + targetAccount);
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
+                String email2 = "info@alinazagitova.ru";
+                Account targetAccount = dao.select("", EMAIL, email2);
+                if (targetAccount == null) {
+                    targetAccount = new Account("Alina", "Zagitova", "alina_zagitova",
+                            LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), email2);
+                    targetAccount.setGender(Gender.F);
+                    dao.insert("", targetAccount);
+                    targetAccount = dao.select("", EMAIL, email2);
+                    System.out.println("Created target account " + targetAccount);
+                }
+                List<Message> messages = account.getMessages();
+                messages.add(new Message(account, targetAccount, MessageType.PERSONAL, "Hello! How are you?"));
+                Account dbAccount = dao.insert("", messages);
+                assertEquals(messages.size(), dbAccount.getMessages().size());
+                con.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
             }
-            List<Message> messages = account.getMessages();
-            messages.add(new Message(account, targetAccount, MessageType.PERSONAL, "Hello! How are you?"));
-            Account dbAccount = dao.insert("", messages);
-            assertEquals(messages.size(), dbAccount.getMessages().size());
-            con.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -316,10 +340,16 @@ class AccountDaoTest {
     void select() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.select()");
-        String email = "info@valievakamila.ru";
-        Account account = dao.select("", EMAIL, email);
-        assertNotNull(account);
-        assertEquals(email, account.getEmail());
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            String email = "info@valievakamila.ru";
+            Account account = dao.select("", EMAIL, email);
+            assertNotNull(account);
+            assertEquals(email, account.getEmail());
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
     }
 
     @Order(6)
@@ -327,29 +357,37 @@ class AccountDaoTest {
     void update() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.update()");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
-            // updating a field
-            String valueToChange = "Some info about Kamila Valieva";
-            Account dbAccount = dao.update("", "addInfo", valueToChange, account);
-            assertEquals(valueToChange, dbAccount.getAddInfo());
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
+                // updating a field
+                String valueToChange = "Some info about Kamila Valieva";
+                Account dbAccount = dao.update("", "addInfo", valueToChange, account);
+                assertEquals(valueToChange, dbAccount.getAddInfo());
 
-            // updating contacts via query
-            String query = "PHONE SET phoneNmr='+79876543210' WHERE accId=" + account.getId()
-                    + " AND phoneType='personal';";
-            dbAccount = dao.update(query, "", "", account);
-            List<Phone> phones = dbAccount.getPhones();
-            assertEquals("+79876543210", Objects.requireNonNull(phones.stream().filter(phone ->
-                    PhoneType.PERSONAL.equals(phone.getPhoneType())).findAny().orElse(null)).getNumber());
-            con.commit();
-            System.out.println("Updated account " + account);
+                // updating contacts via query
+                String query = "PHONE SET phoneNmr='+79876543210' WHERE accId=" + account.getId()
+                        + " AND phoneType='personal';";
+                dbAccount = dao.update(query, "", "", account);
+                List<Phone> phones = dbAccount.getPhones();
+                assertEquals("+79876543210", Objects.requireNonNull(phones.stream().filter(phone ->
+                        PhoneType.PERSONAL.equals(phone.getPhoneType())).findAny().orElse(null)).getNumber());
+                con.commit();
+                System.out.println("Updated account " + account);
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -358,23 +396,31 @@ class AccountDaoTest {
     void deleteContacts() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.delete(Contacts)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
 
-            List<Phone> phones = account.getPhones();
-            phones.clear();
-            phones.add(new Phone(account, "+74951234567", PhoneType.WORK));
-            Account dbAccount = dao.delete("", phones);
-            assertEquals(1, dbAccount.getPhones().size());
-            con.commit();
-            System.out.println("Deleted contact");
+                List<Phone> phones = account.getPhones();
+                phones.clear();
+                phones.add(new Phone(account, "+74951234567", PhoneType.WORK));
+                Account dbAccount = dao.delete("", phones);
+                assertEquals(1, dbAccount.getPhones().size());
+                con.commit();
+                System.out.println("Deleted contact");
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -383,27 +429,35 @@ class AccountDaoTest {
     void deleteFriends() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.delete(Friends)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
-            String email2 = "info@alinazagitova.ru";
-            Account friend = dao.select("", EMAIL, email2);
-            assertNotNull(friend);
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
+                String email2 = "info@alinazagitova.ru";
+                Account friend = dao.select("", EMAIL, email2);
+                assertNotNull(friend);
 
-            List<Friend> friends = account.getFriends();
-            int initialQuantity = friends.size();
-            friends.clear();
-            friends.add(new Friend(account, friend));
-            Account dbAccount = dao.delete("", friends);
-            assertEquals(initialQuantity - 1, dbAccount.getFriends().size());
-            con.commit();
-            System.out.println("Deleted friend");
+                List<Friend> friends = account.getFriends();
+                int initialQuantity = friends.size();
+                friends.clear();
+                friends.add(new Friend(account, friend));
+                Account dbAccount = dao.delete("", friends);
+                assertEquals(initialQuantity - 1, dbAccount.getFriends().size());
+                con.commit();
+                System.out.println("Deleted friend");
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 
@@ -412,20 +466,28 @@ class AccountDaoTest {
     void delete() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.delete(Account)");
-        try {
-            con = pool.getConnection();
+        try (Connection con = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = con.getAutoCommit();
             con.setAutoCommit(false);
-            String email = "info@valievakamila.ru";
-            Account account = dao.select("", EMAIL, email);
-            assertNotNull(account);
+            try {
+                String email = "info@valievakamila.ru";
+                Account account = dao.select("", EMAIL, email);
+                assertNotNull(account);
 
-            Account dbAccount = dao.delete("", account);
-            assertNull(dbAccount);
-            con.commit();
-            System.out.println("Deleted account " + account);
+                Account dbAccount = dao.delete("", account);
+                assertNull(dbAccount);
+                con.commit();
+                System.out.println("Deleted account " + account);
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(con);
+            } finally {
+                con.setAutoCommit(initialAutoCommit);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackTransaction(con);
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
         }
     }
 

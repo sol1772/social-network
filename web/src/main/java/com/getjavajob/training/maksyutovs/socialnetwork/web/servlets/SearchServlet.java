@@ -20,7 +20,7 @@ import static java.lang.Math.max;
 @WebServlet
 public class SearchServlet extends HttpServlet {
 
-    private static final String SEARCH = "/search.jsp";
+    private static final String SEARCH = "/WEB-INF/jsp/search.jsp";
     private AccountService accountService;
     private GroupService groupService;
 
