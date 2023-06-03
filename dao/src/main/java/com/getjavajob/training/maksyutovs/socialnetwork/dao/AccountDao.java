@@ -72,16 +72,28 @@ public class AccountDao implements CrudDao<Account, Object> {
         return account;
     }
 
+    Message createMessageFromResult(ResultSet rs, Account account, Account targetAccount) {
+        Message message;
+        try {
+            message = new Message(account, targetAccount, null,
+                    MessageType.valueOf(rs.getString("msgType")),
+                    rs.getString("txtContent"), null,
+                    LocalDateTime.parse(rs.getString("createdAt"), Utils.DATE_TIME_FORMATTER));
+            message.setId(rs.getInt("id"));
+        } catch (SQLException e) {
+            throw new DaoRuntimeException(e.getMessage(), e);
+        }
+        return message;
+    }
+
     Account getAccountData(Account account) {
         Connection connection = dataSourceHolder.getConnection();
         // contacts, friends
-        String queryPhone = "SELECT * FROM Phone WHERE accId=?;";
-        String queryAddress = "SELECT * FROM Address WHERE accId=?;";
-        String queryMessenger = "SELECT * FROM Messenger WHERE accId=?;";
-        String queryFriend = "SELECT * FROM Account a INNER JOIN Friend f " +
-                "ON a.id = f.friendId AND f.accId=?;";
-        String queryMessage = "SELECT * FROM Message m INNER JOIN Account a " +
-                "ON m.trgtId = a.id WHERE accId=?;";
+        String queryPhone = READ + "Phone WHERE accId=?;";
+        String queryAddress = READ + "Address WHERE accId=?;";
+        String queryMessenger = READ + "Messenger WHERE accId=?;";
+        String queryFriend = READ + "Account a INNER JOIN Friend f ON a.id = f.friendId AND f.accId=?;";
+        String queryMessage = READ + "Message m INNER JOIN Account a ON m.trgtId = a.id WHERE accId=?;";
         ResultSet rs = null;
         try (PreparedStatement pstPhone = connection.prepareStatement(queryPhone);
              PreparedStatement pstAddress = connection.prepareStatement(queryAddress);
@@ -346,6 +358,79 @@ public class AccountDao implements CrudDao<Account, Object> {
         return rows;
     }
 
+    public List<Account> selectTargetAccounts(Account account, MessageType type) {
+        Connection connection = dataSourceHolder.getConnection();
+        List<Account> accounts = new ArrayList<>();
+        String querySelect;
+        if (type == null) {
+            querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgtId" +
+                    " WHERE m.accId=? UNION " +
+                    " SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.accId" +
+                    " WHERE m.trgtId=? GROUP BY a.id;";
+        } else {
+            querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgtId" +
+                    " WHERE m.accId=? AND m.msgType=? UNION " +
+                    " SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.accId" +
+                    " WHERE m.trgtId=? AND m.msgType=? GROUP BY a.id;";
+        }
+        ResultSet rs = null;
+        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
+            pst.setInt(1, account.getId());
+            if (type == null) {
+                pst.setInt(2, account.getId());
+            } else {
+                pst.setString(2, type.toString());
+                pst.setInt(3, account.getId());
+                pst.setString(4, type.toString());
+            }
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                Account dbAccount = createAccountFromResult(rs);
+                accounts.add(dbAccount);
+            }
+        } catch (SQLException e) {
+            throw new DaoRuntimeException(e.getMessage(), e);
+        } finally {
+            closeResultSet(rs);
+        }
+        return accounts;
+    }
+
+    public List<Message> selectMessages(Account account, Account targetAccount, MessageType type) {
+        Connection connection = dataSourceHolder.getConnection();
+        List<Message> messages = new ArrayList<>();
+        String querySelect;
+        if (type == null) {
+            return messages;
+        } else {
+            querySelect = "SELECT * FROM Message WHERE (accId=? AND trgtId=?) " +
+                    "OR (accId=? AND trgtId=?) AND msgType=? ORDER BY createdAt DESC;";
+        }
+        ResultSet rs = null;
+        Message message;
+        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
+            pst.setInt(1, account.getId());
+            pst.setInt(2, targetAccount.getId());
+            pst.setInt(3, targetAccount.getId());
+            pst.setInt(4, account.getId());
+            pst.setString(5, type.toString());
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                if (rs.getInt("accId") == account.getId()) {
+                    message = createMessageFromResult(rs, account, targetAccount);
+                } else {
+                    message = createMessageFromResult(rs, targetAccount, account);
+                }
+                messages.add(message);
+            }
+        } catch (SQLException e) {
+            throw new DaoRuntimeException(e.getMessage(), e);
+        } finally {
+            closeResultSet(rs);
+        }
+        return messages;
+    }
+
     @Override
     public Account update(String query, String field, Object value, Account account) throws DaoException {
         Connection connection = dataSourceHolder.getConnection();
@@ -480,6 +565,37 @@ public class AccountDao implements CrudDao<Account, Object> {
             throw new DaoException(e.getMessage(), e);
         }
         return select("", EMAIL, account.getEmail());
+    }
+
+    public boolean insertMessage(Message message) throws DaoException {
+        Connection connection = dataSourceHolder.getConnection();
+        boolean messageSent = false;
+        String queryInsert = CREATE + "Message(accId,trgtId,txtContent,msgType,createdAt) VALUES (?,?,?,?,now());";
+        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
+            pst.setInt(1, message.getAccount().getId());
+            pst.setInt(2, message.getTargetAccount().getId());
+            pst.setString(3, message.getTextContent());
+            pst.setString(4, message.getMsgType().toString());
+            pst.executeUpdate();
+            messageSent = true;
+        } catch (SQLException e) {
+            throw new DaoException(e.getMessage(), e);
+        }
+        return messageSent;
+    }
+
+    public boolean deleteMessageById(int id) throws DaoException {
+        Connection connection = dataSourceHolder.getConnection();
+        boolean messageDeleted = false;
+        String queryInsert = DELETE + "Message WHERE id=?;";
+        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
+            pst.setInt(1, id);
+            pst.executeUpdate();
+            messageDeleted = true;
+        } catch (SQLException e) {
+            throw new DaoException(e.getMessage(), e);
+        }
+        return messageDeleted;
     }
 
 }

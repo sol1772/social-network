@@ -10,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -77,7 +77,7 @@ public class AccountService {
     }
 
     public List<Account> getAccounts() {
-        List<Account> accounts = Collections.emptyList();
+        List<Account> accounts = new ArrayList<>();
         try (Connection ignored = dataSourceHolder.getConnection()) {
             accounts = dao.selectAll("");
         } catch (SQLException e) {
@@ -89,7 +89,7 @@ public class AccountService {
     }
 
     public List<Account> getAccountsByString(String substring, int start, int total) {
-        List<Account> accounts = Collections.emptyList();
+        List<Account> accounts = new ArrayList<>();
         try (Connection ignored = dataSourceHolder.getConnection()) {
             accounts = dao.selectByString(substring, start, total);
         } catch (SQLException e) {
@@ -110,6 +110,74 @@ public class AccountService {
             dataSourceHolder.returnConnection();
         }
         return rows;
+    }
+
+    public List<Account> getTargetAccounts(Account account, MessageType type) {
+        List<Account> accounts = new ArrayList<>();
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            accounts = dao.selectTargetAccounts(account, type);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
+        return accounts;
+    }
+
+    public List<Message> getMessages(Account account, Account targetAccount, MessageType type) {
+        List<Message> messages = new ArrayList<>();
+        try (Connection ignored = dataSourceHolder.getConnection()) {
+            messages = dao.selectMessages(account, targetAccount, type);
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
+        return messages;
+    }
+
+    public boolean sendMessage(Message message) {
+        boolean messageSent = false;
+        try (Connection connection = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                messageSent = dao.insertMessage(message);
+                connection.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(connection);
+            } finally {
+                connection.setAutoCommit(initialAutoCommit);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
+        return messageSent;
+    }
+
+    public boolean deleteMessage(int id) {
+        boolean messageDeleted = false;
+        try (Connection connection = dataSourceHolder.getConnection()) {
+            boolean initialAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                messageDeleted = dao.deleteMessageById(id);
+                connection.commit();
+            } catch (DaoException | DaoRuntimeException e) {
+                LOGGER.log(Level.WARNING, e.getMessage());
+                rollbackTransaction(connection);
+            } finally {
+                connection.setAutoCommit(initialAutoCommit);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, e.getMessage());
+        } finally {
+            dataSourceHolder.returnConnection();
+        }
+        return messageDeleted;
     }
 
     public Account registerAccount(Account account) {
@@ -296,7 +364,7 @@ public class AccountService {
     }
 
     public List<Friend> getFriends(Account account) {
-        List<Friend> friends = Collections.emptyList();
+        List<Friend> friends = new ArrayList<>();
         try (Connection ignored = dataSourceHolder.getConnection()) {
             friends = dao.select("", EMAIL, account.getEmail()).getFriends();
         } catch (SQLException e) {

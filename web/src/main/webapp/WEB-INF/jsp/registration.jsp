@@ -8,6 +8,7 @@
 <jsp:useBean id="addInfo" scope="request" class="java.lang.String"/>
 <jsp:useBean id="dateOfBirth" scope="request" class="java.lang.String"/>
 <jsp:useBean id="gender" scope="request" class="java.lang.String"/>
+<jsp:useBean id="violations" scope="request" class="java.util.ArrayList"/>
 
 <!DOCTYPE html>
 <html lang="en">

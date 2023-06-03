@@ -121,7 +121,8 @@ public class RegistrationServlet extends HttpServlet {
         String homeAddress = req.getParameter("homeAddress");
         String workAddress = req.getParameter("workAddress");
 
-        Account account = new Account(firstName, lastName, username, LocalDate.parse(dateOfBirth, Utils.DATE_FORMATTER), email);
+        Account account = new Account(firstName, lastName, username,
+                LocalDate.parse(dateOfBirth, Utils.DATE_FORMATTER), email);
         account.setMiddleName(middleName);
         account.setGender(gender.equals("M") ? Gender.M : Gender.F);
         account.setAddInfo(addInfo);

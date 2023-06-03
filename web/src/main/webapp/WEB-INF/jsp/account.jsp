@@ -26,6 +26,7 @@
                 <p><i>Middle name: </i>${account.middleName}</p>
                 <fmt:parseDate value="${account.dateOfBirth}" pattern="yyyy-MM-dd" var="dateOfBirth" type="date"/>
                 <p><i>Date of birth: </i><fmt:formatDate pattern="dd.MM.yyyy" value="${dateOfBirth}"/></p>
+                <p><i>Username: </i>${account.userName}</p>
                 <p><i>E-mail: </i>${account.email}</p>
                 <c:forEach items="${account.phones}" var="phone">
                     <p><i>${CaseUtils.toCamelCase(phone.phoneType.toString(), true, ' ')} phone: </i>${phone.number}</p>
@@ -73,15 +74,22 @@
         </c:if>
     </c:forEach>
     <br>
-    <c:choose>
-        <c:when test="${StringUtils.isEmpty(username)}">
-            <a class="link" href="login">Login</a><br>
-        </c:when>
-        <c:when test="${username.equals(account.userName)}">
-            <a class="link" href="account-edit">Edit</a><br>
-            <a class="link" href="group-add">New group</a>
-        </c:when>
-    </c:choose>
+    <div class="links">
+        <c:choose>
+            <c:when test="${username.equals(account.userName)}">
+                <a class="link" href="messages?id=${account.id}">Messages</a>
+                <a class="link" href="message?trgId=${account.id}">New post</a>
+                <a class="link" href="group-add">New group</a>
+                <a class="link" href="account-edit">Edit</a>
+            </c:when>
+            <c:when test="${!(StringUtils.isEmpty(username) || username.equals(account.userName))}">
+                <a class="link" href="message?trgId=${account.id}">Send message</a>
+            </c:when>
+            <c:when test="${StringUtils.isEmpty(username)}">
+                <a class="link" href="login">Login</a>
+            </c:when>
+        </c:choose>
+    </div>
 </div>
 </body>
 </html>

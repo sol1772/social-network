@@ -12,12 +12,12 @@
 </head>
 <body>
 <div>
-    <c:if test="${!StringUtils.isEmpty(username)}">
+    <c:if test="${!StringUtils.isEmpty(sessionScope.username)}">
         <form id="logout" action="logout" method="post" style="float: right; margin-left: 10px; margin-right: 10px;">
             <input type="submit" value="Logout">
         </form>
         <span style="color: darkgreen; font-style: italic; float: right; margin-left: 10px; margin-right: 10px;">
-            <a href="account?id=${sessionScope.account.id}">User: ${username}</a>
+            <a href="account?id=${sessionScope.account.id}">User: ${sessionScope.username}</a>
         </span>
     </c:if>
     <form class="search" action="search" method="get"

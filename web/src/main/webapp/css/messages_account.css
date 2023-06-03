@@ -1,0 +1,69 @@
+h1, h2 {
+    color: darkgreen;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+h3, h4 {
+    color: midnightblue;
+    text-align: left;
+    text-transform: none;
+    margin-left: 10px;
+}
+
+.field {
+    display: flex;
+    text-align: left;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+textarea[id=message] {
+    float: left;
+    vertical-align: middle;
+    height: 30px;
+}
+
+.button_ok {
+    float: none;
+    width: 90px;
+    height: 30px;
+    border-radius: 3px;
+    margin-left: 10px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+p.report {
+    color: red;
+    margin-left: 10px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.container {
+    display: flex;
+    text-align: left;
+}
+
+.wall {
+    text-align: left;
+    margin-bottom: -20px;
+}
+
+button[id=del_msg] {
+    background-color: lightblue;
+    border: none;
+    border-radius: 0;
+    height: 20px;
+    margin-left: 10px;
+    margin-bottom: -20px;
+}
+
+div.wrapper {
+    width: 50%;
+    background-color: lightblue;
+    padding: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}

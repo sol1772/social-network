@@ -51,7 +51,12 @@ div.wrapper {
     margin-right: auto;
 }
 
-a.link {
+div.links {
     display: block;
     text-align: center;
+}
+
+a.link {
+    margin-left: 10px;
+    margin-right: 10px;
 }

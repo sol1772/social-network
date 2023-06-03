@@ -10,7 +10,7 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.GroupMember;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -75,7 +75,7 @@ public class GroupService {
     }
 
     public List<Group> getGroupsByString(String substring, int start, int total) {
-        List<Group> groups = Collections.emptyList();
+        List<Group> groups = new ArrayList<>();
         try (Connection ignored = dataSourceHolder.getConnection()) {
             groups = dao.selectByString(substring, start, total);
         } catch (SQLException e) {
@@ -99,7 +99,7 @@ public class GroupService {
     }
 
     public List<Group> getGroupsByAccount(Account account) {
-        List<Group> groups = Collections.emptyList();
+        List<Group> groups = new ArrayList<>();
         try (Connection ignored = dataSourceHolder.getConnection()) {
             groups = dao.selectByAccount(account);
         } catch (SQLException e) {
