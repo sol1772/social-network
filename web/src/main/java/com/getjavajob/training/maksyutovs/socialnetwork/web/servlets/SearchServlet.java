@@ -20,7 +20,7 @@ import static java.lang.Math.max;
 @WebServlet
 public class SearchServlet extends HttpServlet {
 
-    private static final String SEARCH = "/WEB-INF/jsp/search.jsp";
+    private static final String SEARCH_URL = "/WEB-INF/jsp/search.jsp";
     private AccountService accountService;
     private GroupService groupService;
 
@@ -74,7 +74,7 @@ public class SearchServlet extends HttpServlet {
             req.setAttribute("accountsPages", Integer.toString(accountsPages));
             req.setAttribute("groupsTotal", Integer.toString(groupsTotal));
             req.setAttribute("groupsPages", Integer.toString(groupsPages));
-            req.getRequestDispatcher(SEARCH).forward(req, resp);
+            req.getRequestDispatcher(SEARCH_URL).forward(req, resp);
         } catch (IOException | ServletException e) {
             e.printStackTrace();
         }

@@ -48,11 +48,14 @@
                     <c:choose>
                         <c:when test="${msg.account.id==account.id}">${account.userName}</c:when>
                         <c:otherwise>${targetAccount.userName}</c:otherwise>
-                    </c:choose>
-                </h4></div>
+                    </c:choose></h4>
+                </div>
                 <div class="wall"><h3>${msg.textContent}</h3></div>
-                <h5><button name="submit" value="del_msg" id="del_msg"
-                            onclick="return confirm('Delete?')">≡</button></h5>
+                <h5>
+                    <button name="submit" value="del_msg" id="del_msg"
+                            onclick="return confirm('Delete?')">x
+                    </button>
+                </h5>
                 <input type="hidden" name="msg_id" value=${msg.id}>
             </div>
         </c:forEach>

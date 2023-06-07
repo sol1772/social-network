@@ -1,7 +1,10 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
-public class Phone {
+import java.io.Serializable;
 
+public class Phone implements Serializable {
+
+    private static final long serialVersionUID = 1105122041958251257L;
     private final Account account;
     private String number;
     private PhoneType phoneType;

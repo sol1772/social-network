@@ -30,6 +30,7 @@ textarea {
 div.field {
     line-height: 25px;
     padding-bottom: 5px;
+    margin-bottom: -10px;
 }
 
 div.field label {
@@ -41,10 +42,19 @@ div.field label {
     padding-left: 10px;
 }
 
+p {
+    margin-bottom: -10px;
+}
+
 .button_ok {
     float: none;
     width: 90px;
     height: 30px;
     border-radius: 3px;
     margin: 10px;
+}
+
+div.links {
+    display: block;
+    text-align: center;
 }

@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -124,9 +123,9 @@ public class UploadServlet extends HttpServlet {
         try {
             InputStream fileContent = null;
             if (command.equals("Change")) {
-                // gets absolute path of the web application
+                // gets an absolute path of the web application
                 String applicationPath = req.getServletContext().getRealPath("");
-                // constructs path of the directory to save uploaded file
+                // constructs a path of the directory to save uploaded file
                 String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
 
                 if (!StringUtils.isEmpty(path)) {
@@ -168,8 +167,8 @@ public class UploadServlet extends HttpServlet {
             }
 
             if (path.equals(ACCOUNT)) {
-                Optional<Account> dbAccount = accountService.editAccount(account, "image", fileContent);
-                session.setAttribute(ACCOUNT, dbAccount.orElseThrow());
+                Account dbAccount = accountService.editAccount(account, "image", fileContent);
+                session.setAttribute(ACCOUNT, dbAccount);
                 resp.sendRedirect(req.getContextPath() + "/account?id=" + account.getId());
             } else if (path.equals(GROUP)) {
                 String id = req.getParameter("id");

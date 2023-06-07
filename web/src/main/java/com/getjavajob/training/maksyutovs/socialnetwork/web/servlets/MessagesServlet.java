@@ -17,7 +17,7 @@ import java.io.IOException;
 @WebServlet
 public class MessagesServlet extends HttpServlet {
 
-    private static final String MESSAGES = "/WEB-INF/jsp/messages.jsp";
+    private static final String MESSAGES_URL = "/WEB-INF/jsp/messages.jsp";
     private AccountService accountService;
 
     @Override
@@ -43,7 +43,7 @@ public class MessagesServlet extends HttpServlet {
             } else {
                 req.setAttribute("account", account);
                 req.setAttribute("accounts", accountService.getTargetAccounts(account, MessageType.PERSONAL));
-                req.getRequestDispatcher(MESSAGES).forward(req, resp);
+                req.getRequestDispatcher(MESSAGES_URL).forward(req, resp);
             }
         } catch (NumberFormatException | IOException e) {
             e.printStackTrace();

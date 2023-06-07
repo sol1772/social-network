@@ -10,6 +10,7 @@ import java.util.List;
 
 public class Account implements Serializable {
 
+    private static final long serialVersionUID = 1905122041950251207L;
     private final List<Phone> phones = new ArrayList<>();
     private final List<Address> addresses = new ArrayList<>();
     private final List<Messenger> messengers = new ArrayList<>();

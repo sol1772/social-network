@@ -34,11 +34,6 @@ div.field label {
     padding-left: 10px;
 }
 
-div.checkbox {
-    display: block;
-    float: none;
-}
-
 .button_ok {
     float: none;
     width: 90px;

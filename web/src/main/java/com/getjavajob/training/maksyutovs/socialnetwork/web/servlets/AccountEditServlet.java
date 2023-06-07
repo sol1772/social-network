@@ -3,6 +3,7 @@ package com.getjavajob.training.maksyutovs.socialnetwork.web.servlets;
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.Utils;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Gender;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.lang3.StringUtils;
@@ -30,9 +31,7 @@ public class AccountEditServlet extends HttpServlet {
     private static final String ABOUT = "addInfo";
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String GENDER = "gender";
-    private static final String EDIT = "/WEB-INF/jsp/account-edit.jsp";
-
-
+    private static final String EDIT_URL = "/WEB-INF/jsp/account-edit.jsp";
     private AccountService accountService;
     private GroupService groupService;
 
@@ -60,7 +59,7 @@ public class AccountEditServlet extends HttpServlet {
                 req.setAttribute(BIRTHDATE, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
                 req.setAttribute(GENDER, String.valueOf(account.getGender() != null ?
                         account.getGender().toString().charAt(0) : 'M'));
-                req.getRequestDispatcher(EDIT).forward(req, resp);
+                req.getRequestDispatcher(EDIT_URL).forward(req, resp);
             }
         } catch (ServletException | IOException e) {
             e.printStackTrace();
@@ -80,17 +79,19 @@ public class AccountEditServlet extends HttpServlet {
             } else {
                 if (command.equals("Save")) {
                     fillAccountFromRequest(account, req);
-                    Account dbAccount = accountService.editAccount(account).orElseThrow();
+                    Account dbAccount = accountService.editAccount(account);
                     req.setAttribute(ACCOUNT, dbAccount);
                     resp.sendRedirect(req.getContextPath() + "/account?id=" + dbAccount.getId());
                 } else if (command.equals("Cancel")) {
                     req.setAttribute(ACCOUNT, account);
                     req.setAttribute("groups", groupService.getGroupsByAccount(account));
+                    req.setAttribute("posts", accountService.getMessages(account, account, MessageType.POST));
                     req.getRequestDispatcher("/WEB-INF/jsp/account.jsp").forward(req, resp);
                 }
             }
         } catch (ServletException | IOException e) {
-            e.printStackTrace();
+            req.setAttribute("exceptionMessage", e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(req, resp);
         }
     }
 

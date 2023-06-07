@@ -1,11 +1,13 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Group {
+public class Group implements Serializable {
 
+    private static final long serialVersionUID = 1905122041950251207L;
     private final List<GroupMember> members = new ArrayList<>();
     private int id;
     private int createdBy;

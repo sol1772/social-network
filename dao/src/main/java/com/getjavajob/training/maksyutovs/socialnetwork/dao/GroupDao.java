@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -54,9 +53,7 @@ public class GroupDao implements CrudDao<Group, Object> {
             group.setId(rs.getInt("id"));
             group.setCreatedBy(rs.getInt("createdBy"));
             group.setMetaTitle(rs.getString("metaTitle"));
-            String createdAt = rs.getString("createdAt");
-            group.setCreatedAt(createdAt == null ? LocalDateTime.of(0, 1, 1, 0, 0) :
-                    LocalDateTime.parse(createdAt.substring(0, Utils.DATE_TIME_PATTERN.length()), Utils.DATE_TIME_FORMATTER));
+            group.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
             group.setImage(rs.getBytes("image"));
         } catch (SQLException e) {
             throw new DaoRuntimeException(e.getMessage(), e);
@@ -65,7 +62,7 @@ public class GroupDao implements CrudDao<Group, Object> {
     }
 
     @Override
-    public Group insert(String query, Group group) throws DaoException {
+    public Group insert(String query, Group group) {
         Connection connection = dataSourceHolder.getConnection();
         if (query.isEmpty()) {
             query = "InterestGroup(title,metaTitle,createdBy,createdAt,image) VALUES (?,?,?,now(),?);";
@@ -80,12 +77,12 @@ public class GroupDao implements CrudDao<Group, Object> {
             }
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", TITLE, group.getTitle());
     }
 
-    public Group insert(String query, List<GroupMember> members) throws DaoException {
+    public Group insert(String query, List<GroupMember> members) {
         if (members.isEmpty()) {
             throw new IllegalArgumentException("No data to insert");
         }
@@ -106,7 +103,7 @@ public class GroupDao implements CrudDao<Group, Object> {
                 pst.executeUpdate();
             }
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", TITLE, group.getTitle());
     }
@@ -219,7 +216,7 @@ public class GroupDao implements CrudDao<Group, Object> {
     }
 
     @Override
-    public Group update(String query, String field, Object value, Group group) throws DaoException {
+    public Group update(String query, String field, Object value, Group group) {
         Connection connection = dataSourceHolder.getConnection();
         if (query.isEmpty()) {
             query = "InterestGroup SET " + field + "=? WHERE title=?;";
@@ -238,12 +235,12 @@ public class GroupDao implements CrudDao<Group, Object> {
             }
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", TITLE, group.getTitle());
     }
 
-    public Group update(Group group) throws DaoException {
+    public Group update(Group group) {
         Connection connection = dataSourceHolder.getConnection();
         String query = "InterestGroup SET metaTitle =?, image=? WHERE title=?;";
         String queryUpdate = UPDATE + query;
@@ -253,13 +250,13 @@ public class GroupDao implements CrudDao<Group, Object> {
             pst.setString(3, group.getTitle());
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", TITLE, group.getTitle());
     }
 
     @Override
-    public Group delete(String query, Group group) throws DaoException {
+    public Group delete(String query, Group group) {
         Connection connection = dataSourceHolder.getConnection();
         if (query.isEmpty()) {
             query = "InterestGroup WHERE title=?;" +
@@ -274,12 +271,12 @@ public class GroupDao implements CrudDao<Group, Object> {
             }
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", TITLE, group.getTitle());
     }
 
-    public Group delete(String query, List<GroupMember> members) throws DaoException {
+    public Group delete(String query, List<GroupMember> members) {
         if (members.isEmpty()) {
             throw new IllegalArgumentException("No data to delete");
         }
@@ -300,7 +297,7 @@ public class GroupDao implements CrudDao<Group, Object> {
                 pst.executeUpdate();
             }
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", TITLE, group.getTitle());
     }

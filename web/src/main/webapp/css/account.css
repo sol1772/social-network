@@ -35,12 +35,22 @@ h3, h4, h5 {
 .container {
     display: flex;
     text-align: left;
+    margin-bottom: -20px;
 }
 
 .wall {
     text-align: left;
     margin-right: 30px;
-    margin-bottom: -10px;
+}
+
+button[id=del_msg] {
+    background-color: lightblue;
+    color: maroon;
+    font-weight: 500;
+    border: none;
+    border-radius: 0;
+    height: 20px;
+    margin-left: 10px;
 }
 
 div.wrapper {

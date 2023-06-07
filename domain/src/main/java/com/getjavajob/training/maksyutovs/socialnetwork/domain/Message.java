@@ -1,13 +1,15 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Message {
+public class Message implements Serializable {
 
+    private static final long serialVersionUID = 6470090944414208496L;
     private Account account;
     private int id;
     private Account targetAccount;
-    private Group targetGroup;
+    private transient Group targetGroup;
     private MessageType msgType;
     private String textContent;
     private byte[] mediaContent;
@@ -124,7 +126,7 @@ public class Message {
         return account.getId();
     }
 
-    public int getTrgtId() {
+    public int getTrgId() {
         return targetAccount.getId();
     }
 

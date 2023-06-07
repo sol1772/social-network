@@ -7,8 +7,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -24,7 +22,7 @@ public class AccountDao implements CrudDao<Account, Object> {
     private static final String USERNAME = "username";
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String EMAIL = "email";
-    private final DataSourceHolder dataSourceHolder;
+    private DataSourceHolder dataSourceHolder;
 
     public AccountDao() {
         this.dataSourceHolder = DataSourceHolder.getInstance(null);
@@ -36,6 +34,10 @@ public class AccountDao implements CrudDao<Account, Object> {
 
     public DataSourceHolder getDataSourceHolder() {
         return dataSourceHolder;
+    }
+
+    public void setDataSourceHolder(DataSourceHolder ds) {
+        this.dataSourceHolder = ds;
     }
 
     void closeResultSet(ResultSet rs) {
@@ -51,20 +53,15 @@ public class AccountDao implements CrudDao<Account, Object> {
     Account createAccountFromResult(ResultSet rs) {
         Account account;
         try {
-            account = new Account(rs.getString(FIRST_NAME),
-                    rs.getString(LAST_NAME),
-                    rs.getString(USERNAME),
-                    LocalDate.parse(rs.getString(BIRTHDATE), Utils.DATE_FORMATTER),
-                    rs.getString(EMAIL));
+            account = new Account(rs.getString(FIRST_NAME), rs.getString(LAST_NAME), rs.getString(USERNAME),
+                    rs.getDate(BIRTHDATE).toLocalDate(), rs.getString(EMAIL));
             account.setId(rs.getInt("id"));
             account.setPasswordHash(rs.getString("passwordHash"));
             account.setMiddleName(rs.getString("middleName"));
             account.setGender(rs.getString("gender") == null ?
                     Gender.M : Gender.valueOf(rs.getString("gender")));
             account.setAddInfo(rs.getString("addInfo"));
-            String registeredAt = rs.getString("registeredAt");
-            account.setRegisteredAt(registeredAt == null ? LocalDateTime.of(0, 1, 1, 0, 0) :
-                    LocalDateTime.parse(registeredAt.substring(0, Utils.DATE_TIME_PATTERN.length()), Utils.DATE_TIME_FORMATTER));
+            account.setRegisteredAt(rs.getTimestamp("registeredAt").toLocalDateTime());
             account.setImage(rs.getBytes("image"));
         } catch (SQLException e) {
             throw new DaoRuntimeException(e.getMessage(), e);
@@ -78,7 +75,7 @@ public class AccountDao implements CrudDao<Account, Object> {
             message = new Message(account, targetAccount, null,
                     MessageType.valueOf(rs.getString("msgType")),
                     rs.getString("txtContent"), null,
-                    LocalDateTime.parse(rs.getString("createdAt"), Utils.DATE_TIME_FORMATTER));
+                    rs.getTimestamp("createdAt").toLocalDateTime());
             message.setId(rs.getInt("id"));
         } catch (SQLException e) {
             throw new DaoRuntimeException(e.getMessage(), e);
@@ -93,7 +90,7 @@ public class AccountDao implements CrudDao<Account, Object> {
         String queryAddress = READ + "Address WHERE accId=?;";
         String queryMessenger = READ + "Messenger WHERE accId=?;";
         String queryFriend = READ + "Account a INNER JOIN Friend f ON a.id = f.friendId AND f.accId=?;";
-        String queryMessage = READ + "Message m INNER JOIN Account a ON m.trgtId = a.id WHERE accId=?;";
+        String queryMessage = READ + "Message m INNER JOIN Account a ON m.trgId = a.id WHERE accId=?;";
         ResultSet rs = null;
         try (PreparedStatement pstPhone = connection.prepareStatement(queryPhone);
              PreparedStatement pstAddress = connection.prepareStatement(queryAddress);
@@ -121,19 +118,14 @@ public class AccountDao implements CrudDao<Account, Object> {
             List<Messenger> messengers = account.getMessengers();
             while (rs.next()) {
                 messengers.add(new Messenger(account, rs.getString(USERNAME),
-                        MessengerType.valueOf(rs.getString("msngrType"))));
+                        MessengerType.valueOf(rs.getString("msgrType"))));
             }
 
             pstFriend.setInt(1, account.getId());
             rs = pstFriend.executeQuery();
             List<Friend> friends = account.getFriends();
             while (rs.next()) {
-                Account friendAccount = new Account(rs.getString(FIRST_NAME),
-                        rs.getString(LAST_NAME),
-                        rs.getString(USERNAME),
-                        LocalDate.parse(rs.getString(BIRTHDATE), Utils.DATE_FORMATTER),
-                        rs.getString(EMAIL));
-                friendAccount.setId(rs.getInt("id"));
+                Account friendAccount = createAccountFromResult(rs);
                 friends.add(new Friend(account, friendAccount));
             }
 
@@ -141,14 +133,8 @@ public class AccountDao implements CrudDao<Account, Object> {
             rs = pstMessage.executeQuery();
             List<Message> messages = account.getMessages();
             while (rs.next()) {
-                Account targetAccount = new Account(rs.getString(FIRST_NAME),
-                        rs.getString(LAST_NAME),
-                        rs.getString(USERNAME),
-                        LocalDate.parse(rs.getString(BIRTHDATE), Utils.DATE_FORMATTER),
-                        rs.getString(EMAIL));
-                Message message = new Message(account, targetAccount,
-                        MessageType.valueOf(rs.getString("msgType")), rs.getString("txtContent"));
-                message.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
+                Account targetAccount = createAccountFromResult(rs);
+                Message message = createMessageFromResult(rs, account, targetAccount);
                 messages.add(message);
             }
         } catch (SQLException e) {
@@ -160,7 +146,7 @@ public class AccountDao implements CrudDao<Account, Object> {
     }
 
     @Override
-    public Account insert(String query, Account account) throws DaoException {
+    public Account insert(String query, Account account) {
         Connection connection = dataSourceHolder.getConnection();
         if (query.isEmpty()) {
             query = "Account(firstName,middleName,lastName,username,email," +
@@ -184,12 +170,12 @@ public class AccountDao implements CrudDao<Account, Object> {
             }
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", EMAIL, account.getEmail());
     }
 
-    public <T> Account insert(String query, List<T> accountData) throws DaoException {
+    public <T> Account insert(String query, List<T> accountData) {
         if (accountData.isEmpty()) {
             throw new IllegalArgumentException("No data to insert");
         }
@@ -203,11 +189,11 @@ public class AccountDao implements CrudDao<Account, Object> {
             } else if (contact instanceof Address) {
                 query = "Address(accId,addr,addrType) VALUES (?,?,?);";
             } else if (contact instanceof Messenger) {
-                query = "Messenger(accId,username,msngrType) VALUES (?,?,?);";
+                query = "Messenger(accId,username,msgrType) VALUES (?,?,?);";
             } else if (contact instanceof Friend) {
                 query = "Friend(accId,friendId) VALUES (?,?), (?,?);";
             } else if (contact instanceof Message) {
-                query = "Message(accId,trgtId,txtContent,mediaContent,msgType,createdAt) VALUES (?,?,?,?,?,now());";
+                query = "Message(accId,trgId,txtContent,mediaContent,msgType,createdAt) VALUES (?,?,?,?,?,now());";
             }
         }
         assert account != null;
@@ -225,13 +211,13 @@ public class AccountDao implements CrudDao<Account, Object> {
                         pst.setString(3, ((Address) data).getAddrType().toString());
                     } else if (data instanceof Messenger) {
                         pst.setString(2, ((Messenger) data).getUsername());
-                        pst.setString(3, ((Messenger) data).getMsngrType().toString());
+                        pst.setString(3, ((Messenger) data).getMsgrType().toString());
                     } else if (data instanceof Friend) {
                         pst.setInt(2, ((Friend) data).getFriendId());
                         pst.setInt(3, ((Friend) data).getFriendId());
                         pst.setInt(4, accountId);
                     } else if (data instanceof Message) {
-                        pst.setInt(2, ((Message) data).getTrgtId());
+                        pst.setInt(2, ((Message) data).getTrgId());
                         pst.setString(3, ((Message) data).getTextContent());
                         pst.setBytes(4, ((Message) data).getMediaContent());
                         pst.setString(5, ((Message) data).getMsgType().toString());
@@ -240,7 +226,7 @@ public class AccountDao implements CrudDao<Account, Object> {
                 pst.executeUpdate();
             }
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", EMAIL, account.getEmail());
     }
@@ -363,15 +349,15 @@ public class AccountDao implements CrudDao<Account, Object> {
         List<Account> accounts = new ArrayList<>();
         String querySelect;
         if (type == null) {
-            querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgtId" +
+            querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgId" +
                     " WHERE m.accId=? UNION " +
                     " SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.accId" +
-                    " WHERE m.trgtId=? GROUP BY a.id;";
+                    " WHERE m.trgId=? GROUP BY a.id;";
         } else {
-            querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgtId" +
+            querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgId" +
                     " WHERE m.accId=? AND m.msgType=? UNION " +
                     " SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.accId" +
-                    " WHERE m.trgtId=? AND m.msgType=? GROUP BY a.id;";
+                    " WHERE m.trgId=? AND m.msgType=? GROUP BY a.id;";
         }
         ResultSet rs = null;
         try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
@@ -403,8 +389,8 @@ public class AccountDao implements CrudDao<Account, Object> {
         if (type == null) {
             return messages;
         } else {
-            querySelect = "SELECT * FROM Message WHERE (accId=? AND trgtId=?) " +
-                    "OR (accId=? AND trgtId=?) AND msgType=? ORDER BY createdAt DESC;";
+            querySelect = "SELECT * FROM Message WHERE (accId=? AND trgId=?) " +
+                    "OR (accId=? AND trgId=?) AND msgType=? ORDER BY createdAt DESC;";
         }
         ResultSet rs = null;
         Message message;
@@ -432,7 +418,7 @@ public class AccountDao implements CrudDao<Account, Object> {
     }
 
     @Override
-    public Account update(String query, String field, Object value, Account account) throws DaoException {
+    public Account update(String query, String field, Object value, Account account) {
         Connection connection = dataSourceHolder.getConnection();
         if (query.isEmpty()) {
             query = "Account SET " + field + "=? WHERE email=?;";
@@ -451,12 +437,12 @@ public class AccountDao implements CrudDao<Account, Object> {
             }
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", EMAIL, account.getEmail());
     }
 
-    public Account update(Account account) throws DaoException {
+    public Account update(Account account) {
         Connection connection = dataSourceHolder.getConnection();
         String query = "Account SET firstName=?,middleName=?,lastName=?,username=?,dateOfBirth=?,gender=?,addInfo=?" +
                 " WHERE email=?;";
@@ -473,13 +459,13 @@ public class AccountDao implements CrudDao<Account, Object> {
             pst.setString(8, account.getEmail());
             pst.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", EMAIL, account.getEmail());
     }
 
     @Override
-    public Account delete(String query, Account account) throws DaoException {
+    public Account delete(String query, Account account) {
         Connection connection = dataSourceHolder.getConnection();
         List<String> queries = new ArrayList<>();
         if (query.isEmpty()) {
@@ -488,7 +474,7 @@ public class AccountDao implements CrudDao<Account, Object> {
             queries.add("Address WHERE accId=?;");
             queries.add("Messenger WHERE accId=?;");
             queries.add("Friend WHERE accId=? OR friendId=?;");
-            queries.add("Message WHERE accId=? OR trgtId=?");
+            queries.add("Message WHERE accId=? OR trgId=?");
         } else {
             queries.add(query);
         }
@@ -508,13 +494,13 @@ public class AccountDao implements CrudDao<Account, Object> {
                 }
                 pst.executeUpdate();
             } catch (SQLException e) {
-                throw new DaoException(e.getMessage(), e);
+                throw new DaoRuntimeException(e.getMessage(), e);
             }
         }
         return select("", "Email", account.getEmail());
     }
 
-    public <T> Account delete(String query, List<T> accountData) throws DaoException {
+    public <T> Account delete(String query, List<T> accountData) {
         if (accountData.isEmpty()) {
             throw new IllegalArgumentException("No data to delete");
         }
@@ -528,11 +514,11 @@ public class AccountDao implements CrudDao<Account, Object> {
             } else if (contact instanceof Address) {
                 query = "Address WHERE accId=? AND addr=? AND addrType=?;";
             } else if (contact instanceof Messenger) {
-                query = "Messenger WHERE accId=? AND username=? AND msngrType=?;";
+                query = "Messenger WHERE accId=? AND username=? AND msgrType=?;";
             } else if (contact instanceof Friend) {
                 query = "Friend WHERE accId=? AND friendId=?;";
             } else if (contact instanceof Message) {
-                query = "Message WHERE accId=? AND trgtId=? AND createdAt=?;";
+                query = "Message WHERE accId=? AND trgId=? AND createdAt=?;";
             }
         }
 
@@ -551,26 +537,26 @@ public class AccountDao implements CrudDao<Account, Object> {
                         pst.setString(3, ((Address) data).getAddrType().toString());
                     } else if (data instanceof Messenger) {
                         pst.setString(2, ((Messenger) data).getUsername());
-                        pst.setString(3, ((Messenger) data).getMsngrType().toString());
+                        pst.setString(3, ((Messenger) data).getMsgrType().toString());
                     } else if (data instanceof Friend) {
                         pst.setInt(2, ((Friend) data).getFriendId());
                     } else if (data instanceof Message) {
-                        pst.setInt(2, ((Message) data).getTrgtId());
+                        pst.setInt(2, ((Message) data).getTrgId());
                         pst.setString(3, ((Message) data).getCreatedAt().toString());
                     }
                 }
                 pst.executeUpdate();
             }
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return select("", EMAIL, account.getEmail());
     }
 
-    public boolean insertMessage(Message message) throws DaoException {
+    public boolean insertMessage(Message message) {
         Connection connection = dataSourceHolder.getConnection();
-        boolean messageSent = false;
-        String queryInsert = CREATE + "Message(accId,trgtId,txtContent,msgType,createdAt) VALUES (?,?,?,?,now());";
+        boolean messageSent;
+        String queryInsert = CREATE + "Message(accId,trgId,txtContent,msgType,createdAt) VALUES (?,?,?,?,now());";
         try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
             pst.setInt(1, message.getAccount().getId());
             pst.setInt(2, message.getTargetAccount().getId());
@@ -579,21 +565,21 @@ public class AccountDao implements CrudDao<Account, Object> {
             pst.executeUpdate();
             messageSent = true;
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return messageSent;
     }
 
-    public boolean deleteMessageById(int id) throws DaoException {
+    public boolean deleteMessageById(int id) {
         Connection connection = dataSourceHolder.getConnection();
-        boolean messageDeleted = false;
+        boolean messageDeleted;
         String queryInsert = DELETE + "Message WHERE id=?;";
         try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
             pst.setInt(1, id);
             pst.executeUpdate();
             messageDeleted = true;
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage(), e);
+            throw new DaoRuntimeException(e.getMessage(), e);
         }
         return messageDeleted;
     }

@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.servlets;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,7 @@ public class AccountServlet extends HttpServlet {
             } else {
                 req.setAttribute("account", account);
                 req.setAttribute("groups", groupService.getGroupsByAccount(account));
+                req.setAttribute("posts", accountService.getMessages(account, account, MessageType.POST));
                 req.getRequestDispatcher("/WEB-INF/jsp/account.jsp").forward(req, resp);
             }
         } catch (NumberFormatException | IOException e) {

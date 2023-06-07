@@ -19,7 +19,7 @@ import java.io.IOException;
 @WebServlet
 public class GroupEditServlet extends HttpServlet {
 
-    private static final String EDIT = "/WEB-INF/jsp/group-edit.jsp";
+    private static final String EDIT_URL = "/WEB-INF/jsp/group-edit.jsp";
     private static final String TITLE = "title";
     private static final String ERROR = "error";
     private GroupService groupService;
@@ -39,7 +39,7 @@ public class GroupEditServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(req, resp);
         }
         req.setAttribute("group", group);
-        req.getRequestDispatcher(EDIT).forward(req, resp);
+        req.getRequestDispatcher(EDIT_URL).forward(req, resp);
     }
 
     @Override
@@ -53,13 +53,13 @@ public class GroupEditServlet extends HttpServlet {
         if (command.equals("Save")) {
             if (title.isEmpty()) {
                 req.setAttribute(ERROR, "Enter title");
-                req.getRequestDispatcher(EDIT).forward(req, resp);
+                req.getRequestDispatcher(EDIT_URL).forward(req, resp);
             }
             String metaTitle = req.getParameter("metaTitle");
             group.setMetaTitle(metaTitle);
             group.setCreatedBy(account.getId());
             group.getMembers().add(new GroupMember(group, account, Role.ADMIN));
-            Group dbGroup = groupService.editGroup(group).orElseThrow();
+            Group dbGroup = groupService.editGroup(group);
             resp.sendRedirect(req.getContextPath() + "/group?id=" + dbGroup.getId());
 
         } else if (command.equals("Cancel")) {

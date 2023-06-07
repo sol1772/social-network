@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="firstName" scope="request" class="java.lang.String"/>
 <jsp:useBean id="lastName" scope="request" class="java.lang.String"/>
 <jsp:useBean id="middleName" scope="request" class="java.lang.String"/>
@@ -22,6 +23,11 @@
     <h1>Social network</h1>
     <h2>Account registration</h2>
     <form name="reg_form" action="registration" method="post">
+        <c:if test="${violations != null}">
+            <c:forEach items="${violations}" var="violation">
+                <p style="color: red; text-align: center">${violation}</p>
+            </c:forEach>
+        </c:if>
         <div class="field">
             <label for="firstName">First name *</label>
             <input type="text" name="firstName" id="firstName" placeholder="Required" value=${firstName}>
@@ -82,12 +88,12 @@
             <input type="submit" value="Register" class="button_ok" name="submit"/>
             <input type="submit" value="Cancel" class="button_ok" name="submit"/>
         </div>
-        <c:if test="${violations != null}">
-            <c:forEach items="${violations}" var="violation">
-                <p style="color: red">${violation}</p>
-            </c:forEach>
-        </c:if>
     </form>
+    <div class="links">
+        <c:if test="${StringUtils.isEmpty(sessionScope.username)}">
+            <a class="link" href="login">Login</a>
+        </c:if>
+    </div>
 </div>
 </body>
 </html>

@@ -68,7 +68,6 @@ class DataSourceHolderTest {
         assertEquals(numberOfThreads, successfulConnections.intValue());
     }
 
-
     static class ConnectionRunnable implements Runnable {
 
         String name;

@@ -17,7 +17,7 @@ public class LoginServlet extends HttpServlet {
     private static final String EMAIL = "email";
     private static final String PASS = "password";
     private static final String ERROR = "error";
-    private static final String LOGIN = "/WEB-INF/jsp/login.jsp";
+    private static final String LOGIN_URL = "/WEB-INF/jsp/login.jsp";
     private AccountService accountService;
 
     @Override
@@ -31,7 +31,7 @@ public class LoginServlet extends HttpServlet {
         String email = req.getParameter(EMAIL);
         try {
             if (email == null) {
-                req.getRequestDispatcher(LOGIN).forward(req, resp);
+                req.getRequestDispatcher(LOGIN_URL).forward(req, resp);
             } else {
                 Account account = accountService.getAccountByEmail(email);
                 String accountInfo = req.getContextPath() + "/account?id=" + account.getId();
@@ -50,14 +50,14 @@ public class LoginServlet extends HttpServlet {
         try (PrintWriter out = resp.getWriter()) {
             if (email.isEmpty()) {
                 req.setAttribute(ERROR, "Enter email");
-                req.getRequestDispatcher(LOGIN).forward(req, resp);
+                req.getRequestDispatcher(LOGIN_URL).forward(req, resp);
                 return;
             }
             Account account = accountService.getAccountByEmail(email);
             if (account == null) {
                 // error handling
                 req.setAttribute(ERROR, "Account not found for email: " + email);
-                req.getRequestDispatcher(LOGIN).forward(req, resp);
+                req.getRequestDispatcher(LOGIN_URL).forward(req, resp);
             } else {
                 if (accountService.passwordIsValid(password, account)) {
                     out.println("You are logged in");
@@ -77,7 +77,7 @@ public class LoginServlet extends HttpServlet {
                 } else {
                     // error handling
                     req.setAttribute(ERROR, "Wrong password.");
-                    req.getRequestDispatcher(LOGIN).forward(req, resp);
+                    req.getRequestDispatcher(LOGIN_URL).forward(req, resp);
                 }
             }
         } catch (ServletException | IOException e) {

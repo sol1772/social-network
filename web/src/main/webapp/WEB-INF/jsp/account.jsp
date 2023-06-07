@@ -11,6 +11,13 @@
 <head>
     <title>Account info</title>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/account.css"/>
+    <script>
+        function confirmDelete() {
+            if (confirm("Delete?")) {
+                return true;
+            }
+        }
+    </script>
 </head>
 <body>
 <div class="wrapper">
@@ -48,13 +55,6 @@
                 <form action="upload" method="get">
                     <p><input type="submit" name="submit" value="Change"/>
                         <input type="submit" name="submit" onclick="return confirm('Delete?')" value="Delete"/></p>
-                    <script>
-                        function confirmDelete() {
-                            if (confirm("Delete?")) {
-                                return true;
-                            }
-                        }
-                    </script>
                     <p style="color: darkgreen">${requestScope.message}</p>
                     <input type="hidden" name="path" value="account">
                 </form>
@@ -63,16 +63,24 @@
     </div>
     <br>
     <h2>Account wall</h2>
-    <c:forEach items="${account.messages}" var="msg">
-        <c:if test="${msg.msgType=='PUBLIC'}">
+    <form name="msg_form" action="messages_account" method="post">
+        <c:forEach items="${requestScope.posts}" var="msg">
             <div class="container">
                 <div class="wall"><h4><i><fmt:parseDate value="${msg.createdAt}" pattern="yyyy-MM-dd'T'HH:mm"
                                                         var="parsedDateTime" type="both"/>
                     <fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${parsedDateTime}"/></i></h4></div>
                 <div class="wall"><h3>${msg.textContent}</h3></div>
+                <h5>
+                    <button name="submit" value="del_msg" id="del_msg"
+                            onclick="return confirm('Delete?')">x
+                    </button>
+                </h5>
+                <input type="hidden" name="accId" value=${account.id}>
+                <input type="hidden" name="trgId" value=${account.id}>
+                <input type="hidden" name="msg_id" value=${msg.id}>
             </div>
-        </c:if>
-    </c:forEach>
+        </c:forEach>
+    </form>
     <br>
     <div class="links">
         <c:choose>
@@ -85,7 +93,7 @@
             <c:when test="${!(StringUtils.isEmpty(username) || username.equals(account.userName))}">
                 <a class="link" href="message?trgId=${account.id}">Send message</a>
             </c:when>
-            <c:when test="${StringUtils.isEmpty(username)}">
+            <c:when test="${StringUtils.isEmpty(sessionScope.username)}">
                 <a class="link" href="login">Login</a>
             </c:when>
         </c:choose>

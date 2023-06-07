@@ -1,7 +1,10 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
-public class Friend {
+import java.io.Serializable;
 
+public class Friend implements Serializable {
+
+    private static final long serialVersionUID = 2905122041950251203L;
     private final Account account;
     private Account friendAccount;
 

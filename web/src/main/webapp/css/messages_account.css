@@ -44,20 +44,21 @@ p.report {
 .container {
     display: flex;
     text-align: left;
+    margin-bottom: -20px;
 }
 
 .wall {
     text-align: left;
-    margin-bottom: -20px;
 }
 
 button[id=del_msg] {
     background-color: lightblue;
+    color: maroon;
+    font-weight: 500;
     border: none;
     border-radius: 0;
     height: 20px;
     margin-left: 10px;
-    margin-bottom: -20px;
 }
 
 div.wrapper {

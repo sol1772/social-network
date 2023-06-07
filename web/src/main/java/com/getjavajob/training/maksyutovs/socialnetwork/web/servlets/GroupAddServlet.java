@@ -19,7 +19,7 @@ import java.io.IOException;
 @WebServlet
 public class GroupAddServlet extends HttpServlet {
 
-    private static final String ADD = "/WEB-INF/jsp/group-add.jsp";
+    private static final String ADD_URL = "/WEB-INF/jsp/group-add.jsp";
     private static final String TITLE = "title";
     private static final String ERROR = "error";
     private GroupService groupService;
@@ -32,7 +32,7 @@ public class GroupAddServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher(ADD).forward(req, resp);
+        req.getRequestDispatcher(ADD_URL).forward(req, resp);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class GroupAddServlet extends HttpServlet {
                 String title = req.getParameter(TITLE);
                 if (title.isEmpty()) {
                     req.setAttribute(ERROR, "Enter title");
-                    req.getRequestDispatcher(ADD).forward(req, resp);
+                    req.getRequestDispatcher(ADD_URL).forward(req, resp);
                 }
                 Group group = new Group(title);
                 String metaTitle = req.getParameter("metaTitle");

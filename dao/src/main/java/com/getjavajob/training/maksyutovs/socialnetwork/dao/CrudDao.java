@@ -2,12 +2,12 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 public interface CrudDao<T, V> {
 
-    T insert(String query, T type) throws DaoException;
+    T insert(String query, T type);
 
-    T select(String query, String field, V value) throws DaoRuntimeException;
+    T select(String query, String field, V value);
 
-    T update(String query, String field, V value, T type) throws DaoException;
+    T update(String query, String field, V value, T type);
 
-    T delete(String query, T type) throws DaoException;
+    T delete(String query, T type);
 
 }

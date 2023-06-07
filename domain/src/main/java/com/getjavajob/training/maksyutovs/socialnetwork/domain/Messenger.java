@@ -1,20 +1,23 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
-public class Messenger {
+import java.io.Serializable;
 
+public class Messenger implements Serializable {
+
+    private static final long serialVersionUID = 4505122041950251272L;
     private final Account account;
     private String username;
-    private MessengerType msngrType;
+    private MessengerType msgrType;
     private int id;
 
     public Messenger(Account account) {
         this.account = account;
     }
 
-    public Messenger(Account account, String username, MessengerType msngrType) {
+    public Messenger(Account account, String username, MessengerType msgrType) {
         this.account = account;
         this.username = username;
-        this.msngrType = msngrType;
+        this.msgrType = msgrType;
     }
 
     public String getUsername() {
@@ -25,12 +28,12 @@ public class Messenger {
         this.username = username;
     }
 
-    public MessengerType getMsngrType() {
-        return msngrType;
+    public MessengerType getMsgrType() {
+        return msgrType;
     }
 
-    public void setMsngrType(MessengerType msngrType) {
-        this.msngrType = msngrType;
+    public void setMsgrType(MessengerType msgrType) {
+        this.msgrType = msgrType;
     }
 
     public int getAccId() {

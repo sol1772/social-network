@@ -17,10 +17,13 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet
 public class RegistrationServlet extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(RegistrationServlet.class.getName());
     private static final String FIRSTNAME = "firstName";
     private static final String LASTNAME = "lastName";
     private static final String MIDDLENAME = "middleName";
@@ -30,8 +33,8 @@ public class RegistrationServlet extends HttpServlet {
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String GENDER = "gender";
     private static final String ABOUT = "addInfo";
-    private static final String REG = "/WEB-INF/jsp/registration.jsp";
-    private static final String LOGIN = "/WEB-INF/jsp/login.jsp";
+    private static final String REG_URL = "/WEB-INF/jsp/registration.jsp";
+    private static final String LOGIN_URL = "/WEB-INF/jsp/login.jsp";
     private AccountService accountService;
 
     @Override
@@ -42,7 +45,7 @@ public class RegistrationServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher(REG).forward(req, resp);
+        req.getRequestDispatcher(REG_URL).forward(req, resp);
     }
 
     @Override
@@ -52,7 +55,14 @@ public class RegistrationServlet extends HttpServlet {
         try {
             if (command.equals("Register")) {
                 List<String> violations = validate(req);
-                if (!violations.isEmpty()) {
+                if (violations.isEmpty()) {
+                    Account dbAccount = createAccount(req);
+                    req.setAttribute(EMAIL, req.getParameter(EMAIL));
+                    HttpSession session = req.getSession();
+                    session.setAttribute("account", dbAccount);
+                    session.setAttribute(USERNAME, dbAccount.getUserName());
+                    resp.sendRedirect(req.getContextPath() + "/account?id=" + dbAccount.getId());
+                } else {
                     req.setAttribute("violations", violations);
                     req.setAttribute(FIRSTNAME, req.getParameter(FIRSTNAME));
                     req.setAttribute(LASTNAME, req.getParameter(LASTNAME));
@@ -62,20 +72,13 @@ public class RegistrationServlet extends HttpServlet {
                     req.setAttribute(ABOUT, req.getParameter(ABOUT));
                     req.setAttribute(BIRTHDATE, req.getParameter(BIRTHDATE));
                     req.setAttribute(GENDER, req.getParameter(GENDER));
-                    req.getRequestDispatcher(REG).include(req, resp);
-                } else {
-                    Account dbAccount = createAccount(req);
-                    req.setAttribute(EMAIL, req.getParameter(EMAIL));
-                    HttpSession session = req.getSession();
-                    session.setAttribute("account", dbAccount);
-                    session.setAttribute(USERNAME, dbAccount.getUserName());
-                    resp.sendRedirect(req.getContextPath() + "/account?id=" + dbAccount.getId());
+                    req.getRequestDispatcher(REG_URL).include(req, resp);
                 }
             } else if (command.equals("Cancel")) {
-                req.getRequestDispatcher(LOGIN).forward(req, resp);
+                req.getRequestDispatcher(LOGIN_URL).forward(req, resp);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage());
         }
     }
 
@@ -91,8 +94,11 @@ public class RegistrationServlet extends HttpServlet {
         if (StringUtils.isEmpty(req.getParameter(USERNAME))) {
             violations.add("Required field 'username' not filled.");
         }
-        if (StringUtils.isEmpty(req.getParameter(EMAIL))) {
+        String email = req.getParameter(EMAIL);
+        if (StringUtils.isEmpty(email)) {
             violations.add("Required field 'email' not filled.");
+        } else if (accountService.getAccountByEmail(email) != null) {
+            violations.add("Account with email '" + email + "' already exists");
         }
         if (StringUtils.isEmpty(req.getParameter(PASS))) {
             violations.add("Required field 'password' not filled.");
@@ -126,6 +132,7 @@ public class RegistrationServlet extends HttpServlet {
         account.setMiddleName(middleName);
         account.setGender(gender.equals("M") ? Gender.M : Gender.F);
         account.setAddInfo(addInfo);
+        account.setPasswordHash(account.hashPassword(password));
         List<Phone> phones = account.getPhones();
         if (!StringUtils.isEmpty(personalPhone)) {
             phones.add(new Phone(account, personalPhone, PhoneType.PERSONAL));
@@ -141,9 +148,7 @@ public class RegistrationServlet extends HttpServlet {
             addresses.add(new Address(account, workAddress, AddressType.WORK));
         }
 
-        Account dbAccount = accountService.registerAccount(account);
-        accountService.changePassword("", password, dbAccount);
-        return dbAccount;
+        return accountService.registerAccount(account);
     }
 
 }

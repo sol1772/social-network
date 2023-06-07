@@ -1,7 +1,10 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
-public class Address {
+import java.io.Serializable;
 
+public class Address implements Serializable {
+
+    private static final long serialVersionUID = 1905133041950251207L;
     private final Account account;
     private String address;
     private AddressType addrType;
