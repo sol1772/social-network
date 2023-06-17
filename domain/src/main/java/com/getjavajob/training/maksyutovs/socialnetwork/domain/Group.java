@@ -1,10 +1,13 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import org.springframework.stereotype.Component;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class Group implements Serializable {
 
     private static final long serialVersionUID = 1905122041950251207L;

@@ -4,17 +4,19 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.GroupMember;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Role;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
+@Repository
 public class GroupDao implements CrudDao<Group, Object> {
 
     private static final String CREATE = "INSERT INTO ";
@@ -22,284 +24,138 @@ public class GroupDao implements CrudDao<Group, Object> {
     private static final String UPDATE = "UPDATE ";
     private static final String DELETE = "DELETE FROM ";
     private static final String TITLE = "title";
-    private final DataSourceHolder dataSourceHolder;
+    private static final String ID = "id";
+    private JdbcTemplate jdbcTemplate;
 
     public GroupDao() {
-        this.dataSourceHolder = DataSourceHolder.getInstance(null);
     }
 
-    public GroupDao(Properties properties) {
-        this.dataSourceHolder = DataSourceHolder.getInstance(properties);
+    @Autowired
+    public GroupDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public DataSourceHolder getDataSourceHolder() {
-        return dataSourceHolder;
-    }
-
-    void closeResultSet(ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                throw new DaoRuntimeException(e.getMessage(), e);
-            }
-        }
-    }
-
-    private Group createGroupFromResult(ResultSet rs) {
+    private Group createGroupFromResult(ResultSet rs) throws SQLException {
         Group group;
-        try {
-            group = new Group(rs.getString(TITLE));
-            group.setId(rs.getInt("id"));
-            group.setCreatedBy(rs.getInt("createdBy"));
-            group.setMetaTitle(rs.getString("metaTitle"));
-            group.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-            group.setImage(rs.getBytes("image"));
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
+        group = new Group(rs.getString(TITLE));
+        group.setId(rs.getInt("id"));
+        group.setCreatedBy(rs.getInt("createdBy"));
+        group.setMetaTitle(rs.getString("metaTitle"));
+        group.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
+        group.setImage(rs.getBytes("image"));
         return group;
     }
 
-    @Override
-    public Group insert(String query, Group group) {
-        Connection connection = dataSourceHolder.getConnection();
-        if (query.isEmpty()) {
-            query = "InterestGroup(title,metaTitle,createdBy,createdAt,image) VALUES (?,?,?,now(),?);";
-        }
-        String queryInsert = CREATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
-            if (queryInsert.contains("?")) {
-                pst.setString(1, group.getTitle());
-                pst.setString(2, group.getMetaTitle());
-                pst.setInt(3, group.getCreatedBy());
-                pst.setBytes(4, group.getImage());
-            }
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", TITLE, group.getTitle());
+    private GroupMember createGroupMemberFromResult(ResultSet rs, Group group) throws SQLException {
+        Account account = new AccountDao().createAccountFromResult(rs);
+        return new GroupMember(group, account, Role.valueOf(rs.getString("roleType")));
     }
 
-    public Group insert(String query, List<GroupMember> members) {
+    @Override
+    public Group insert(Group group) {
+        String queryInsert = CREATE + "InterestGroup(title,metaTitle,createdBy,createdAt,image) VALUES (?,?,?,now(),?);";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement pst = con.prepareStatement(queryInsert, new String[]{"id"});
+            pst.setString(1, group.getTitle());
+            pst.setString(2, group.getMetaTitle());
+            pst.setInt(3, group.getCreatedBy());
+            pst.setBytes(4, group.getImage());
+            return pst;
+        }, keyHolder);
+        return select(ID, keyHolder.getKey());
+    }
+
+    public Group insert(List<GroupMember> members) {
         if (members.isEmpty()) {
             throw new IllegalArgumentException("No data to insert");
         }
-        Connection connection = dataSourceHolder.getConnection();
-
         Group group = members.get(0).getGroup();
-        if (query.isEmpty()) {
-            query = "Group_member(groupId,accId,roleType) VALUES (?,?,?);";
+        String queryInsert = CREATE + "Group_member(groupId,accId,roleType) VALUES (?,?,?);";
+        for (GroupMember member : members) {
+            jdbcTemplate.update(queryInsert, member.getGroupId(), member.getAccount().getId(),
+                    member.getRole().toString());
         }
-        String queryInsert = CREATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
-            for (GroupMember member : members) {
-                if (queryInsert.contains("?")) {
-                    pst.setInt(1, member.getGroupId());
-                    pst.setInt(2, member.getAccount().getId());
-                    pst.setString(3, member.getRole().toString());
-                }
-                pst.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", TITLE, group.getTitle());
+        return select(TITLE, group.getTitle());
     }
 
     @Override
-    public Group select(String query, String field, Object value) {
-        Connection connection = dataSourceHolder.getConnection();
-        Group group = null;
-        ResultSet rs = null;
-        if (query.isEmpty()) {
-            query = "InterestGroup WHERE " + field + "=?;";
-        }
-        String querySelect = READ + query;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            if (querySelect.contains("?")) {
-                if (value instanceof String) {
-                    pst.setString(1, (String) value);
-                } else if (value instanceof Integer) {
-                    pst.setInt(1, (int) value);
-                }
-            }
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                group = createGroupFromResult(rs);
+    public Group select(String field, Object value) {
+        String querySelect = READ + "InterestGroup WHERE " + field + "=?;";
+        Group group = jdbcTemplate.query(querySelect, (rs, rowNum) -> createGroupFromResult(rs), value)
+                .stream().findAny().orElse(null);
 
-                // members
-                String queryMembers = "SELECT * FROM Group_member gm INNER JOIN Account a " +
-                        "ON gm.accId = a.id WHERE groupId=?;";
-                try (PreparedStatement pstMembers = connection.prepareStatement(queryMembers)) {
-                    pstMembers.setInt(1, group.getId());
-                    rs = pstMembers.executeQuery();
-                    List<GroupMember> members = group.getMembers();
-                    while (rs.next()) {
-                        Account account = new AccountDao().createAccountFromResult(rs);
-                        members.add(new GroupMember(group, account, Role.valueOf(rs.getString("roleType"))));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
+        // members
+        if (group != null) {
+            String queryMembers = "SELECT * FROM Group_member gm INNER JOIN Account a " +
+                    "ON gm.accId = a.id WHERE groupId=?;";
+            group.getMembers().addAll(jdbcTemplate.query(queryMembers, (rs, rowNum) ->
+                    createGroupMemberFromResult(rs, group), group.getId()));
         }
         return group;
     }
 
     public List<Group> selectByString(String substring, int start, int total) {
-        Connection connection = dataSourceHolder.getConnection();
-        List<Group> groups = new ArrayList<>();
         String searchString = "%" + substring + "%";
         String querySelect = READ + "InterestGroup WHERE title LIKE ? ORDER BY title " +
                 (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setString(1, searchString);
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                Group group = createGroupFromResult(rs);
-                groups.add(group);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return groups;
+        return jdbcTemplate.query(querySelect, (rs, rowNum) -> createGroupFromResult(rs), searchString);
     }
 
-    public int selectCountByString(String substring, int start, int total) {
-        Connection connection = dataSourceHolder.getConnection();
-        int rows = 0;
+    public Integer selectCountByString(String substring, int start, int total) {
         String searchString = "%" + substring + "%";
         String querySelect = READ + "InterestGroup WHERE title LIKE ? ORDER BY title " +
                 (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
         querySelect = querySelect.replace("SELECT *", "SELECT COUNT(*) AS count");
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setString(1, searchString);
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                rows = rs.getInt("count");
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return rows;
+        return jdbcTemplate.queryForObject(querySelect, Integer.class, searchString);
     }
 
     public List<Group> selectByAccount(Account account) {
-        Connection connection = dataSourceHolder.getConnection();
-        List<Group> groups = new ArrayList<>();
         String querySelect = READ + "InterestGroup ig INNER JOIN Group_member gm " +
                 "ON ig.id = gm.groupId WHERE accId = ?";
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setInt(1, account.getId());
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                Group group = createGroupFromResult(rs);
-                groups.add(group);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return groups;
+        return jdbcTemplate.query(querySelect, (rs, rowNum) -> createGroupFromResult(rs), account.getId());
     }
 
     @Override
-    public Group update(String query, String field, Object value, Group group) {
-        Connection connection = dataSourceHolder.getConnection();
-        if (query.isEmpty()) {
-            query = "InterestGroup SET " + field + "=? WHERE title=?;";
-        }
-        String queryUpdate = UPDATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
-            if (queryUpdate.contains("?")) {
-                if (value instanceof String) {
-                    pst.setString(1, (String) value);
-                } else if (value instanceof Integer) {
-                    pst.setInt(1, (int) value);
-                } else if (value instanceof InputStream) {
-                    pst.setBinaryStream(1, (InputStream) value);
-                }
-                pst.setString(2, group.getTitle());
-            }
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", TITLE, group.getTitle());
+    public Group update(String field, Object value, Group group) {
+        String queryUpdate = UPDATE + "InterestGroup SET " + field + "=? WHERE title=?;";
+        jdbcTemplate.update(queryUpdate, value, group.getTitle());
+        return select(TITLE, group.getTitle());
     }
 
     public Group update(Group group) {
-        Connection connection = dataSourceHolder.getConnection();
-        String query = "InterestGroup SET metaTitle =?, image=? WHERE title=?;";
-        String queryUpdate = UPDATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
-            pst.setString(1, group.getMetaTitle());
-            pst.setBinaryStream(2, new ByteArrayInputStream(group.getImage()));
-            pst.setString(3, group.getTitle());
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", TITLE, group.getTitle());
+        String queryUpdate = UPDATE + "InterestGroup SET metaTitle =?, image=? WHERE title=?;";
+        jdbcTemplate.update(queryUpdate, group.getMetaTitle(),
+                new ByteArrayInputStream(group.getImage()), group.getTitle());
+        return select(TITLE, group.getTitle());
+    }
+
+    public Group updateGroupMember(GroupMember groupMember) {
+        String queryUpdate = UPDATE + "Group_member SET roleType=? WHERE groupId=? AND accId=?;";
+        jdbcTemplate.update(queryUpdate, groupMember.getRole().toString(),
+                groupMember.getGroupId(), groupMember.getAccount().getId());
+        return select(TITLE, groupMember.getGroup().getTitle());
     }
 
     @Override
-    public Group delete(String query, Group group) {
-        Connection connection = dataSourceHolder.getConnection();
-        if (query.isEmpty()) {
-            query = "InterestGroup WHERE title=?;" +
-                    "DELETE FROM Group_member WHERE groupId=?;";
-        }
-        String queryDelete = DELETE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {
-            if (queryDelete.contains("?")) {
-                int groupId = group.getId();
-                pst.setString(1, group.getTitle());
-                pst.setInt(2, groupId);
-            }
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", TITLE, group.getTitle());
+    public Group delete(Group group) {
+        String queryDelete = DELETE + "InterestGroup WHERE title=?;" +
+                DELETE + "Group_member WHERE groupId=?;";
+        jdbcTemplate.update(queryDelete, group.getTitle(), group.getId());
+        return select(TITLE, group.getTitle());
     }
 
-    public Group delete(String query, List<GroupMember> members) {
+    public Group delete(List<GroupMember> members) {
         if (members.isEmpty()) {
             throw new IllegalArgumentException("No data to delete");
         }
-        Connection connection = dataSourceHolder.getConnection();
-
         Group group = members.get(0).getGroup();
-        if (query.isEmpty()) {
-            query = "Group_member WHERE groupId=? AND accId=? AND roleType=?;";
+        String queryDelete = DELETE + "Group_member WHERE groupId=? AND accId=? AND roleType=?;";
+        for (GroupMember member : members) {
+            jdbcTemplate.update(queryDelete,
+                    member.getGroupId(), member.getAccount().getId(), member.getRole().toString());
         }
-        String queryDelete = DELETE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {
-            for (GroupMember member : members) {
-                if (queryDelete.contains("?")) {
-                    pst.setInt(1, member.getGroupId());
-                    pst.setInt(2, member.getAccount().getId());
-                    pst.setString(3, member.getRole().toString());
-                }
-                pst.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", TITLE, group.getTitle());
+        return select(TITLE, group.getTitle());
     }
 
 }

@@ -5,9 +5,9 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,10 +36,10 @@ public class UploadServlet extends HttpServlet {
     private GroupService groupService;
 
     @Override
-    public void init(ServletConfig config) {
-        ServletContext sc = config.getServletContext();
-        accountService = (AccountService) sc.getAttribute("AccountService");
-        groupService = (GroupService) sc.getAttribute("GroupService");
+    public void init() {
+        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        accountService = Objects.requireNonNull(context).getBean(AccountService.class);
+        groupService = Objects.requireNonNull(context).getBean(GroupService.class);
     }
 
     @Override

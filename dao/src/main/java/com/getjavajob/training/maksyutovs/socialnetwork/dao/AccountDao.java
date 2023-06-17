@@ -1,16 +1,20 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
+@Repository
 public class AccountDao implements CrudDao<Account, Object> {
 
     private static final String CREATE = "INSERT INTO ";
@@ -22,213 +26,159 @@ public class AccountDao implements CrudDao<Account, Object> {
     private static final String USERNAME = "username";
     private static final String BIRTHDATE = "dateOfBirth";
     private static final String EMAIL = "email";
-    private DataSourceHolder dataSourceHolder;
+    private static final String ID = "id";
+    private JdbcTemplate jdbcTemplate;
 
     public AccountDao() {
-        this.dataSourceHolder = DataSourceHolder.getInstance(null);
     }
 
-    public AccountDao(Properties properties) {
-        this.dataSourceHolder = DataSourceHolder.getInstance(properties);
+    @Autowired
+    public AccountDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public DataSourceHolder getDataSourceHolder() {
-        return dataSourceHolder;
-    }
-
-    public void setDataSourceHolder(DataSourceHolder ds) {
-        this.dataSourceHolder = ds;
-    }
-
-    void closeResultSet(ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                throw new DaoRuntimeException(e.getMessage(), e);
-            }
-        }
-    }
-
-    Account createAccountFromResult(ResultSet rs) {
+    Account createAccountFromResult(ResultSet rs) throws SQLException {
         Account account;
-        try {
-            account = new Account(rs.getString(FIRST_NAME), rs.getString(LAST_NAME), rs.getString(USERNAME),
-                    rs.getDate(BIRTHDATE).toLocalDate(), rs.getString(EMAIL));
-            account.setId(rs.getInt("id"));
-            account.setPasswordHash(rs.getString("passwordHash"));
-            account.setMiddleName(rs.getString("middleName"));
-            account.setGender(rs.getString("gender") == null ?
-                    Gender.M : Gender.valueOf(rs.getString("gender")));
-            account.setAddInfo(rs.getString("addInfo"));
-            account.setRegisteredAt(rs.getTimestamp("registeredAt").toLocalDateTime());
-            account.setImage(rs.getBytes("image"));
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
+        account = new Account(rs.getString(FIRST_NAME), rs.getString(LAST_NAME), rs.getString(USERNAME),
+                rs.getDate(BIRTHDATE).toLocalDate(), rs.getString(EMAIL));
+        account.setId(rs.getInt("id"));
+        account.setPasswordHash(rs.getString("passwordHash"));
+        account.setMiddleName(rs.getString("middleName"));
+        account.setGender(rs.getString("gender") == null ?
+                Gender.M : Gender.valueOf(rs.getString("gender")));
+        account.setAddInfo(rs.getString("addInfo"));
+        account.setRegisteredAt(rs.getTimestamp("registeredAt").toLocalDateTime());
+        account.setImage(rs.getBytes("image"));
         return account;
     }
 
-    Message createMessageFromResult(ResultSet rs, Account account, Account targetAccount) {
-        Message message;
-        try {
-            message = new Message(account, targetAccount, null,
-                    MessageType.valueOf(rs.getString("msgType")),
-                    rs.getString("txtContent"), null,
-                    rs.getTimestamp("createdAt").toLocalDateTime());
-            message.setId(rs.getInt("id"));
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
+    Phone createPhoneFromResult(ResultSet rs, Account account) throws SQLException {
+        return new Phone(account, rs.getInt("id"), rs.getString("phoneNmr"),
+                PhoneType.valueOf(rs.getString("phoneType")));
+    }
+
+    Address createAddressFromResult(ResultSet rs, Account account) throws SQLException {
+        return new Address(account, rs.getInt("id"), rs.getString("addr"),
+                AddressType.valueOf(rs.getString("addrType")));
+    }
+
+    Messenger createMessengerFromResult(ResultSet rs, Account account) throws SQLException {
+        return new Messenger(account, rs.getInt("id"), rs.getString(USERNAME),
+                MessengerType.valueOf(rs.getString("msgrType")));
+    }
+
+    Friend createFriendFromResult(ResultSet rs, Account account) throws SQLException {
+        Account friendAccount = createAccountFromResult(rs);
+        return new Friend(account, friendAccount);
+    }
+
+    Message createMessageFromResult(ResultSet rs, Account account, Account targetAccount) throws SQLException {
+        Message message = new Message(account, targetAccount, null,
+                MessageType.valueOf(rs.getString("msgType")),
+                rs.getString("txtContent"), null,
+                rs.getTimestamp("createdAt").toLocalDateTime());
+        message.setId(rs.getInt("id"));
         return message;
     }
 
     Account getAccountData(Account account) {
-        Connection connection = dataSourceHolder.getConnection();
         // contacts, friends
         String queryPhone = READ + "Phone WHERE accId=?;";
         String queryAddress = READ + "Address WHERE accId=?;";
         String queryMessenger = READ + "Messenger WHERE accId=?;";
         String queryFriend = READ + "Account a INNER JOIN Friend f ON a.id = f.friendId AND f.accId=?;";
         String queryMessage = READ + "Message m INNER JOIN Account a ON m.trgId = a.id WHERE accId=?;";
-        ResultSet rs = null;
-        try (PreparedStatement pstPhone = connection.prepareStatement(queryPhone);
-             PreparedStatement pstAddress = connection.prepareStatement(queryAddress);
-             PreparedStatement pstMessenger = connection.prepareStatement(queryMessenger);
-             PreparedStatement pstFriend = connection.prepareStatement(queryFriend);
-             PreparedStatement pstMessage = connection.prepareStatement(queryMessage)) {
-            pstPhone.setInt(1, account.getId());
-            rs = pstPhone.executeQuery();
-            List<Phone> phones = account.getPhones();
-            while (rs.next()) {
-                phones.add(new Phone(account, rs.getString("phoneNmr"),
-                        PhoneType.valueOf(rs.getString("phoneType"))));
-            }
 
-            pstAddress.setInt(1, account.getId());
-            rs = pstAddress.executeQuery();
-            List<Address> addresses = account.getAddresses();
-            while (rs.next()) {
-                addresses.add(new Address(account, rs.getString("addr"),
-                        AddressType.valueOf(rs.getString("addrType"))));
-            }
+        account.getPhones().addAll(jdbcTemplate.query(queryPhone, (rs, rowNum) ->
+                createPhoneFromResult(rs, account), account.getId()));
 
-            pstMessenger.setInt(1, account.getId());
-            rs = pstMessenger.executeQuery();
-            List<Messenger> messengers = account.getMessengers();
-            while (rs.next()) {
-                messengers.add(new Messenger(account, rs.getString(USERNAME),
-                        MessengerType.valueOf(rs.getString("msgrType"))));
-            }
+        account.getAddresses().addAll(jdbcTemplate.query(queryAddress, (rs, rowNum) ->
+                createAddressFromResult(rs, account), account.getId()));
 
-            pstFriend.setInt(1, account.getId());
-            rs = pstFriend.executeQuery();
-            List<Friend> friends = account.getFriends();
-            while (rs.next()) {
-                Account friendAccount = createAccountFromResult(rs);
-                friends.add(new Friend(account, friendAccount));
-            }
+        account.getMessengers().addAll(jdbcTemplate.query(queryMessenger, (rs, rowNum) ->
+                createMessengerFromResult(rs, account), account.getId()));
 
-            pstMessage.setInt(1, account.getId());
-            rs = pstMessage.executeQuery();
-            List<Message> messages = account.getMessages();
-            while (rs.next()) {
-                Account targetAccount = createAccountFromResult(rs);
-                Message message = createMessageFromResult(rs, account, targetAccount);
-                messages.add(message);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
+        account.getFriends().addAll(jdbcTemplate.query(queryFriend, (rs, rowNum) ->
+                createFriendFromResult(rs, account), account.getId()));
+
+        account.getMessages().addAll(jdbcTemplate.query(queryMessage, (rs, rowNum) ->
+                createMessageFromResult(rs, account, createAccountFromResult(rs)), account.getId()));
         return account;
     }
 
     @Override
-    public Account insert(String query, Account account) {
-        Connection connection = dataSourceHolder.getConnection();
-        if (query.isEmpty()) {
-            query = "Account(firstName,middleName,lastName,username,email," +
-                    "dateOfBirth,gender,addInfo,passwordHash,registeredAt,image)" +
-                    " VALUES (?,?,?,?,?,?,?,?,?,now(),?);";
-        }
-        String queryInsert = CREATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
-            if (queryInsert.contains("?")) {
-                pst.setString(1, account.getFirstName());
-                pst.setString(2, account.getMiddleName());
-                pst.setString(3, account.getLastName());
-                pst.setString(4, account.getUserName());
-                pst.setString(5, account.getEmail());
-                pst.setString(6, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
-                pst.setString(7, String.valueOf(account.getGender() != null ?
-                        account.getGender().toString().charAt(0) : 'M'));
-                pst.setString(8, account.getAddInfo());
-                pst.setString(9, account.getPasswordHash());
-                pst.setBytes(10, account.getImage());
-            }
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", EMAIL, account.getEmail());
+    public Account insert(Account account) {
+        String queryInsert = CREATE + "Account(firstName,middleName,lastName,username,email," +
+                "dateOfBirth,gender,addInfo,passwordHash,registeredAt,image)" +
+                " VALUES (?,?,?,?,?,?,?,?,?,now(),?);";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement pst = con.prepareStatement(queryInsert, new String[]{"id"});
+            pst.setString(1, account.getFirstName());
+            pst.setString(2, account.getMiddleName());
+            pst.setString(3, account.getLastName());
+            pst.setString(4, account.getUserName());
+            pst.setString(5, account.getEmail());
+            pst.setString(6, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
+            pst.setString(7, String.valueOf(account.getGender() != null ?
+                    account.getGender().toString().charAt(0) : 'M'));
+            pst.setString(8, account.getAddInfo());
+            pst.setString(9, account.getPasswordHash());
+            pst.setBytes(10, account.getImage());
+            return pst;
+        }, keyHolder);
+        return select(ID, keyHolder.getKey());
     }
 
-    public <T> Account insert(String query, List<T> accountData) {
+    public <T> Account insert(List<T> accountData) {
         if (accountData.isEmpty()) {
             throw new IllegalArgumentException("No data to insert");
         }
-        Connection connection = dataSourceHolder.getConnection();
 
         T contact = accountData.get(0);
         Account account = getAccountFromAccountData(contact);
-        if (query.isEmpty()) {
-            if (contact instanceof Phone) {
-                query = "Phone(accId,phoneNmr,phoneType) VALUES (?,?,?);";
-            } else if (contact instanceof Address) {
-                query = "Address(accId,addr,addrType) VALUES (?,?,?);";
-            } else if (contact instanceof Messenger) {
-                query = "Messenger(accId,username,msgrType) VALUES (?,?,?);";
-            } else if (contact instanceof Friend) {
-                query = "Friend(accId,friendId) VALUES (?,?), (?,?);";
-            } else if (contact instanceof Message) {
-                query = "Message(accId,trgId,txtContent,mediaContent,msgType,createdAt) VALUES (?,?,?,?,?,now());";
-            }
+        String query = "";
+        if (contact instanceof Phone) {
+            query = "Phone(accId,phoneNmr,phoneType) VALUES (?,?,?);";
+        } else if (contact instanceof Address) {
+            query = "Address(accId,addr,addrType) VALUES (?,?,?);";
+        } else if (contact instanceof Messenger) {
+            query = "Messenger(accId,username,msgrType) VALUES (?,?,?);";
+        } else if (contact instanceof Friend) {
+            query = "Friend(accId,friendId) VALUES (?,?), (?,?);";
+        } else if (contact instanceof Message) {
+            query = "Message(accId,trgId,txtContent,mediaContent,msgType,createdAt) VALUES (?,?,?,?,?,now());";
         }
         assert account != null;
         int accountId = account.getId();
-        String queryInsert = CREATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
-            for (T data : accountData) {
-                if (queryInsert.contains("?")) {
-                    pst.setInt(1, accountId);
-                    if (data instanceof Phone) {
-                        pst.setString(2, ((Phone) data).getNumber());
-                        pst.setString(3, ((Phone) data).getPhoneType().toString());
-                    } else if (data instanceof Address) {
-                        pst.setString(2, ((Address) data).getAddress());
-                        pst.setString(3, ((Address) data).getAddrType().toString());
-                    } else if (data instanceof Messenger) {
-                        pst.setString(2, ((Messenger) data).getUsername());
-                        pst.setString(3, ((Messenger) data).getMsgrType().toString());
-                    } else if (data instanceof Friend) {
-                        pst.setInt(2, ((Friend) data).getFriendId());
-                        pst.setInt(3, ((Friend) data).getFriendId());
-                        pst.setInt(4, accountId);
-                    } else if (data instanceof Message) {
-                        pst.setInt(2, ((Message) data).getTrgId());
-                        pst.setString(3, ((Message) data).getTextContent());
-                        pst.setBytes(4, ((Message) data).getMediaContent());
-                        pst.setString(5, ((Message) data).getMsgType().toString());
-                    }
+        for (T data : accountData) {
+            String queryInsert = CREATE + query;
+            jdbcTemplate.update(con -> {
+                PreparedStatement pst = con.prepareStatement(queryInsert);
+                pst.setInt(1, accountId);
+                if (data instanceof Phone) {
+                    pst.setString(2, ((Phone) data).getNumber());
+                    pst.setString(3, ((Phone) data).getPhoneType().toString());
+                } else if (data instanceof Address) {
+                    pst.setString(2, ((Address) data).getAddr());
+                    pst.setString(3, ((Address) data).getAddrType().toString());
+                } else if (data instanceof Messenger) {
+                    pst.setString(2, ((Messenger) data).getUsername());
+                    pst.setString(3, ((Messenger) data).getMsgrType().toString());
+                } else if (data instanceof Friend) {
+                    pst.setInt(2, ((Friend) data).getFriendId());
+                    pst.setInt(3, ((Friend) data).getFriendId());
+                    pst.setInt(4, accountId);
+                } else if (data instanceof Message) {
+                    pst.setInt(2, ((Message) data).getTrgId());
+                    pst.setString(3, ((Message) data).getTextContent());
+                    pst.setBytes(4, ((Message) data).getMediaContent());
+                    pst.setString(5, ((Message) data).getMsgType().toString());
                 }
-                pst.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
+                return pst;
+            });
         }
-        return select("", EMAIL, account.getEmail());
+        return select(EMAIL, account.getEmail());
     }
 
     private <T> Account getAccountFromAccountData(T contact) {
@@ -248,105 +198,68 @@ public class AccountDao implements CrudDao<Account, Object> {
     }
 
     @Override
-    public Account select(String query, String field, Object value) {
-        Connection connection = dataSourceHolder.getConnection();
-        Account account = null;
-        ResultSet rs = null;
-        if (query.isEmpty()) {
-            query = "Account WHERE " + field + "=?;";
+    public Account select(String field, Object value) {
+        String querySelect = READ + "Account WHERE " + field + "=?;";
+        Account dbAccount = jdbcTemplate.query(querySelect, (rs, rowNum) -> createAccountFromResult(rs), value)
+                .stream().findAny().orElse(null);
+        if (dbAccount != null) {
+            dbAccount = getAccountData(dbAccount);
         }
-        String querySelect = READ + query;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            if (querySelect.contains("?")) {
-                if (value instanceof String) {
-                    pst.setString(1, (String) value);
-                } else if (value instanceof Integer) {
-                    pst.setInt(1, (int) value);
-                }
-            }
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                account = getAccountData(createAccountFromResult(rs));
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return account;
+        return dbAccount;
     }
 
-    public List<Account> selectAll(String query) {
-        Connection connection = dataSourceHolder.getConnection();
-        List<Account> accounts = new ArrayList<>();
-        if (query.isEmpty()) {
-            query = "Account";
+    public boolean selectByEmail(String email) {
+        String querySelect = READ + "Account WHERE email=?;";
+        return jdbcTemplate.query(querySelect, (rs, rowNum) -> true, email)
+                .stream().findAny().orElse(false);
+    }
+
+    public <T> Object selectByValueAndType(String value, T type, Account account) {
+        String query;
+        int accId = account.getId();
+        if (type instanceof PhoneType) {
+            query = READ + "Phone WHERE accId=? AND phoneNmr LIKE ? AND phoneType=?;";
+            return jdbcTemplate.queryForObject(query, (rs, rowNum) -> createPhoneFromResult(rs, account),
+                    accId, "%" + value + "%", type.toString());
+        } else if (type instanceof Address) {
+            query = READ + "Address WHERE accId=? AND addr LIKE ? AND addrType=?;";
+            return jdbcTemplate.query(query, (rs, rowNum) -> createAddressFromResult(rs, account),
+                    accId, "%" + value + "%", type.toString()).stream().findAny().orElse(null);
+        } else if (type instanceof Messenger) {
+            query = READ + "Messenger WHERE accId=? AND username LIKE ? AND msgrType=?;";
+            return jdbcTemplate.query(query, (rs, rowNum) -> createMessengerFromResult(rs, account),
+                    accId, "%" + value + "%", type.toString()).stream().findAny().orElse(null);
+        } else if (type instanceof Message) {
+            query = READ + "Message m INNER JOIN Account a ON m.trgId = a.id " +
+                    "WHERE accId=? AND txtContent LIKE ? AND msgType=?;";
+            return jdbcTemplate.query(query, (rs, rowNum) -> createMessageFromResult(rs, account,
+                            createAccountFromResult(rs)), accId, "%" + value + "%", type.toString())
+                    .stream().findAny().orElse(null);
         }
-        String querySelect = READ + query;
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                Account account = getAccountData(createAccountFromResult(rs));
-                accounts.add(account);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return accounts;
+        return null;
+    }
+
+    public List<Account> selectAll() {
+        String querySelect = READ + "Account";
+        return jdbcTemplate.query(querySelect, (rs, rowNum) -> createAccountFromResult(rs));
     }
 
     public List<Account> selectByString(String substring, int start, int total) {
-        Connection connection = dataSourceHolder.getConnection();
-        List<Account> accounts = new ArrayList<>();
         String searchString = "%" + substring + "%";
         String querySelect = READ + "Account WHERE firstName LIKE ? OR lastName LIKE ? ORDER BY lastName" +
                 (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setString(1, searchString);
-            pst.setString(2, searchString);
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                Account account = getAccountData(createAccountFromResult(rs));
-                accounts.add(account);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return accounts;
+        return jdbcTemplate.query(querySelect, (rs, rowNum) -> createAccountFromResult(rs), searchString, searchString);
     }
 
-    public int selectCountByString(String substring, int start, int total) {
-        Connection connection = dataSourceHolder.getConnection();
-        int rows = 0;
+    public Integer selectCountByString(String substring, int start, int total) {
         String searchString = "%" + substring + "%";
         String querySelect = READ + "Account WHERE firstName LIKE ? OR lastName LIKE ? ORDER BY lastName" +
                 (total > 0 ? " LIMIT " + (start - 1) + "," + total : "");
         querySelect = querySelect.replace("SELECT *", "SELECT COUNT(*) AS count");
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setString(1, searchString);
-            pst.setString(2, searchString);
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                rows = rs.getInt("count");
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return rows;
+        return jdbcTemplate.queryForObject(querySelect, Integer.class, searchString, searchString);
     }
 
     public List<Account> selectTargetAccounts(Account account, MessageType type) {
-        Connection connection = dataSourceHolder.getConnection();
-        List<Account> accounts = new ArrayList<>();
         String querySelect;
         if (type == null) {
             querySelect = "SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.trgId" +
@@ -359,31 +272,16 @@ public class AccountDao implements CrudDao<Account, Object> {
                     " SELECT a.* FROM Account a INNER JOIN Message m ON a.id = m.accId" +
                     " WHERE m.trgId=? AND m.msgType=? GROUP BY a.id;";
         }
-        ResultSet rs = null;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setInt(1, account.getId());
-            if (type == null) {
-                pst.setInt(2, account.getId());
-            } else {
-                pst.setString(2, type.toString());
-                pst.setInt(3, account.getId());
-                pst.setString(4, type.toString());
-            }
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                Account dbAccount = createAccountFromResult(rs);
-                accounts.add(dbAccount);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
+        if (type == null) {
+            return jdbcTemplate.query(querySelect, (rs, rowNum) -> createAccountFromResult(rs),
+                    account.getId(), account.getId());
+        } else {
+            return jdbcTemplate.query(querySelect, (rs, rowNum) -> createAccountFromResult(rs),
+                    account.getId(), type.toString(), account.getId(), type.toString());
         }
-        return accounts;
     }
 
     public List<Message> selectMessages(Account account, Account targetAccount, MessageType type) {
-        Connection connection = dataSourceHolder.getConnection();
         List<Message> messages = new ArrayList<>();
         String querySelect;
         if (type == null) {
@@ -392,62 +290,37 @@ public class AccountDao implements CrudDao<Account, Object> {
             querySelect = "SELECT * FROM Message WHERE (accId=? AND trgId=?) " +
                     "OR (accId=? AND trgId=?) AND msgType=? ORDER BY createdAt DESC;";
         }
-        ResultSet rs = null;
-        Message message;
-        try (PreparedStatement pst = connection.prepareStatement(querySelect)) {
-            pst.setInt(1, account.getId());
-            pst.setInt(2, targetAccount.getId());
-            pst.setInt(3, targetAccount.getId());
-            pst.setInt(4, account.getId());
-            pst.setString(5, type.toString());
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                if (rs.getInt("accId") == account.getId()) {
-                    message = createMessageFromResult(rs, account, targetAccount);
-                } else {
-                    message = createMessageFromResult(rs, targetAccount, account);
-                }
-                messages.add(message);
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        } finally {
-            closeResultSet(rs);
-        }
-        return messages;
+        int accId = account.getId();
+        int trgId = targetAccount.getId();
+        return jdbcTemplate.query(querySelect, (rs, rowNum) -> (rs.getInt("accId") == accId) ?
+                        createMessageFromResult(rs, account, targetAccount) :
+                        createMessageFromResult(rs, targetAccount, account),
+                accId, trgId, trgId, accId, type.toString());
     }
 
     @Override
-    public Account update(String query, String field, Object value, Account account) {
-        Connection connection = dataSourceHolder.getConnection();
-        if (query.isEmpty()) {
-            query = "Account SET " + field + "=? WHERE email=?;";
-        }
-        String queryUpdate = UPDATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
-            if (queryUpdate.contains("?")) {
-                if (value instanceof String) {
-                    pst.setString(1, (String) value);
-                } else if (value instanceof Integer) {
-                    pst.setInt(1, (int) value);
-                } else if (value instanceof InputStream) {
-                    pst.setBinaryStream(1, (InputStream) value);
-                }
-                pst.setString(2, account.getEmail());
+    public Account update(String field, Object value, Account account) {
+        String queryUpdate = UPDATE + "Account SET " + field + "=? WHERE email=?;";
+        jdbcTemplate.update(con -> {
+            PreparedStatement pst = con.prepareStatement(queryUpdate);
+            if (value instanceof String) {
+                pst.setString(1, (String) value);
+            } else if (value instanceof Integer) {
+                pst.setInt(1, (int) value);
+            } else if (value instanceof InputStream) {
+                pst.setBinaryStream(1, (InputStream) value);
             }
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return select("", EMAIL, account.getEmail());
+            pst.setString(2, account.getEmail());
+            return pst;
+        });
+        return select(EMAIL, account.getEmail());
     }
 
     public Account update(Account account) {
-        Connection connection = dataSourceHolder.getConnection();
-        String query = "Account SET firstName=?,middleName=?,lastName=?,username=?,dateOfBirth=?,gender=?,addInfo=?" +
-                " WHERE email=?;";
-        String queryUpdate = UPDATE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryUpdate)) {
+        String queryUpdate = UPDATE + "Account SET firstName=?,middleName=?,lastName=?,username=?," +
+                "dateOfBirth=?,gender=?,addInfo=? WHERE email=?;";
+        jdbcTemplate.update(con -> {
+            PreparedStatement pst = con.prepareStatement(queryUpdate);
             pst.setString(1, account.getFirstName());
             pst.setString(2, account.getMiddleName());
             pst.setString(3, account.getLastName());
@@ -457,131 +330,119 @@ public class AccountDao implements CrudDao<Account, Object> {
                     account.getGender().toString().charAt(0) : 'M'));
             pst.setString(7, account.getAddInfo());
             pst.setString(8, account.getEmail());
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
+            return pst;
+        });
+        return select(EMAIL, account.getEmail());
+    }
+
+    public <T> Account updateAccountData(String value, T type, int id, Account account) {
+        String query = "";
+        if (type instanceof PhoneType) {
+            query = "Phone SET phoneNmr=?,phoneType=? WHERE id=?;";
+        } else if (type instanceof Address) {
+            query = "Address SET addr=?,addrType=? WHERE id=?;";
+        } else if (type instanceof Messenger) {
+            query = "Messenger SET username=?,msgrType=? WHERE id=?;";
+        } else if (type instanceof Message) {
+            query = "Message SET txtContent=?,msgType=?,updatedAt=now() WHERE id=?);";
         }
-        return select("", EMAIL, account.getEmail());
+        String queryUpdate = UPDATE + query;
+        jdbcTemplate.update(con -> {
+            PreparedStatement pst = con.prepareStatement(queryUpdate);
+            pst.setString(1, value);
+            pst.setString(2, type.toString());
+            pst.setInt(3, id);
+            return pst;
+        });
+        return select(EMAIL, account.getEmail());
     }
 
     @Override
-    public Account delete(String query, Account account) {
-        Connection connection = dataSourceHolder.getConnection();
+    public Account delete(Account account) {
         List<String> queries = new ArrayList<>();
-        if (query.isEmpty()) {
-            queries.add("Account WHERE email=?;");
-            queries.add("Phone WHERE accId=?;");
-            queries.add("Address WHERE accId=?;");
-            queries.add("Messenger WHERE accId=?;");
-            queries.add("Friend WHERE accId=? OR friendId=?;");
-            queries.add("Message WHERE accId=? OR trgId=?");
-        } else {
-            queries.add(query);
-        }
+        queries.add("Account WHERE email=?;");
+        queries.add("Phone WHERE accId=?;");
+        queries.add("Address WHERE accId=?;");
+        queries.add("Messenger WHERE accId=?;");
+        queries.add("Friend WHERE accId=? OR friendId=?;");
+        queries.add("Message WHERE accId=? OR trgId=?");
         for (String queryText : queries) {
             String queryDelete = DELETE + queryText;
-            try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {
-                if (queryDelete.contains("?")) {
-                    int accountId = account.getId();
-                    if (queryDelete.contains("Account")) {
-                        pst.setString(1, account.getEmail());
-                    } else {
-                        pst.setInt(1, accountId);
-                        if (queryDelete.contains("Friend") || queryDelete.contains("Message")) {
-                            pst.setInt(2, accountId);
-                        }
+            jdbcTemplate.update(con -> {
+                PreparedStatement pst = con.prepareStatement(queryDelete);
+                if (queryDelete.contains("Account")) {
+                    pst.setString(1, account.getEmail());
+                } else {
+                    pst.setInt(1, account.getId());
+                    if (queryDelete.contains("Friend") || queryDelete.contains("Message")) {
+                        pst.setInt(2, account.getId());
                     }
                 }
-                pst.executeUpdate();
-            } catch (SQLException e) {
-                throw new DaoRuntimeException(e.getMessage(), e);
-            }
+                return pst;
+            });
         }
-        return select("", "Email", account.getEmail());
+        return select(EMAIL, account.getEmail());
     }
 
-    public <T> Account delete(String query, List<T> accountData) {
+    public <T> Account delete(List<T> accountData) {
         if (accountData.isEmpty()) {
             throw new IllegalArgumentException("No data to delete");
         }
-        Connection connection = dataSourceHolder.getConnection();
 
         T contact = accountData.get(0);
         Account account = getAccountFromAccountData(contact);
-        if (query.isEmpty()) {
-            if (contact instanceof Phone) {
-                query = "Phone WHERE accId=? AND phoneNmr=? AND phoneType=?;";
-            } else if (contact instanceof Address) {
-                query = "Address WHERE accId=? AND addr=? AND addrType=?;";
-            } else if (contact instanceof Messenger) {
-                query = "Messenger WHERE accId=? AND username=? AND msgrType=?;";
-            } else if (contact instanceof Friend) {
-                query = "Friend WHERE accId=? AND friendId=?;";
-            } else if (contact instanceof Message) {
-                query = "Message WHERE accId=? AND trgId=? AND createdAt=?;";
-            }
+        String query = "";
+        if (contact instanceof Phone) {
+            query = "Phone WHERE accId=? AND phoneNmr LIKE ? AND phoneType=?;";
+        } else if (contact instanceof Address) {
+            query = "Address WHERE accId=? AND addr LIKE ? AND addrType=?;";
+        } else if (contact instanceof Messenger) {
+            query = "Messenger WHERE accId=? AND username LIKE ? AND msgrType=?;";
+        } else if (contact instanceof Friend) {
+            query = "Friend WHERE accId=? AND friendId=?;";
+        } else if (contact instanceof Message) {
+            query = "Message WHERE accId=? AND trgId=? AND id=?;";
         }
 
         assert account != null;
         int accountId = account.getId();
         String queryDelete = DELETE + query;
-        try (PreparedStatement pst = connection.prepareStatement(queryDelete)) {
-            for (T data : accountData) {
-                if (queryDelete.contains("?")) {
-                    pst.setInt(1, accountId);
-                    if (data instanceof Phone) {
-                        pst.setString(2, ((Phone) data).getNumber());
-                        pst.setString(3, ((Phone) data).getPhoneType().toString());
-                    } else if (data instanceof Address) {
-                        pst.setString(2, ((Address) data).getAddress());
-                        pst.setString(3, ((Address) data).getAddrType().toString());
-                    } else if (data instanceof Messenger) {
-                        pst.setString(2, ((Messenger) data).getUsername());
-                        pst.setString(3, ((Messenger) data).getMsgrType().toString());
-                    } else if (data instanceof Friend) {
-                        pst.setInt(2, ((Friend) data).getFriendId());
-                    } else if (data instanceof Message) {
-                        pst.setInt(2, ((Message) data).getTrgId());
-                        pst.setString(3, ((Message) data).getCreatedAt().toString());
-                    }
+        for (T data : accountData) {
+            jdbcTemplate.update(con -> {
+                PreparedStatement pst = con.prepareStatement(queryDelete);
+                pst.setInt(1, accountId);
+                if (data instanceof Phone) {
+                    pst.setString(2, ((Phone) data).getNumber());
+                    pst.setString(3, ((Phone) data).getPhoneType().toString());
+                } else if (data instanceof Address) {
+                    pst.setString(2, ((Address) data).getAddr());
+                    pst.setString(3, ((Address) data).getAddrType().toString());
+                } else if (data instanceof Messenger) {
+                    pst.setString(2, ((Messenger) data).getUsername());
+                    pst.setString(3, ((Messenger) data).getMsgrType().toString());
+                } else if (data instanceof Friend) {
+                    pst.setInt(2, ((Friend) data).getFriendId());
+                } else if (data instanceof Message) {
+                    pst.setInt(2, ((Message) data).getTrgId());
+                    pst.setInt(3, ((Message) data).getId());
                 }
-                pst.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
+                return pst;
+            });
         }
-        return select("", EMAIL, account.getEmail());
+        return select(EMAIL, account.getEmail());
     }
 
     public boolean insertMessage(Message message) {
-        Connection connection = dataSourceHolder.getConnection();
-        boolean messageSent;
         String queryInsert = CREATE + "Message(accId,trgId,txtContent,msgType,createdAt) VALUES (?,?,?,?,now());";
-        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
-            pst.setInt(1, message.getAccount().getId());
-            pst.setInt(2, message.getTargetAccount().getId());
-            pst.setString(3, message.getTextContent());
-            pst.setString(4, message.getMsgType().toString());
-            pst.executeUpdate();
-            messageSent = true;
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return messageSent;
+        jdbcTemplate.update(queryInsert, message.getAccount().getId(), message.getTargetAccount().getId(),
+                message.getTextContent(), message.getMsgType().toString());
+        return true;
     }
 
     public boolean deleteMessageById(int id) {
-        Connection connection = dataSourceHolder.getConnection();
-        boolean messageDeleted;
         String queryInsert = DELETE + "Message WHERE id=?;";
-        try (PreparedStatement pst = connection.prepareStatement(queryInsert)) {
-            pst.setInt(1, id);
-            pst.executeUpdate();
-            messageDeleted = true;
-        } catch (SQLException e) {
-            throw new DaoRuntimeException(e.getMessage(), e);
-        }
-        return messageDeleted;
+        jdbcTemplate.update(queryInsert, id);
+        return true;
     }
 
 }

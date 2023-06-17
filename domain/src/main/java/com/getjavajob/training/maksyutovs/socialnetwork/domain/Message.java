@@ -1,8 +1,11 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import org.springframework.stereotype.Component;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Component
 public class Message implements Serializable {
 
     private static final long serialVersionUID = 6470090944414208496L;

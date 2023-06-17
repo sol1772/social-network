@@ -45,7 +45,7 @@ public class AccountListServlet extends HttpServlet {
             List<Address> homeAddresses = account.getAddresses().stream().filter(
                     address -> address.getAddrType() == AddressType.HOME).collect(Collectors.toList());
             for (Address address : homeAddresses) {
-                sb.append(address.getAddress());
+                sb.append(address.getAddr());
                 sb.append("</p>");
             }
         }
