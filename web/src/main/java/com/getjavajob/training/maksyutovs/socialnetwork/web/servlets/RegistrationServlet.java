@@ -1,12 +1,13 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.servlets;
 
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.DaoRuntimeException;
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.Utils;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,9 +40,9 @@ public class RegistrationServlet extends HttpServlet {
     private AccountService accountService;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        ServletContext sc = config.getServletContext();
-        accountService = (AccountService) sc.getAttribute("AccountService");
+    public void init() {
+        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        accountService = Objects.requireNonNull(context).getBean(AccountService.class);
     }
 
     @Override
@@ -77,7 +79,7 @@ public class RegistrationServlet extends HttpServlet {
             } else if (command.equals("Cancel")) {
                 req.getRequestDispatcher(LOGIN_URL).forward(req, resp);
             }
-        } catch (IOException e) {
+        } catch (IOException | DaoRuntimeException e) {
             LOGGER.log(Level.WARNING, e.getMessage());
         }
     }
@@ -135,17 +137,17 @@ public class RegistrationServlet extends HttpServlet {
         account.setPasswordHash(account.hashPassword(password));
         List<Phone> phones = account.getPhones();
         if (!StringUtils.isEmpty(personalPhone)) {
-            phones.add(new Phone(account, personalPhone, PhoneType.PERSONAL));
+            phones.add(new Phone(account, 0, personalPhone, PhoneType.PERSONAL));
         }
         if (!StringUtils.isEmpty(workPhone)) {
-            phones.add(new Phone(account, workPhone, PhoneType.WORK));
+            phones.add(new Phone(account, 0, workPhone, PhoneType.WORK));
         }
         List<Address> addresses = account.getAddresses();
         if (!StringUtils.isEmpty(homeAddress)) {
-            addresses.add(new Address(account, homeAddress, AddressType.HOME));
+            addresses.add(new Address(account, 0, homeAddress, AddressType.HOME));
         }
         if (!StringUtils.isEmpty(workAddress)) {
-            addresses.add(new Address(account, workAddress, AddressType.WORK));
+            addresses.add(new Address(account, 0, workAddress, AddressType.WORK));
         }
 
         return accountService.registerAccount(account);

@@ -5,9 +5,9 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Objects;
 
 @WebServlet
 @MultipartConfig
@@ -24,10 +25,10 @@ public class AccountServlet extends HttpServlet {
     private GroupService groupService;
 
     @Override
-    public void init(ServletConfig config) {
-        ServletContext sc = config.getServletContext();
-        accountService = (AccountService) sc.getAttribute("AccountService");
-        groupService = (GroupService) sc.getAttribute("GroupService");
+    public void init() {
+        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        accountService = Objects.requireNonNull(context).getBean(AccountService.class);
+        groupService = Objects.requireNonNull(context).getBean(GroupService.class);
     }
 
     @Override

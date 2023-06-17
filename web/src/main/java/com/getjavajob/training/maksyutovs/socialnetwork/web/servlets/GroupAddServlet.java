@@ -5,9 +5,9 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.GroupMember;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Role;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Objects;
 
 @WebServlet
 public class GroupAddServlet extends HttpServlet {
@@ -25,9 +26,9 @@ public class GroupAddServlet extends HttpServlet {
     private GroupService groupService;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        ServletContext sc = config.getServletContext();
-        groupService = (GroupService) sc.getAttribute("GroupService");
+    public void init() {
+        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        groupService = Objects.requireNonNull(context).getBean(GroupService.class);
     }
 
     @Override

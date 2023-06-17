@@ -3,27 +3,26 @@ package com.getjavajob.training.maksyutovs.socialnetwork.web.filters;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.*;
 
 @WebFilter
-public class AuthenticationFilter implements Filter {
+public class AuthenticationFilter extends HttpFilter {
 
     private Set<String> authorizationUrls;
     private AccountService accountService;
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        ServletContext sc = filterConfig.getServletContext();
-        accountService = (AccountService) sc.getAttribute("AccountService");
-        accountService = (AccountService) sc.getAttribute("AccountService");
+    public void init() throws ServletException {
+        ServletContext sc = getServletContext();
+        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        accountService = Objects.requireNonNull(context).getBean(AccountService.class);
         Properties properties = (Properties) sc.getAttribute("ConfigProperties");
 
         String authPattern = properties.getProperty("authorizationUrls");

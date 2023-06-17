@@ -5,19 +5,31 @@ import java.io.Serializable;
 public class Phone implements Serializable {
 
     private static final long serialVersionUID = 1105122041958251257L;
-    private final Account account;
+    private Account account;
     private String number;
     private PhoneType phoneType;
     private int id;
+
+    public Phone() {
+    }
 
     public Phone(Account account) {
         this.account = account;
     }
 
-    public Phone(Account account, String number, PhoneType phoneType) {
+    public Phone(Account account, int id, String number, PhoneType phoneType) {
         this.account = account;
+        this.id = id;
         this.number = number;
         this.phoneType = phoneType;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNumber() {
@@ -36,12 +48,16 @@ public class Phone implements Serializable {
         this.phoneType = phoneType;
     }
 
-    public int getAccId() {
-        return account.getId();
-    }
-
     public Account getAccount() {
         return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public int getAccId() {
+        return account.getId();
     }
 
 }

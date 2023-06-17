@@ -5,27 +5,39 @@ import java.io.Serializable;
 public class Address implements Serializable {
 
     private static final long serialVersionUID = 1905133041950251207L;
-    private final Account account;
-    private String address;
+    private Account account;
+    private String addr;
     private AddressType addrType;
     private int id;
+
+    public Address() {
+    }
 
     public Address(Account account) {
         this.account = account;
     }
 
-    public Address(Account account, String address, AddressType addrType) {
+    public Address(Account account, int id, String address, AddressType addrType) {
         this.account = account;
-        this.address = address;
+        this.id = id;
+        this.addr = address;
         this.addrType = addrType;
     }
 
-    public String getAddress() {
-        return address;
+    public int getId() {
+        return id;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getAddr() {
+        return addr;
+    }
+
+    public void setAddr(String addr) {
+        this.addr = addr;
     }
 
     public AddressType getAddrType() {
@@ -36,12 +48,16 @@ public class Address implements Serializable {
         this.addrType = addrType;
     }
 
-    public int getAccId() {
-        return account.getId();
-    }
-
     public Account getAccount() {
         return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public int getAccId() {
+        return account.getId();
     }
 
 }

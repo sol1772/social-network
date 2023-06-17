@@ -39,7 +39,7 @@
                     <p><i>${CaseUtils.toCamelCase(phone.phoneType.toString(), true, ' ')} phone: </i>${phone.number}</p>
                 </c:forEach>
                 <c:forEach items="${account.addresses}" var="addr">
-                    <p><i>${CaseUtils.toCamelCase(addr.addrType.toString(), true, ' ')} address: </i>${addr.address}</p>
+                    <p><i>${CaseUtils.toCamelCase(addr.addrType.toString(), true, ' ')} address: </i>${addr.addr}</p>
                 </c:forEach>
                 <p><i>About: </i>${StringUtils.isEmpty(account.addInfo)?"---" : account.addInfo}</p>
                 <p><i>Groups: </i>

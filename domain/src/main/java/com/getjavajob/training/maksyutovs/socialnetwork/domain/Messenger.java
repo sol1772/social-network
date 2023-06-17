@@ -5,19 +5,31 @@ import java.io.Serializable;
 public class Messenger implements Serializable {
 
     private static final long serialVersionUID = 4505122041950251272L;
-    private final Account account;
+    private Account account;
     private String username;
     private MessengerType msgrType;
     private int id;
+
+    public Messenger() {
+    }
 
     public Messenger(Account account) {
         this.account = account;
     }
 
-    public Messenger(Account account, String username, MessengerType msgrType) {
+    public Messenger(Account account, int id, String username, MessengerType msgrType) {
         this.account = account;
+        this.id = id;
         this.username = username;
         this.msgrType = msgrType;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -36,12 +48,16 @@ public class Messenger implements Serializable {
         this.msgrType = msgrType;
     }
 
-    public int getAccId() {
-        return account.getId();
-    }
-
     public Account getAccount() {
         return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public int getAccId() {
+        return account.getId();
     }
 
 }
