@@ -19,7 +19,6 @@ public class Group implements Serializable {
     private LocalDateTime createdAt;
     private byte[] image;
 
-
     public Group() {
     }
 
