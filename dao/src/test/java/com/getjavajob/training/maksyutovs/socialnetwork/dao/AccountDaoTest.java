@@ -2,6 +2,7 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -115,6 +116,11 @@ class AccountDaoTest {
         createTablesIfNotExist();
     }
 
+    @BeforeEach
+    void truncate() {
+        truncateTables();
+    }
+
     void createTablesIfNotExist() {
         String query = getQueryCreateTables();
         jdbcTemplate.execute(query);
@@ -161,7 +167,6 @@ class AccountDaoTest {
     void insert() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Account)");
-        truncateTables();
         Account dbAccount = dao.insert(getNewAccount());
         assertNotNull(dbAccount);
         System.out.println("Created account " + dbAccount);
@@ -171,7 +176,6 @@ class AccountDaoTest {
     void insertContacts() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Contacts)");
-        truncateTables();
         Account dbAccount = dao.insert(getNewAccount());
         assertNotNull(dbAccount);
 
@@ -199,7 +203,6 @@ class AccountDaoTest {
     void insertFriends() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Friends)");
-        truncateTables();
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
         Account friendAccount = dao.insert(getNewTargetAccount());
@@ -215,7 +218,6 @@ class AccountDaoTest {
     void insertMessages() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Messages)");
-        truncateTables();
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
         Account targetAccount = dao.insert(getNewTargetAccount());
@@ -231,7 +233,6 @@ class AccountDaoTest {
     void select() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.select()");
-        truncateTables();
         String email = "info@valievakamila.ru";
         Account account = dao.select(EMAIL, email);
         assertNull(account);
@@ -245,7 +246,6 @@ class AccountDaoTest {
     void update() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.update()");
-        truncateTables();
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
         // updating a field
@@ -270,7 +270,6 @@ class AccountDaoTest {
     void deleteContacts() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.delete(Contacts)");
-        truncateTables();
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
         List<Phone> phones = account.getPhones();
@@ -291,7 +290,6 @@ class AccountDaoTest {
     void deleteFriends() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.delete(Friends)");
-        truncateTables();
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
         Account friendAccount = dao.insert(getNewTargetAccount());
@@ -314,7 +312,6 @@ class AccountDaoTest {
     void delete() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.delete(Account)");
-        truncateTables();
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
 

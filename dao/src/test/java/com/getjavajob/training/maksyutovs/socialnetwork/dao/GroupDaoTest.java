@@ -2,6 +2,7 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,10 @@ class GroupDaoTest {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDao.beforeAll");
         createTablesIfNotExist();
+    }
+
+    @BeforeEach
+    void truncate() {
         truncateTables();
     }
 
@@ -114,7 +119,6 @@ class GroupDaoTest {
     void insert() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.insert(Group)");
-        truncateTables();
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
         System.out.println("Created group " + group);
@@ -124,7 +128,6 @@ class GroupDaoTest {
     void insertMembers() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.insert(Members)");
-        truncateTables();
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
 
@@ -147,7 +150,6 @@ class GroupDaoTest {
     void select() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.select()");
-        truncateTables();
         assertNotNull(dao.insert(getNewGroup()));
         String title = "Figure skating";
         Group group = dao.select("title", title);
@@ -159,7 +161,6 @@ class GroupDaoTest {
     void update() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.update()");
-        truncateTables();
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
         // updating a field 'metaTitle'
@@ -184,7 +185,6 @@ class GroupDaoTest {
     void deleteMembers() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.delete(Members)");
-        truncateTables();
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
 
@@ -209,7 +209,6 @@ class GroupDaoTest {
     void delete() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDAO.delete()");
-        truncateTables();
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
 
