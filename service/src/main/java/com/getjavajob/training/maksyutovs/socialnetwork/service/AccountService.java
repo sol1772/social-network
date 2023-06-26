@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -77,17 +77,17 @@ public class AccountService {
         return dao.selectMessages(account, targetAccount, type);
     }
 
-    @Transactional
+//    @Transactional
     public boolean sendMessage(Message message) {
         return dao.insertMessage(message);
     }
 
-    @Transactional
+//    @Transactional
     public boolean deleteMessage(int id) {
         return dao.deleteMessageById(id);
     }
 
-    @Transactional
+//    @Transactional
     public Account registerAccount(Account account) {
         Account dbAccount;
         try {
@@ -99,7 +99,7 @@ public class AccountService {
         return dbAccount;
     }
 
-    @Transactional
+//    @Transactional
     public Account addAccountData(Account account, Account dbAccount) {
         if (!account.getPhones().isEmpty()) {
             for (Phone phone : account.getPhones()) {
@@ -124,7 +124,7 @@ public class AccountService {
         return dbAccount;
     }
 
-    @Transactional
+//    @Transactional
     public Account editAccount(Account account, String field, Object value) {
         Account dbAccount = null;
         if (checkAccount(account)) {
@@ -133,7 +133,7 @@ public class AccountService {
         return dbAccount;
     }
 
-    @Transactional
+//    @Transactional
     public Account editAccount(Account account) {
         Account dbAccount = null;
         if (checkAccount(account)) {
@@ -142,7 +142,7 @@ public class AccountService {
         return dbAccount;
     }
 
-    @Transactional
+//    @Transactional
     public Account deleteAccount(Account account) {
         Account dbAccount = null;
         if (checkAccount(account)) {
@@ -151,7 +151,7 @@ public class AccountService {
         return dbAccount;
     }
 
-    @Transactional
+//    @Transactional
     public Account addFriend(Account account, Account friend) {
         Account dbAccount = validateAccount(account);
         Account dbFriend = validateAccount(friend);
@@ -160,7 +160,7 @@ public class AccountService {
         return dao.insert(friends);
     }
 
-    @Transactional
+//    @Transactional
     public Account deleteFriend(Account account, Account friend) {
         Account dbAccount = validateAccount(account);
         Account dbFriend = validateAccount(friend);
@@ -179,7 +179,7 @@ public class AccountService {
         return bCryptPasswordEncoder.matches(password, account.getPasswordHash());
     }
 
-    @Transactional
+//    @Transactional
     public boolean changePassword(String oldPassword, String newPassword, Account account) {
         boolean passwordChanged = false;
         if (checkAccount(account)) {

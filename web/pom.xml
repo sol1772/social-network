@@ -23,19 +23,16 @@
             <groupId>com.getjavajob</groupId>
             <artifactId>domain</artifactId>
             <version>1.21.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.getjavajob</groupId>
             <artifactId>dao</artifactId>
             <version>1.21.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.getjavajob</groupId>
             <artifactId>service</artifactId>
             <version>1.21.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
         <dependency>
