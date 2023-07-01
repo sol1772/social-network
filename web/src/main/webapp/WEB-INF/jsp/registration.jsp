@@ -29,12 +29,12 @@
             </c:forEach>
         </c:if>
         <div class="field">
-            <label for="firstName">First name *</label>
-            <input type="text" name="firstName" id="firstName" placeholder="Required" value=${firstName}>
-        </div>
-        <div class="field">
             <label for="lastName">Last name *</label>
             <input type="text" name="lastName" id="lastName" placeholder="Required" value=${lastName}>
+        </div>
+        <div class="field">
+            <label for="firstName">First name *</label>
+            <input type="text" name="firstName" id="firstName" placeholder="Required" value=${firstName}>
         </div>
         <div class="field">
             <label for="middleName">Middle name</label>

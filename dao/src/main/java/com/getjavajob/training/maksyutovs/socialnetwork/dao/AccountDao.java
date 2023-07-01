@@ -130,6 +130,26 @@ public class AccountDao implements CrudDao<Account, Object> {
         return select(ID, keyHolder.getKey());
     }
 
+    public <T> Account insert(Account account, String value, T type) {
+        String query = "";
+        if (type instanceof PhoneType) {
+            query = "Phone(accId,phoneNmr,phoneType) VALUES (?,?,?);";
+        } else if (type instanceof AddressType) {
+            query = "Address(accId,addr,addrType) VALUES (?,?,?);";
+        } else if (type instanceof MessengerType) {
+            query = "Messenger(accId,username,msgrType) VALUES (?,?,?);";
+        }
+        String queryInsert = CREATE + query;
+        jdbcTemplate.update(con -> {
+            PreparedStatement pst = con.prepareStatement(queryInsert);
+            pst.setInt(1, account.getId());
+            pst.setString(2, value);
+            pst.setString(3, type.toString());
+            return pst;
+        });
+        return select(EMAIL, account.getEmail());
+    }
+
     public <T> Account insert(List<T> accountData) {
         if (accountData.isEmpty()) {
             throw new IllegalArgumentException("No data to insert");
@@ -221,15 +241,15 @@ public class AccountDao implements CrudDao<Account, Object> {
             query = READ + "Phone WHERE accId=? AND phoneNmr LIKE ? AND phoneType=?;";
             return jdbcTemplate.queryForObject(query, (rs, rowNum) -> createPhoneFromResult(rs, account),
                     accId, "%" + value + "%", type.toString());
-        } else if (type instanceof Address) {
+        } else if (type instanceof AddressType) {
             query = READ + "Address WHERE accId=? AND addr LIKE ? AND addrType=?;";
             return jdbcTemplate.query(query, (rs, rowNum) -> createAddressFromResult(rs, account),
                     accId, "%" + value + "%", type.toString()).stream().findAny().orElse(null);
-        } else if (type instanceof Messenger) {
+        } else if (type instanceof MessengerType) {
             query = READ + "Messenger WHERE accId=? AND username LIKE ? AND msgrType=?;";
             return jdbcTemplate.query(query, (rs, rowNum) -> createMessengerFromResult(rs, account),
                     accId, "%" + value + "%", type.toString()).stream().findAny().orElse(null);
-        } else if (type instanceof Message) {
+        } else if (type instanceof MessageType) {
             query = READ + "Message m INNER JOIN Account a ON m.trgId = a.id " +
                     "WHERE accId=? AND txtContent LIKE ? AND msgType=?;";
             return jdbcTemplate.query(query, (rs, rowNum) -> createMessageFromResult(rs, account,
@@ -339,11 +359,11 @@ public class AccountDao implements CrudDao<Account, Object> {
         String query = "";
         if (type instanceof PhoneType) {
             query = "Phone SET phoneNmr=?,phoneType=? WHERE id=?;";
-        } else if (type instanceof Address) {
+        } else if (type instanceof AddressType) {
             query = "Address SET addr=?,addrType=? WHERE id=?;";
-        } else if (type instanceof Messenger) {
+        } else if (type instanceof MessengerType) {
             query = "Messenger SET username=?,msgrType=? WHERE id=?;";
-        } else if (type instanceof Message) {
+        } else if (type instanceof MessageType) {
             query = "Message SET txtContent=?,msgType=?,updatedAt=now() WHERE id=?);";
         }
         String queryUpdate = UPDATE + query;

@@ -124,6 +124,15 @@ public class AccountService {
     }
 
     //    @Transactional
+    public <T> Account addAccountData(Account account, String value, T type) {
+        Account dbAccount = null;
+        if (checkAccount(account)) {
+            dbAccount = dao.insert(account, value, type);
+        }
+        return dbAccount;
+    }
+
+    //    @Transactional
     public Account editAccount(Account account, String field, Object value) {
         Account dbAccount = null;
         if (checkAccount(account)) {
@@ -137,6 +146,14 @@ public class AccountService {
         Account dbAccount = null;
         if (checkAccount(account)) {
             dbAccount = dao.update(account);
+        }
+        return dbAccount;
+    }
+
+    public <T> Account editAccountData(String value, T type, int id, Account account) {
+        Account dbAccount = null;
+        if (checkAccount(account)) {
+            dbAccount = dao.updateAccountData(value, type, id, account);
         }
         return dbAccount;
     }
