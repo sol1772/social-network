@@ -1,9 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.servlets;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.Utils;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.Gender;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +25,6 @@ public class AccountEditServlet extends HttpServlet {
     private static final String FIRSTNAME = "firstName";
     private static final String LASTNAME = "lastName";
     private static final String MIDDLENAME = "middleName";
-    private static final String EMAIL = "email";
     private static final String USERNAME = "username";
     private static final String ABOUT = "addInfo";
     private static final String BIRTHDATE = "dateOfBirth";
@@ -35,6 +32,14 @@ public class AccountEditServlet extends HttpServlet {
     private static final String EDIT_URL = "/WEB-INF/jsp/account-edit.jsp";
     private AccountService accountService;
     private GroupService groupService;
+
+    public static Integer tryParse(String text) {
+        try {
+            return Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
 
     @Override
     public void init() {
@@ -51,15 +56,25 @@ public class AccountEditServlet extends HttpServlet {
             if (account == null) {
                 resp.sendRedirect(req.getContextPath() + "/login");
             } else {
-                req.setAttribute(FIRSTNAME, account.getFirstName());
-                req.setAttribute(LASTNAME, account.getLastName());
-                req.setAttribute(MIDDLENAME, account.getMiddleName());
-                req.setAttribute(USERNAME, account.getUserName());
-                req.setAttribute(EMAIL, account.getEmail());
-                req.setAttribute(ABOUT, account.getAddInfo());
-                req.setAttribute(BIRTHDATE, Utils.DATE_FORMATTER.format(account.getDateOfBirth()));
+                req.setAttribute(ACCOUNT, account);
                 req.setAttribute(GENDER, String.valueOf(account.getGender() != null ?
                         account.getGender().toString().charAt(0) : 'M'));
+                req.setAttribute("personalPhone", account.getPhones().stream().filter(phone ->
+                        PhoneType.PERSONAL.equals(phone.getPhoneType())).map(Phone::getNumber).findAny().orElse(""));
+                req.setAttribute("personalPhoneId", account.getPhones().stream().filter(phone ->
+                        PhoneType.PERSONAL.equals(phone.getPhoneType())).map(Phone::getId).findAny().orElse(null));
+                req.setAttribute("workPhone", account.getPhones().stream().filter(phone ->
+                        PhoneType.WORK.equals(phone.getPhoneType())).map(Phone::getNumber).findAny().orElse(""));
+                req.setAttribute("workPhoneId", account.getPhones().stream().filter(phone ->
+                        PhoneType.WORK.equals(phone.getPhoneType())).map(Phone::getId).findAny().orElse(null));
+                req.setAttribute("homeAddress", account.getAddresses().stream().filter(addr ->
+                        AddressType.HOME.equals(addr.getAddrType())).map(Address::getAddr).findAny().orElse(""));
+                req.setAttribute("homeAddressId", account.getAddresses().stream().filter(addr ->
+                        AddressType.HOME.equals(addr.getAddrType())).map(Address::getId).findAny().orElse(null));
+                req.setAttribute("workAddress", account.getAddresses().stream().filter(addr ->
+                        AddressType.WORK.equals(addr.getAddrType())).map(Address::getAddr).findAny().orElse(""));
+                req.setAttribute("workAddressId", account.getAddresses().stream().filter(addr ->
+                        AddressType.WORK.equals(addr.getAddrType())).map(Address::getId).findAny().orElse(null));
                 req.getRequestDispatcher(EDIT_URL).forward(req, resp);
             }
         } catch (ServletException | IOException e) {
@@ -80,7 +95,24 @@ public class AccountEditServlet extends HttpServlet {
             } else {
                 if (command.equals("Save")) {
                     fillAccountFromRequest(account, req);
+                    fillAccountDataFromRequest(account, req);
                     Account dbAccount = accountService.editAccount(account);
+                    for (Phone phone : account.getPhones()) {
+                        if (phone.getId() == 0) {
+                            dbAccount = accountService.addAccountData(account, phone.getNumber(), phone.getPhoneType());
+                        } else {
+                            dbAccount = accountService.editAccountData(
+                                    phone.getNumber(), phone.getPhoneType(), phone.getId(), account);
+                        }
+                    }
+                    for (Address addr : account.getAddresses()) {
+                        if (addr.getId() == 0) {
+                            dbAccount = accountService.addAccountData(account, addr.getAddr(), addr.getAddrType());
+                        } else {
+                            dbAccount = accountService.editAccountData(
+                                    addr.getAddr(), addr.getAddrType(), addr.getId(), account);
+                        }
+                    }
                     req.setAttribute(ACCOUNT, dbAccount);
                     resp.sendRedirect(req.getContextPath() + "/account?id=" + dbAccount.getId());
                 } else if (command.equals("Cancel")) {
@@ -112,6 +144,51 @@ public class AccountEditServlet extends HttpServlet {
                 : LocalDate.parse(dateOfBirth, Utils.DATE_FORMATTER));
         String gender = req.getParameter(GENDER);
         account.setGender(StringUtils.isEmpty(gender) ? account.getGender() : Gender.valueOf(gender));
+    }
+
+    void fillAccountDataFromRequest(Account account, HttpServletRequest req) {
+        // phones
+        String personalPhone = req.getParameter("personalPhone");
+        if (!StringUtils.isEmpty(personalPhone)) {
+            int id = tryParse(req.getParameter("personalPhoneId"));
+            Phone phone = account.getPhones().stream().filter(p -> id == p.getId()).findAny().orElse(null);
+            if (phone == null) {
+                account.getPhones().add(new Phone(account, id, personalPhone, PhoneType.PERSONAL));
+            } else {
+                phone.setNumber(personalPhone);
+            }
+        }
+        String workPhone = req.getParameter("workPhone");
+        if (!StringUtils.isEmpty(workPhone)) {
+            int id = tryParse(req.getParameter("workPhoneId"));
+            Phone phone = account.getPhones().stream().filter(p -> id == p.getId()).findAny().orElse(null);
+            if (phone == null) {
+                account.getPhones().add(new Phone(account, id, workPhone, PhoneType.WORK));
+            } else {
+                phone.setNumber(workPhone);
+            }
+        }
+        // addresses
+        String homeAddress = req.getParameter("homeAddress");
+        if (!StringUtils.isEmpty(homeAddress)) {
+            int id = tryParse(req.getParameter("homeAddressId"));
+            Address addr = account.getAddresses().stream().filter(p -> id == p.getId()).findAny().orElse(null);
+            if (addr == null) {
+                account.getAddresses().add(new Address(account, id, homeAddress, AddressType.HOME));
+            } else {
+                addr.setAddr(homeAddress);
+            }
+        }
+        String workAddress = req.getParameter("workAddress");
+        if (!StringUtils.isEmpty(workAddress)) {
+            int id = tryParse(req.getParameter("workAddressId"));
+            Address addr = account.getAddresses().stream().filter(p -> id == p.getId()).findAny().orElse(null);
+            if (addr == null) {
+                account.getAddresses().add(new Address(account, id, workAddress, AddressType.WORK));
+            } else {
+                addr.setAddr(workAddress);
+            }
+        }
     }
 
 }
