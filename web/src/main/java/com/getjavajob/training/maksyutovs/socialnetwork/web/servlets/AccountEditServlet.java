@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.Objects;
 
 @WebServlet
@@ -97,6 +98,15 @@ public class AccountEditServlet extends HttpServlet {
                     fillAccountFromRequest(account, req);
                     fillAccountDataFromRequest(account, req);
                     Account dbAccount = accountService.editAccount(account);
+                    // delete not actual numbers
+                    for (Phone phone : dbAccount.getPhones()) {
+                        Phone phoneFoundById = account.getPhones().stream().filter
+                                (p -> phone.getId() == p.getId()).findAny().orElse(null);
+                        if (phoneFoundById == null) {
+                            accountService.deleteAccountData(phone.getPhoneType(), phone.getId());
+                        }
+                    }
+                    // update existing and write new numbers
                     for (Phone phone : account.getPhones()) {
                         if (phone.getId() == 0) {
                             dbAccount = accountService.addAccountData(account, phone.getNumber(), phone.getPhoneType());
@@ -148,24 +158,16 @@ public class AccountEditServlet extends HttpServlet {
 
     void fillAccountDataFromRequest(Account account, HttpServletRequest req) {
         // phones
-        String personalPhone = req.getParameter("personalPhone");
-        if (!StringUtils.isEmpty(personalPhone)) {
-            int id = tryParse(req.getParameter("personalPhoneId"));
-            Phone phone = account.getPhones().stream().filter(p -> id == p.getId()).findAny().orElse(null);
-            if (phone == null) {
-                account.getPhones().add(new Phone(account, id, personalPhone, PhoneType.PERSONAL));
-            } else {
-                phone.setNumber(personalPhone);
-            }
-        }
-        String workPhone = req.getParameter("workPhone");
-        if (!StringUtils.isEmpty(workPhone)) {
-            int id = tryParse(req.getParameter("workPhoneId"));
-            Phone phone = account.getPhones().stream().filter(p -> id == p.getId()).findAny().orElse(null);
-            if (phone == null) {
-                account.getPhones().add(new Phone(account, id, workPhone, PhoneType.WORK));
-            } else {
-                phone.setNumber(workPhone);
+        String[] phoneNums = req.getParameterValues("phoneNum");
+        String[] phoneTypes = req.getParameterValues("phoneType");
+        String[] phoneIds = req.getParameterValues("phoneId");
+        account.getPhones().clear();
+        if (phoneNums != null && phoneTypes != null) {
+            for (int i = 0; i < phoneNums.length; i++) {
+                String phoneNum = phoneNums[i];
+                PhoneType phoneType = PhoneType.valueOf(phoneTypes[i].toUpperCase(Locale.getDefault()));
+                int phoneId = (phoneIds == null || phoneIds.length < i + 1) ? 0 : tryParse(phoneIds[i]);
+                account.getPhones().add(new Phone(account, phoneId, phoneNum, phoneType));
             }
         }
         // addresses

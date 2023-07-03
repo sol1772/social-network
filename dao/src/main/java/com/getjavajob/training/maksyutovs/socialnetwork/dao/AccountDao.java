@@ -452,6 +452,36 @@ public class AccountDao implements CrudDao<Account, Object> {
         return select(EMAIL, account.getEmail());
     }
 
+    public <T> Account deleteAccountDataById(T type, int id, Account account) {
+        String queryDelete = "";
+        if (type instanceof PhoneType) {
+            queryDelete = DELETE + "Phone WHERE id=?;";
+        } else if (type instanceof AddressType) {
+            queryDelete = DELETE + "Address WHERE id=?;";
+        } else if (type instanceof MessengerType) {
+            queryDelete = DELETE + "Messenger WHERE id=?;";
+        } else if (type instanceof MessageType) {
+            queryDelete = DELETE + "Message WHERE id=?;";
+        }
+        jdbcTemplate.update(queryDelete, id);
+        return select(EMAIL, account.getEmail());
+    }
+
+    public <T> boolean deleteAccountDataById(T type, int id) {
+        String queryDelete = "";
+        if (type instanceof PhoneType) {
+            queryDelete = DELETE + "Phone WHERE id=?;";
+        } else if (type instanceof AddressType) {
+            queryDelete = DELETE + "Address WHERE id=?;";
+        } else if (type instanceof MessengerType) {
+            queryDelete = DELETE + "Messenger WHERE id=?;";
+        } else if (type instanceof MessageType) {
+            queryDelete = DELETE + "Message WHERE id=?;";
+        }
+        jdbcTemplate.update(queryDelete, id);
+        return true;
+    }
+
     public boolean insertMessage(Message message) {
         String queryInsert = CREATE + "Message(accId,trgId,txtContent,msgType,createdAt) VALUES (?,?,?,?,now());";
         jdbcTemplate.update(queryInsert, message.getAccount().getId(), message.getTargetAccount().getId(),
@@ -460,8 +490,8 @@ public class AccountDao implements CrudDao<Account, Object> {
     }
 
     public boolean deleteMessageById(int id) {
-        String queryInsert = DELETE + "Message WHERE id=?;";
-        jdbcTemplate.update(queryInsert, id);
+        String queryDelete = DELETE + "Message WHERE id=?;";
+        jdbcTemplate.update(queryDelete, id);
         return true;
     }
 

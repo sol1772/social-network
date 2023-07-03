@@ -2,34 +2,16 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:tx="http://www.springframework.org/schema/tx"
-       xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation=
                "http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
-http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd
+
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
 
     <context:component-scan base-package="com.getjavajob.training.maksyutovs.socialnetwork.service"/>
     <tx:annotation-driven transaction-manager="txManager"/>
     <import resource="classpath:dao-context.xml"/>
-
-    <tx:advice id="txAdvice" transaction-manager="txManager">
-        <tx:attributes>
-            <!-- all methods starting with 'get', 'check' or 'validate' are read-only -->
-            <tx:method name="get*" read-only="true"/>
-            <tx:method name="check*" read-only="true"/>
-            <tx:method name="validate*" read-only="true"/>
-            <!-- other methods use the default transaction settings -->
-            <tx:method name="*"/>
-        </tx:attributes>
-    </tx:advice>
-
-    <aop:config>
-        <aop:pointcut id="serviceMethods"
-                      expression="execution(* com.getjavajob.training.maksyutovs.socialnetwork.service.*.*(..))"/>
-        <aop:advisor pointcut-ref="serviceMethods" advice-ref="txAdvice"/>
-    </aop:config>
 
     <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="dataSource"/>

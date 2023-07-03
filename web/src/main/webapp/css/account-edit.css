@@ -20,6 +20,22 @@ input[type=text] {
     box-sizing: border-box;
 }
 
+input[id=newPhone] {
+    width: 180px;
+    height: 25px;
+    padding: 10px;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+input[id=phoneNum] {
+    width: 280px;
+    height: 25px;
+    padding: 10px;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
 textarea {
     width: 300px;
     padding: 10px;
@@ -36,7 +52,7 @@ div.field label {
     display: block;
     float: left;
     text-align: left;
-    width: 100px;
+    width: 110px;
     height: 20px;
     padding-left: 10px;
 }
@@ -53,4 +69,38 @@ input[type=radio] {
     height: 30px;
     border-radius: 3px;
     margin: 10px;
+}
+
+table {
+    width: 100%;
+    padding-left: 7px;
+    padding-bottom: 20px;
+    padding-top: 20px;
+    margin: auto;
+    text-align: left;
+    display: block;
+    float: left;
+    /*border-collapse: collapse;*/
+}
+
+td, th {
+    /*padding: 3px; !* Поля вокруг содержимого таблицы *!*/
+    /*border: 1px solid black; !* Параметры рамки *!*/
+    /*border-spacing: 0 20px;*/
+}
+
+td[id=colPhoneType] {
+    width: 105px;
+}
+
+td[id=colPhoneNum] {
+    /*width: 400px;*/
+}
+
+p[id=error] {
+    width: 50%;
+    background-color: lightblue;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: -10px;
 }
