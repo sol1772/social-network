@@ -1,106 +1,61 @@
-h1, h2 {
-    color: darkgreen;
+div.container {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
-    text-transform: uppercase;
+    background-color: lightblue;
+    border-left: solid 1px #25cff2;
+    border-right: solid 1px #25cff2;
 }
 
-div {
+h2 {
+    text-align: center;
+    text-transform: uppercase;
+    padding-top: 1rem;
+}
+
+h3 {
+    text-align: center;
+    padding-bottom: 1rem;
+}
+
+form[id=acc_edit_form] {
     width: 50%;
-    background-color: lightblue;
-    padding: 20px;
     margin-left: auto;
     margin-right: auto;
 }
 
-input[type=text] {
-    width: 300px;
-    height: 25px;
-    padding: 10px;
-    border-radius: 3px;
-    box-sizing: border-box;
+span[class=input-group-text] {
+    width: 7rem;
 }
 
-input[id=newPhone] {
-    width: 180px;
-    height: 25px;
-    padding: 10px;
-    border-radius: 3px;
-    box-sizing: border-box;
+[id=colPhoneType] {
+    width: 7rem;
+    font-size: small;
+    border-right: solid 1px lightgrey;
 }
 
-input[id=phoneNum] {
-    width: 280px;
-    height: 25px;
-    padding: 10px;
-    border-radius: 3px;
-    box-sizing: border-box;
+[id=colPhoneNum] {
+    font-size: small;
 }
 
-textarea {
-    width: 300px;
-    padding: 10px;
-    border-radius: 3px;
-    box-sizing: border-box;
+[id=phoneNum] {
+    border: none;
 }
 
-div.field {
-    line-height: 25px;
-    padding-bottom: 5px;
+[id=delPhone] {
+    width: 2rem;
 }
 
-div.field label {
-    display: block;
-    float: left;
-    text-align: left;
-    width: 110px;
-    height: 20px;
-    padding-left: 10px;
+button[id=save], [id=cancel] {
+    width: 5rem;
 }
 
-input[type=radio] {
-    float: left;
-    vertical-align: middle;
-    margin: 5px;
-}
-
-.button_ok {
-    float: none;
-    width: 90px;
-    height: 30px;
-    border-radius: 3px;
-    margin: 10px;
-}
-
-table {
-    width: 100%;
-    padding-left: 7px;
-    padding-bottom: 20px;
-    padding-top: 20px;
-    margin: auto;
-    text-align: left;
-    display: block;
-    float: left;
-    /*border-collapse: collapse;*/
-}
-
-td, th {
-    /*padding: 3px; !* Поля вокруг содержимого таблицы *!*/
-    /*border: 1px solid black; !* Параметры рамки *!*/
-    /*border-spacing: 0 20px;*/
-}
-
-td[id=colPhoneType] {
-    width: 105px;
-}
-
-td[id=colPhoneNum] {
-    /*width: 400px;*/
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
 }
 
 p[id=error] {
-    width: 50%;
-    background-color: lightblue;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: -10px;
+    color: red;
 }

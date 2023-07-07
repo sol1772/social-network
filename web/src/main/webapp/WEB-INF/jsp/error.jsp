@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <jsp:useBean id="title" scope="request" class="java.lang.String"/>
 <jsp:useBean id="servletName" scope="request" class="java.lang.String"/>
 <jsp:useBean id="reqUri" scope="request" class="java.lang.String"/>
@@ -15,9 +15,9 @@
 </head>
 <body>
 <jsp:include page="header.jsp"/>
-<div>
-    <h1>Social network</h1>
-    <h2>Error page</h2><br>
+<div class="container">
+    <h2 style="color: darkgreen">Social network</h2>
+    <h3 style="color: darkgreen">Error page</h3>
     <h3><i>${title}</i></h3>
     <p><i>Exception Name: </i>${exceptionName}</p>
     <p><i>Exception Message: </i>${exceptionMessage}</p>
@@ -26,5 +26,6 @@
     <p><i>Status Code: </i>${statusCode}</p>
     <a class="link" href="login">Home page</a><br>
 </div>
+<jsp:include page="footer.jsp"/>
 </body>
 </html>

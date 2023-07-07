@@ -50,6 +50,7 @@ public class GroupAddServlet extends HttpServlet {
                 if (title.isEmpty()) {
                     req.setAttribute(ERROR, "Enter title");
                     req.getRequestDispatcher(ADD_URL).forward(req, resp);
+                    return;
                 }
                 Group group = new Group(title);
                 String metaTitle = req.getParameter("metaTitle");

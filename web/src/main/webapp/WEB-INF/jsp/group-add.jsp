@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <jsp:useBean id="title" scope="request" class="java.lang.String"/>
 <jsp:useBean id="metaTitle" scope="request" class="java.lang.String"/>
 <jsp:useBean id="error" scope="request" class="java.lang.String"/>
@@ -8,30 +8,33 @@
 <head>
     <meta charset="UTF-8">
     <title>Group creation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/group-add.css"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
-<div>
-    <h1>Social network</h1>
-    <h2>New group</h2>
-    <form name="group-add_form" action="group-add" method="post">
-        <div class="field">
-            <input type="text" name="title" id="title" placeholder="Required" value=${title}>
-            <label for="title">Title *</label>
+<div class="container">
+    <h2 style="color: darkgreen">Social network</h2>
+    <h3 style="color: darkgreen">New group</h3>
+    <form id="group_add_form" action="group-add" method="post" novalidate>
+        <p class="error" id="error">${error}</p>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="titleLabel">Title *</span>
+            <input type="text" class="form-control" name="title" id="title" placeholder="Required" required
+                   aria-label="Title" value="${title}">
         </div>
-        <div class="field">
-            <textarea rows="2" cols="40" name="metaTitle" id="metaTitle">${metaTitle}</textarea>
-            <label for="metaTitle">About</label><br>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="metaTitleLabel">About</span>
+            <textarea class="form-control" id="metaTitle" name="metaTitle" rows="2"
+                      aria-label="About">${metaTitle}</textarea>
         </div>
-        <div class="field" style="text-align: center">
-            <input type="submit" value="Create" class="button_ok" name="submit"/>
-            <input type="submit" value="Cancel" class="button_ok" name="submit"/>
+        <div class="btn-group d-block mx-auto">
+            <button class="btn btn-outline-info" name="submit" id="create" value="Create">Create</button>
+            <button class="btn btn-outline-info" name="submit" id="cancel" value="Cancel">Cancel</button>
         </div>
-        <p class="error" style="color: red">
-            ${error}
-        </p>
     </form>
 </div>
+<jsp:include page="footer.jsp"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

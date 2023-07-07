@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="org.apache.commons.text.CaseUtils" %>
@@ -12,17 +12,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Group</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/group.css"/>
 </head>
 <body>
-<div class="wrapper">
-    <jsp:include page="header.jsp"/>
-    <br><br>
-    <h1>Social network</h1>
-    <h2>Group info</h2>
+<jsp:include page="header.jsp"/>
+<div class="container">
+    <h2 style="color: darkgreen">Social network</h2>
+    <h3 style="color: darkgreen">Group info</h3>
     <div class="head">
         <div class="head-cont">
-            <h3>
+            <h5>
                 <p><i>Title: </i>${group.title}</p>
                 <p><i>About: </i>${StringUtils.isEmpty(group.metaTitle)?"---" : group.metaTitle}</p>
                 <p><i>Owner: </i>${owner.firstName} ${owner.lastName}</p>
@@ -35,22 +35,22 @@
                             (${CaseUtils.toCamelCase(member.role.toString(), true, ' ')})</p><br>
                     </c:forEach>
                 </c:if>
-            </h3>
+            </h5>
         </div>
         <div class="head-logo">
             <img src="<c:url value="upload?command=group&id=${group.id}"/>" alt="Group image"/>
             <c:if test="${username.equals(owner.userName)}">
                 <form action="upload" method="get">
-                    <p><input type="submit" name="submit" value="Change"/>
-                        <input type="submit" name="submit" onclick="return confirm('Delete?')" value="Delete"/></p>
-                    <script>
-                        function confirmDelete() {
-                            if (confirm("Delete?")) {
-                                return true;
-                            }
-                        }
-                    </script>
-                    <p style="color: darkgreen">${requestScope.message}</p>
+                    <div class="btn-group d-block mx-auto">
+                        <button class="btn btn-outline-info btn-sm" name="submit" id="change" value="Change">Change
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" name="submit" id="delete"
+                                onclick="return confirm('Delete?')" value="Delete">Delete
+                        </button>
+                    </div>
+                        <%--                    <p><input type="submit" name="submit" value="Change"/>--%>
+                        <%--                        <input type="submit" name="submit" onclick="return confirm('Delete?')" value="Delete"/></p>--%>
+                        <%--                    <p style="color: darkgreen">${requestScope.message}</p>--%>
                     <input type="hidden" name="path" value="group">
                     <input type="hidden" name="id" value=${group.id}>
                 </form>
@@ -58,8 +58,21 @@
         </div>
     </div>
     <c:if test="${username.equals(owner.userName)}">
-        <a class="link" href="group-edit?id=${group.id}"> Edit</a><br>
+        <ul class="nav justify-content-center">
+            <li class="nav-item">
+                <a class="nav-link" href="group-edit?id=${group.id}">Edit</a>
+            </li>
+        </ul>
     </c:if>
 </div>
+<jsp:include page="footer.jsp"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmDelete() {
+        if (confirm("Delete?")) {
+            return true;
+        }
+    }
+</script>
 </body>
 </html>

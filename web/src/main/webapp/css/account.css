@@ -1,13 +1,22 @@
-h1, h2 {
-    color: darkgreen;
+div.container {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
-    text-transform: uppercase;
+    background-color: lightblue;
+    border-left: solid 1px #25cff2;
+    border-right: solid 1px #25cff2;
 }
 
-h3, h4, h5 {
-    color: midnightblue;
-    text-align: left;
-    text-transform: none;
+h2 {
+    text-align: center;
+    text-transform: uppercase;
+    padding-top: 1rem;
+}
+
+h3 {
+    text-align: center;
+    padding-bottom: 1rem;
 }
 
 .head {
@@ -18,7 +27,6 @@ h3, h4, h5 {
 }
 
 .head-cont {
-    color: darkgreen;
     float: left;
     text-align: left;
 }
@@ -26,16 +34,26 @@ h3, h4, h5 {
 .head-logo {
     float: right;
     width: 150px;
-    margin-left: auto;
-    margin-right: 100px;
-    margin-top: 20px;
+    margin: 1rem 5rem 1rem auto;
     text-align: justify-all;
 }
 
-.container {
+div.btn-group {
+    margin: 1rem;
+}
+
+button[id=change], [id=delete] {
+    width: 4rem;
+}
+
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
+}
+
+.container-wall {
     display: flex;
     text-align: left;
-    margin-bottom: -20px;
 }
 
 .wall {
@@ -51,14 +69,6 @@ button[id=del_msg] {
     border-radius: 0;
     height: 20px;
     margin-left: 10px;
-}
-
-div.wrapper {
-    width: 50%;
-    background-color: lightblue;
-    padding: 20px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 div.links {

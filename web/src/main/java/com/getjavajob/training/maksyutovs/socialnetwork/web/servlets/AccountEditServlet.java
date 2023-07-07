@@ -129,7 +129,7 @@ public class AccountEditServlet extends HttpServlet {
                     req.setAttribute(ACCOUNT, account);
                     req.setAttribute("groups", groupService.getGroupsByAccount(account));
                     req.setAttribute("posts", accountService.getMessages(account, account, MessageType.POST));
-                    req.getRequestDispatcher("/WEB-INF/jsp/account.jsp").forward(req, resp);
+                    resp.sendRedirect(req.getContextPath() + "/account?id=" + account.getId());
                 }
             }
         } catch (ServletException | IOException e) {

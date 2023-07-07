@@ -1,0 +1,24 @@
+nav {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0.5rem 0.5rem 0 0;
+    background-color: lightblue;
+    border-top: solid 1px #25cff2;
+    border-left: solid 1px #25cff2;
+    border-right: solid 1px #25cff2;
+}
+
+.nav-link:hover {
+    color: #fff !important;
+    background-color: #0dcaf0;
+    border-radius: 0.5rem;
+}
+
+input[id=search] {
+    width: 15rem;
+}
+
+button[id=btn_search] {
+    width: 3rem;
+}

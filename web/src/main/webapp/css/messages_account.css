@@ -1,14 +1,32 @@
-h1, h2 {
-    color: darkgreen;
+div.container {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
-    text-transform: uppercase;
+    background-color: lightblue;
+    border-left: solid 1px #25cff2;
+    border-right: solid 1px #25cff2;
 }
 
-h3, h4 {
+h2 {
+    text-align: center;
+    text-transform: uppercase;
+    padding-top: 1rem;
+}
+
+h3 {
+    text-align: center;
+    padding-bottom: 1rem;
+}
+
+h5 {
     color: midnightblue;
-    text-align: left;
-    text-transform: none;
-    margin-left: 10px;
+}
+
+form[id=msg_form] {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .field {
@@ -22,6 +40,7 @@ textarea[id=message] {
     float: left;
     vertical-align: middle;
     height: 30px;
+    margin-bottom: 1rem;
 }
 
 .button_ok {
@@ -31,24 +50,24 @@ textarea[id=message] {
     border-radius: 3px;
     margin-left: 10px;
     margin-top: auto;
-    margin-bottom: auto;
+    margin-bottom: 1rem;
 }
 
 p.report {
     color: red;
     margin-left: 10px;
     margin-top: auto;
-    margin-bottom: auto;
+    margin-bottom: 1rem;
 }
 
-.container {
+.container_msg {
     display: flex;
     text-align: left;
-    margin-bottom: -20px;
 }
 
 .wall {
     text-align: left;
+    margin-right: 1rem;
 }
 
 button[id=del_msg] {
@@ -59,12 +78,4 @@ button[id=del_msg] {
     border-radius: 0;
     height: 20px;
     margin-left: 10px;
-}
-
-div.wrapper {
-    width: 50%;
-    background-color: lightblue;
-    padding: 20px;
-    margin-left: auto;
-    margin-right: auto;
 }

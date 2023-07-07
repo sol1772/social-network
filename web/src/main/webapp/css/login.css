@@ -1,48 +1,41 @@
-h1 {
-    color: darkgreen;
-    text-align: center;
-    text-transform: uppercase;
+div.container {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: lightblue;
+    border-left: solid 1px #25cff2;
+    border-right: solid 1px #25cff2;
 }
 
-div {
-    width: 50%;
-    background-color: lightblue;
-    padding: 20px;
+h2 {
+    text-align: center;
+    color: darkgreen;
+    text-transform: uppercase;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+form[id=login_form] {
+    width: 80%;
     margin-left: auto;
     margin-right: auto;
 }
 
-input[type=email], input[type=password] {
-    width: 300px;
-    height: 25px;
-    padding: 10px;
-    border-radius: 3px;
-    box-sizing: border-box;
+div.input-group {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
-div.field {
-    line-height: 25px;
-    padding-bottom: 5px;
+button[id=button_ok] {
+    width: 6rem;
 }
 
-div.field label {
-    display: block;
-    float: left;
-    text-align: left;
-    width: 100px;
-    height: 20px;
-    padding-left: 10px;
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
 }
 
-.button_ok {
-    float: none;
-    width: 90px;
-    height: 30px;
-    border-radius: 3px;
-    margin: 10px;
-}
-
-a.link {
-    display: block;
+p[id=error] {
     text-align: center;
+    color: red;
 }

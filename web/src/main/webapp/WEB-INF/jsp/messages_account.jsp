@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="messages" scope="request" type="java.util.List"/>
@@ -13,22 +13,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Messages / ${targetAccount.userName}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/messages_account.css"/>
-    <script>
-        function confirmDelete() {
-            if (confirm("Delete?")) {
-                return true;
-            }
-        }
-    </script>
 </head>
 <body>
-<div class="wrapper">
-    <jsp:include page="header.jsp"/>
-    <br><br>
-    <h1>Social network</h1>
-    <h2>Account messages</h2>
-    <br>
+<jsp:include page="header.jsp"/>
+<div class="container">
+    <h2 style="color: darkgreen">Social network</h2>
+    <h3 style="color: darkgreen">Account messages</h3>
     <form name="msg_form" action="messages_account" method="post">
         <h3>Messages / ${targetAccount.userName}</h3>
         <div class="field">
@@ -40,17 +32,20 @@
             <p class="report">${report}</p>
         </div>
         <c:forEach items="${messages}" var="msg">
-            <div class="container">
-                <div class="wall"><h4><i><fmt:parseDate value="${msg.createdAt}" pattern="yyyy-MM-dd'T'HH:mm"
+            <div class="container_msg">
+                <div class="wall"><h5><i><fmt:parseDate value="${msg.createdAt}" pattern="yyyy-MM-dd'T'HH:mm"
                                                         var="parsedDateTime" type="both"/>
-                    <fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${parsedDateTime}"/></i></h4></div>
-                <div class="wall"><h4>
+                    <fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${parsedDateTime}"/></i></h5>
+                </div>
+                <div class="wall"><h5>
                     <c:choose>
                         <c:when test="${msg.account.id==account.id}">${account.userName}</c:when>
                         <c:otherwise>${targetAccount.userName}</c:otherwise>
-                    </c:choose></h4>
+                    </c:choose></h5>
                 </div>
-                <div class="wall"><h3>${msg.textContent}</h3></div>
+                <div class="wall">
+                    <h5>${msg.textContent}</h5>
+                </div>
                 <h5>
                     <button name="submit" value="del_msg" id="del_msg"
                             onclick="return confirm('Delete?')">x
@@ -61,5 +56,14 @@
         </c:forEach>
     </form>
 </div>
+<jsp:include page="footer.jsp"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmDelete() {
+        if (confirm("Delete?")) {
+            return true;
+        }
+    }
+</script>
 </body>
 </html>

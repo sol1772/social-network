@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
@@ -19,17 +19,18 @@
 </head>
 <body>
 <jsp:include page="header.jsp"/>
-<div>
-    <h1>Social network</h1>
-    <h2>Account / group search</h2>
+<div class="container">
+    <h2 style="color: darkgreen">Social network</h2>
+    <h3 style="color: darkgreen">Account / group search</h3>
+    <p class="error" id="error">${error}</p>
     <c:choose>
         <c:when test="${requestScope.accountsTotal==0}">
             <h4>Accounts not found by substring '${q}'</h4>
         </c:when>
         <c:otherwise>
-            <table>
+            <table class="table table-sm table-bordered table-hover">
                 <caption>
-                    <h4>Accounts found by substring '${q}': ${accountsTotal},
+                    <h5>Accounts found by substring '${q}': ${accountsTotal},
                         <c:choose>
                             <c:when test="${fn:length(requestScope.accounts)==0}">
                                 page ${pageContext.request.getParameter("page")} exceeds number of pages ${accountsPages}
@@ -38,7 +39,7 @@
                                 page ${pageContext.request.getParameter("page")} of ${accountsPages}
                             </c:otherwise>
                         </c:choose>
-                    </h4>
+                    </h5>
                 </caption>
                 <tr>
                     <th>Id</th>
@@ -53,7 +54,6 @@
                     </tr>
                 </c:forEach>
             </table>
-            <br>
             <form action="search" method="get" name='accountsForm'>
                 <a href='search?q=${q}&page=1'>Page 1 ||</a>
                 <c:choose>
@@ -94,9 +94,9 @@
             <h4>Groups not found by substring '${q}'</h4>
         </c:when>
         <c:otherwise>
-            <table>
+            <table class="table table-sm table-bordered table-hover">
                 <caption>
-                    <h4>Groups found by substring '${q}': ${groupsTotal},
+                    <h5>Groups found by substring '${q}': ${groupsTotal},
                         <c:choose>
                             <c:when test="${fn:length(requestScope.groups)==0}">
                                 page ${pageContext.request.getParameter("page")} exceeds number of pages ${groupsPages}
@@ -105,7 +105,7 @@
                                 page ${pageContext.request.getParameter("page")} of ${groupsPages}
                             </c:otherwise>
                         </c:choose>
-                    </h4>
+                    </h5>
                 </caption>
                 <tr>
                     <th>Id</th>
@@ -120,7 +120,6 @@
                     </tr>
                 </c:forEach>
             </table>
-            <br>
             <form action="search" method="get" name='groupsForm'>
                 <a href='search?q=${q}&page=1'>Page 1 ||</a>
                 <c:choose>
@@ -154,13 +153,7 @@
             </form>
         </c:otherwise>
     </c:choose>
-    <br>
-    <p class="error" style="color: red">
-        ${error}
-    </p>
-    <c:if test="${StringUtils.isEmpty(username)}">
-        <a class="link" href="login">Login</a><br>
-    </c:if>
 </div>
+<jsp:include page="footer.jsp"/>
 </body>
 </html>

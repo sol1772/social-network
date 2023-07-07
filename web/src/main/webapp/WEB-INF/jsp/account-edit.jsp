@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="org.apache.commons.text.CaseUtils" %>
 <jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
@@ -11,86 +11,107 @@
 <html lang="en">
 <head>
     <title>Account edit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/account-edit.css"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
-<div>
-    <h1>Social network</h1>
-    <h2>Account edit</h2>
-    <form action="account-edit" method="post">
-        <p id="error" style="color: red; text-align: center">${error}</p>
-        <div class="field">
-            <label for="lastName">Last name *</label>
-            <input type="text" name="lastName" required id="lastName" value=${account.lastName}>
+<div class="container">
+    <h2 style="color: darkgreen">Social network</h2>
+    <h3 style="color: darkgreen">Account edit</h3>
+    <form id="acc_edit_form" action="account-edit" method="post" novalidate>
+        <p class="error" id="error">${error}</p>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="lastNameLabel">Last name *</span>
+            <input type="text" class="form-control" name="lastName" id="lastName" placeholder="Required" required
+                   aria-label="Last name" value=${account.lastName}>
         </div>
-        <div class="field">
-            <label for="firstName">First name *</label>
-            <input type="text" name="firstName" required id="firstName" value=${account.firstName}>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="firstNameLabel">First name *</span>
+            <input type="text" class="form-control" name="firstName" id="firstName" placeholder="Required" required
+                   aria-label="First name" value=${account.firstName}>
         </div>
-        <div class="field">
-            <label for="middleName">Middle name</label>
-            <input type="text" name="middleName" id="middleName" value=${account.middleName}>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="middleNameLabel">Middle name</span>
+            <input type="text" class="form-control" name="middleName" id="middleName"
+                   aria-label="Middle name" value=${account.middleName}>
         </div>
-        <div class="field">
-            <label for="username">Username *</label>
-            <input type="text" name="username" required id="username" value=${account.userName}>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="usernameLabel">Username *</span>
+            <input type="text" class="form-control" name="username" id="username" placeholder="Required" required
+                   aria-label="Username" value=${account.userName}>
         </div>
-        <div class="field">
-            <label for="newPhone">New phone</label>
-            <input type="text" name="newPhone" id="newPhone" placeholder="+1234567890">
-            <select id="newPhoneType">
-                <option>Personal</option>
-                <option>Work</option>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="newPhoneLabel">New phone</span>
+            <input type="text" class="form-control" name="newPhone" id="newPhone" placeholder="+1234567890"
+                   aria-label="Ввод нового телефона">
+            <select class="form-select" id="newPhoneType" aria-label="Выбор типа телефона">
+                <option value="Personal">Personal</option>
+                <option value="Work">Work</option>
             </select>
-            <input type="button" id="addPhone" value="Add">
-            <table id="phoneTable" value="${account.phones}">
+            <button class="btn btn-outline-info" type="button" id="addPhone">Add</button>
+        </div>
+
+        <div class="input-group input-group-sm mb-3">
+            <table id="phoneTable" class="table table-hover">
                 <c:forEach items="${account.phones}" var="phone">
                     <tr>
                         <td id="colPhoneType">${CaseUtils.toCamelCase(phone.phoneType.toString(), true, ' ')} phone</td>
                         <td id="colPhoneNum"><input type="tel" readonly name="phoneNum" id="phoneNum"
-                                                    value=${phone.number}></td>
-                        <td><input type="button" id="delPhone" value="x"></td>
+                                                    value='${phone.number}' aria-label=""></td>
                         <td><input type="hidden" name="phoneId" id="phoneId" value=${phone.id}></td>
                         <td><input type="hidden" name="phoneType" id="phoneType" value=${phone.phoneType}></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" type="button" id="delPhone">x</button>
+                        </td>
                     </tr>
                 </c:forEach>
             </table>
         </div>
-        <div class="field">
-            <label for="homeAddress">Home address</label>
-            <input type="text" name="homeAddress" id="homeAddress" value="${homeAddress}">
-            <input type="hidden" name="homeAddressId" id="homeAddressId" value=${requestScope.homeAddressId}>
+
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="homeAddressLabel">Home address</span>
+            <input type="text" class="form-control" name="homeAddress" id="homeAddress"
+                   aria-label="Home address">
         </div>
-        <div class="field">
-            <label for="workAddress">Work address</label>
-            <input type="text" name="workAddress" id="workAddress" value="${workAddress}">
-            <input type="hidden" name="workAddressId" id="workAddressId" value=${requestScope.workAddressId}>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="workAddressLabel">Work address</span>
+            <input type="text" class="form-control" name=workAddress"" id="workAddress"
+                   aria-label="Work address">
         </div>
-        <div class="field">
-            <label for="addInfo">About</label>
-            <textarea rows="2" cols="40" name="addInfo" id="addInfo">${account.addInfo}</textarea>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="addInfoLabel">About</span>
+            <textarea class="form-control" id="addInfo" name="addInfo" rows="2"
+                      aria-label="About">${account.addInfo}</textarea>
         </div>
-        <div class="field">
-            <label for="dateOfBirth">Date of birth *</label>
-            <input type="date" name="dateOfBirth" required id="dateOfBirth" value=${account.dateOfBirth}>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="dateOfBirthLabel">Date of birth *</span>
+            <input type="date" class="form-control" name="dateOfBirth" id="dateOfBirth" required
+                   aria-label="Date of birth" value=${account.dateOfBirth}>
         </div>
-        <div class="field">
-            <label>Gender *</label>
-            <input type="radio" name="gender" id="genderF" value="F"
-                   <c:if test="${gender=='F'}">checked</c:if>/>
-            <label for="genderF">Female</label>
-            <input type="radio" name="gender" id="genderM" value="M"
-                   <c:if test="${gender=='M'}">checked</c:if>/>
-            <label for="genderM">Male</label>
-            <br>
+        <div class="input-group input-group-sm mb-3" id="radio_group">
+            <span class="input-group-text" id="genderLabel">Gender *</span>
+            <div class="col-sm-7">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="genderF" value="F" required
+                           <c:if test="${gender=='F'}">checked</c:if>/>
+                    <label class="form-check-label" for="genderF">Female</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="genderM" value="M" required
+                           <c:if test="${gender=='M'}">checked</c:if>/>
+                    <label class="form-check-label" for="genderM">Male</label>
+                </div>
+            </div>
         </div>
-        <div class="field" style="text-align: center">
-            <input type="submit" name="submit" class="button_ok" id="save" value="Save"/>
-            <input type="submit" name="submit" class="button_ok" id="cancel" value="Cancel"/>
+        <div class="btn-group d-block mx-auto">
+            <button class="btn btn-outline-info" name="submit" id="save" value="Save">Save</button>
+            <button class="btn btn-outline-info" name="submit" id="cancel" value="Cancel">Cancel</button>
         </div>
     </form>
 </div>
+<jsp:include page="footer.jsp"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<c:url value="/js/accountEdit.js"/>"></script>
 </body>
 </html>
