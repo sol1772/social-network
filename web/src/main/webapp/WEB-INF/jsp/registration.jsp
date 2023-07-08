@@ -33,27 +33,27 @@
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="lastNameLabel">Last name *</span>
             <input type="text" class="form-control" name="lastName" id="lastName" placeholder="Required" required
-                   aria-label="Last name" value=${lastName}>
+                   aria-label="Last name" value="${lastName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="firstNameLabel">First name *</span>
             <input type="text" class="form-control" name="firstName" id="firstName" placeholder="Required" required
-                   aria-label="First name" value=${firstName}>
+                   aria-label="First name" value="${firstName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="middleNameLabel">Middle name</span>
             <input type="text" class="form-control" name="middleName" id="middleName"
-                   aria-label="Middle name" value=${middleName}>
+                   aria-label="Middle name" value="${middleName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="usernameLabel">Username *</span>
             <input type="text" class="form-control" name="username" id="username" placeholder="Required" required
-                   aria-label="Username" value=${username}>
+                   aria-label="Username" value="${username}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="emailLabel">E-mail *</span>
             <input type="text" class="form-control" name="email" id="email" placeholder="Required" required
-                   aria-label="E-mail" value=${email}>
+                   aria-label="E-mail" value="${email}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="passwordLabel">Password *</span>
@@ -87,7 +87,7 @@
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="dateOfBirthLabel">Date of birth *</span>
             <input type="date" class="form-control" name="dateOfBirth" id="dateOfBirth" required
-                   aria-label="Date of birth" value=${dateOfBirth}>
+                   aria-label="Date of birth" value="${dateOfBirth}">
         </div>
         <div class="input-group input-group-sm mb-3" id="radio_group">
             <span class="input-group-text" id="genderLabel">Gender *</span>

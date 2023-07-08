@@ -52,7 +52,7 @@
                         <%--                        <input type="submit" name="submit" onclick="return confirm('Delete?')" value="Delete"/></p>--%>
                         <%--                    <p style="color: darkgreen">${requestScope.message}</p>--%>
                     <input type="hidden" name="path" value="group">
-                    <input type="hidden" name="id" value=${group.id}>
+                    <input type="hidden" name="id" value="${group.id}">
                 </form>
             </c:if>
         </div>

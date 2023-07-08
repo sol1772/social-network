@@ -73,9 +73,9 @@
                             onclick="return confirm('Delete?')">x
                     </button>
                 </h5>
-                <input type="hidden" name="accId" value=${account.id}>
-                <input type="hidden" name="trgId" value=${account.id}>
-                <input type="hidden" name="msg_id" value=${msg.id}>
+                <input type="hidden" name="accId" value="${account.id}">
+                <input type="hidden" name="trgId" value="${account.id}">
+                <input type="hidden" name="msg_id" value="${msg.id}">
             </div>
         </c:forEach>
     </form>

@@ -24,22 +24,22 @@
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="lastNameLabel">Last name *</span>
             <input type="text" class="form-control" name="lastName" id="lastName" placeholder="Required" required
-                   aria-label="Last name" value=${account.lastName}>
+                   aria-label="Last name" value="${account.lastName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="firstNameLabel">First name *</span>
             <input type="text" class="form-control" name="firstName" id="firstName" placeholder="Required" required
-                   aria-label="First name" value=${account.firstName}>
+                   aria-label="First name" value="${account.firstName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="middleNameLabel">Middle name</span>
             <input type="text" class="form-control" name="middleName" id="middleName"
-                   aria-label="Middle name" value=${account.middleName}>
+                   aria-label="Middle name" value="${account.middleName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="usernameLabel">Username *</span>
             <input type="text" class="form-control" name="username" id="username" placeholder="Required" required
-                   aria-label="Username" value=${account.userName}>
+                   aria-label="Username" value="${account.userName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="newPhoneLabel">New phone</span>
@@ -58,9 +58,9 @@
                     <tr>
                         <td id="colPhoneType">${CaseUtils.toCamelCase(phone.phoneType.toString(), true, ' ')} phone</td>
                         <td id="colPhoneNum"><input type="tel" readonly name="phoneNum" id="phoneNum"
-                                                    value='${phone.number}' aria-label=""></td>
-                        <td><input type="hidden" name="phoneId" id="phoneId" value=${phone.id}></td>
-                        <td><input type="hidden" name="phoneType" id="phoneType" value=${phone.phoneType}></td>
+                                                    value="${phone.number}" aria-label=""></td>
+                        <td><input type="hidden" name="phoneId" id="phoneId" value="${phone.id}"></td>
+                        <td><input type="hidden" name="phoneType" id="phoneType" value="${phone.phoneType}"></td>
                         <td>
                             <button class="btn btn-sm btn-outline-info" type="button" id="delPhone">x</button>
                         </td>
@@ -71,13 +71,15 @@
 
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="homeAddressLabel">Home address</span>
-            <input type="text" class="form-control" name="homeAddress" id="homeAddress"
+            <input type="text" class="form-control" name="homeAddress" id="homeAddress" value="${homeAddress}"
                    aria-label="Home address">
+            <input type="hidden" name="homeAddressId" id="homeAddressId" value="${requestScope.homeAddressId}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="workAddressLabel">Work address</span>
-            <input type="text" class="form-control" name=workAddress"" id="workAddress"
+            <input type="text" class="form-control" name="workAddress" id="workAddress" value="${workAddress}"
                    aria-label="Work address">
+            <input type="hidden" name="workAddressId" id="workAddressId" value="${requestScope.workAddressId}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="addInfoLabel">About</span>
@@ -87,7 +89,7 @@
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="dateOfBirthLabel">Date of birth *</span>
             <input type="date" class="form-control" name="dateOfBirth" id="dateOfBirth" required
-                   aria-label="Date of birth" value=${account.dateOfBirth}>
+                   aria-label="Date of birth" value="${account.dateOfBirth}">
         </div>
         <div class="input-group input-group-sm mb-3" id="radio_group">
             <span class="input-group-text" id="genderLabel">Gender *</span>
@@ -105,8 +107,26 @@
             </div>
         </div>
         <div class="btn-group d-block mx-auto">
-            <button class="btn btn-outline-info" name="submit" id="save" value="Save">Save</button>
-            <button class="btn btn-outline-info" name="submit" id="cancel" value="Cancel">Cancel</button>
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal"
+                    name="saveBtn" id="saveBtn" value="Save">Save
+            </button>
+            <button type="submit" class="btn btn-outline-info" name="submit" id="cancel" value="Cancel">Cancel</button>
+        </div>
+        <div class="modal" id="modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Save changes?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-outline-info" name="submit" id="save" value="Save">Save
+                        </button>
+                        <button type="button" class="btn btn-outline-info" id="close" data-bs-dismiss="modal">Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
 </div>

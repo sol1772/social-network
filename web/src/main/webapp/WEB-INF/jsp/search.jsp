@@ -65,7 +65,7 @@
                             Previous ||</a>
                     </c:otherwise>
                 </c:choose>
-                <input type="hidden" name="q" value=${q}>
+                <input type="hidden" name="q" value="${q}">
                 <label for="num"></label>
                 <input type="number" id="num" name="page" style="width: 50px"
                        oninput="function submitForm() {
@@ -73,7 +73,7 @@
                                return value <= ${accountsPages};
                                }
                                return submitForm()"
-                       value=${pageContext.request.getParameter("page")} min="1" max=${accountsPages}>
+                       value="${pageContext.request.getParameter("page")}" min="1" max=${accountsPages}>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page').toString().equals(accountsPages)}">
                         <a href='search' class="disabled">Next ||</a>
@@ -131,7 +131,7 @@
                             Previous ||</a>
                     </c:otherwise>
                 </c:choose>
-                <input type="hidden" name="q" value=${q}>
+                <input type="hidden" name="q" value="${q}">
                 <label for="numGr"></label>
                 <input type="number" id="numGr" name="page" style="width: 50px"
                        oninput="function submitForm() {
@@ -139,7 +139,7 @@
                                return value <= ${groupsPages};
                                }
                                return submitForm()"
-                       value=${pageContext.request.getParameter("page")} min="1" max=${groupsPages}>
+                       value="${pageContext.request.getParameter("page")}" min="1" max=${groupsPages}>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page').toString().equals(groupsPages)}">
                         <a href='search' class="disabled">Next ||</a>

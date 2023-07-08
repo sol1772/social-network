@@ -21,4 +21,3 @@ function validateFields(e) {
         e.preventDefault();
     }
 }
-

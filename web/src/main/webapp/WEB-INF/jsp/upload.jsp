@@ -19,9 +19,9 @@
         <input type="text" name="description" placeholder="file size up to 65 kb" aria-label=""/>
         <input type="file" name="file"/>
         <input type="submit"/>
-        <input type="hidden" name="change_delete" value=${change_delete}>
-        <input type="hidden" name="path" value=${path}>
-        <input type="hidden" name="id" value=${id}>
+        <input type="hidden" name="change_delete" value="${change_delete}">
+        <input type="hidden" name="path" value="${path}">
+        <input type="hidden" name="id" value="${id}">
     </form>
 </div>
 <jsp:include page="footer.jsp"/>

@@ -24,8 +24,8 @@
     <form name="msg_form" action="messages_account" method="post">
         <h3>Messages / ${targetAccount.userName}</h3>
         <div class="field">
-            <input type="hidden" name="accId" value=${account.id}>
-            <input type="hidden" name="trgId" value=${targetAccount.id}>
+            <input type="hidden" name="accId" value="${account.id}">
+            <input type="hidden" name="trgId" value=""${targetAccount.id}">
             <label for="message"></label>
             <textarea rows="2" cols="50" name="message" id="message" placeholder="Your message">${message}</textarea>
             <input type="submit" value="Send" class="button_ok" name="submit"/>
@@ -51,7 +51,7 @@
                             onclick="return confirm('Delete?')">x
                     </button>
                 </h5>
-                <input type="hidden" name="msg_id" value=${msg.id}>
+                <input type="hidden" name="msg_id" value="${msg.id}">
             </div>
         </c:forEach>
     </form>

@@ -1,9 +1,10 @@
 const re = /^[\d+][\d() -]{4,14}\d$/;
 const phone = document.getElementById("newPhone");
 const phoneType = document.getElementById("newPhoneType");
-const addPhoneBtn = document.getElementById("addPhone");
-const saveBtn = document.getElementById("save");
 const phoneTbl = document.getElementById("phoneTable");
+const addPhoneBtn = document.getElementById("addPhone");
+const saveBtn = document.getElementById("saveBtn");
+const closeBtn = document.getElementById("close");
 const error = document.getElementById("error");
 
 function validateFields() {
@@ -92,7 +93,8 @@ Array.from(document.querySelectorAll("button[id=delPhone]")).forEach(function (e
 });
 
 saveBtn.addEventListener("click", function (e) {
-    if (!validateFields() || !confirm("Save changes?")) {
+    if (!validateFields()) {
         e.preventDefault();
+        closeBtn.click();
     }
 })

@@ -47,7 +47,7 @@ span[class=input-group-text] {
     width: 2rem;
 }
 
-button[id=save], [id=cancel] {
+button:not([id=addPhone]):not([id=delPhone]):not([id=btn_search]) {
     width: 5rem;
 }
 
