@@ -48,9 +48,7 @@
                                 onclick="return confirm('Delete?')" value="Delete">Delete
                         </button>
                     </div>
-                        <%--                    <p><input type="submit" name="submit" value="Change"/>--%>
-                        <%--                        <input type="submit" name="submit" onclick="return confirm('Delete?')" value="Delete"/></p>--%>
-                        <%--                    <p style="color: darkgreen">${requestScope.message}</p>--%>
+                    <p style="color: darkgreen">${requestScope.message}</p>
                     <input type="hidden" name="path" value="group">
                     <input type="hidden" name="id" value="${group.id}">
                 </form>

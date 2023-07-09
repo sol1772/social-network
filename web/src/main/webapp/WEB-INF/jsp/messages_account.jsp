@@ -25,7 +25,7 @@
         <h3>Messages / ${targetAccount.userName}</h3>
         <div class="field">
             <input type="hidden" name="accId" value="${account.id}">
-            <input type="hidden" name="trgId" value=""${targetAccount.id}">
+            <input type="hidden" name="trgId" value="${targetAccount.id}">
             <label for="message"></label>
             <textarea rows="2" cols="50" name="message" id="message" placeholder="Your message">${message}</textarea>
             <input type="submit" value="Send" class="button_ok" name="submit"/>
