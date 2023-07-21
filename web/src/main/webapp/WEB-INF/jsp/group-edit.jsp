@@ -1,8 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
-<jsp:useBean id="title" scope="request" class="java.lang.String"/>
-<jsp:useBean id="metaTitle" scope="request" class="java.lang.String"/>
-<jsp:useBean id="error" scope="request" class="java.lang.String"/>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%--<jsp:useBean id="title" scope="request" class="java.lang.String"/>--%>
+<%--<jsp:useBean id="metaTitle" scope="request" class="java.lang.String"/>--%>
 <jsp:useBean id="group" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Group"/>
+<jsp:useBean id="error" scope="request" class="java.lang.String"/>
+<c:set var="root" value="${pageContext.request.contextPath}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -10,14 +12,14 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/group-edit.css"/>
+    <link rel="stylesheet" type="text/css" href="${root}/css/group-edit.css"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
 <div class="container">
     <h2 style="color: darkgreen">Social network</h2>
     <h3 style="color: darkgreen">Group edit</h3>
-    <form id="group_edit_form" action="group-edit" method="post">
+    <form id="group_edit_form" action="${root}/group/${group.id}/edit" method="post">
         <p class="error" id="error">${error}</p>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="titleLabel">Title (readonly)</span>

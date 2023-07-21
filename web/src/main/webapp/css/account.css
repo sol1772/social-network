@@ -31,6 +31,28 @@ h3 {
     text-align: left;
 }
 
+.table-hover tbody tr:hover td {
+    background-color: #ceeaf6 !important;
+}
+
+td, th {
+    background-color: lightblue !important;
+    border: none !important;
+    text-align: left;
+    padding-left: 0.5rem !important;
+    vertical-align: middle;
+}
+
+td[id=msg_date] {
+    width: 7rem;
+    font-size: small;
+}
+
+td[id=msg_del] {
+    text-align: right;
+    font-size: small;
+}
+
 .head-logo {
     float: right;
     width: 150px;
@@ -49,26 +71,6 @@ button[id=change], [id=delete] {
 .btn-outline-info:hover {
     color: #fff !important;
     border-radius: 0.5rem;
-}
-
-.container-wall {
-    display: flex;
-    text-align: left;
-}
-
-.wall {
-    text-align: left;
-    margin-right: 30px;
-}
-
-button[id=del_msg] {
-    background-color: lightblue;
-    color: maroon;
-    font-weight: 500;
-    border: none;
-    border-radius: 0;
-    height: 20px;
-    margin-left: 10px;
 }
 
 div.links {

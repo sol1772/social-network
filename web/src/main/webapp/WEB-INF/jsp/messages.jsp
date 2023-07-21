@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="accounts" scope="request" type="java.util.List"/>
 <jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
+<c:set var="root" value="${pageContext.request.contextPath}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,20 +10,20 @@
     <meta charset="UTF-8">
     <title>Messages</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/messages_account.css"/>
+    <link rel="stylesheet" type="text/css" href="${root}/css/messages_account.css"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
 <div class="container">
     <h2 style="color: darkgreen">Social network</h2>
     <h3 style="color: darkgreen">Account messages</h3>
-    <form name="msg_form" action="messages_account" method="post" style="width: 50%">
+    <form name="msg_form" action="${root}/messages_account" method="post" style="width: 50%">
         <c:if test="${accounts != null}">
             <c:forEach items="${accounts}" var="targetAccount">
-                <ul class="nav justify-content-center">
+                <ul class="nav justify-content-left">
                     <li class="nav-item">
-                        <a class="nav-link"
-                           href="messages_account?id=${account.id}&trgId=${targetAccount.id}">${targetAccount}</a>
+                        <a class="nav-link" href="${root}/messages_account?id=${account.id}&trgId=${targetAccount.id}">
+                                ${targetAccount}</a>
                     </li>
                 </ul>
             </c:forEach>

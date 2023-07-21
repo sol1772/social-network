@@ -19,6 +19,16 @@ h3 {
     padding-bottom: 1rem;
 }
 
+caption {
+    caption-side: top;
+}
+
+td, th {
+    background-color: #86c5d8 !important;
+    text-align: left;
+    padding-left: 0.5rem !important;
+}
+
 a.link {
     display: block;
     text-align: center;

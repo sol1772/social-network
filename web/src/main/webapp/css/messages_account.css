@@ -29,53 +29,55 @@ form[id=msg_form] {
     margin-right: auto;
 }
 
-.field {
-    display: flex;
-    text-align: left;
-    margin-left: 10px;
-    vertical-align: middle;
+div.input-group {
+    margin-bottom: 0 !important;
 }
 
 textarea[id=message] {
-    float: left;
-    vertical-align: middle;
-    height: 30px;
-    margin-bottom: 1rem;
+    height: 3rem;
+    margin-right: 1rem;
 }
 
-.button_ok {
-    float: none;
-    width: 90px;
-    height: 30px;
-    border-radius: 3px;
-    margin-left: 10px;
-    margin-top: auto;
-    margin-bottom: 1rem;
+.table-hover tbody tr:hover td {
+    background-color: #ceeaf6 !important;
+}
+
+table[id=tbl_messages] {
+    margin-bottom: 0;
+}
+
+td, th {
+    background-color: lightblue !important;
+    border: none !important;
+    text-align: left;
+    padding-left: 0.5rem !important;
+    vertical-align: middle;
+}
+
+td[id=msg_date] {
+    width: 7rem;
+    font-size: small;
+}
+
+td[id=msg_del] {
+    text-align: right;
+    font-size: small;
+}
+
+td[id=msg_user] {
+    width: 7rem;
+}
+
+button[id=btn_send] {
+    height: 3rem;
+    border-radius: 0.5rem !important;
+}
+
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
 }
 
 p.report {
     color: red;
-    margin-left: 10px;
-    margin-top: auto;
-    margin-bottom: 1rem;
-}
-
-.container_msg {
-    display: flex;
-    text-align: left;
-}
-
-.wall {
-    text-align: left;
-    margin-right: 1rem;
-}
-
-button[id=del_msg] {
-    background-color: lightblue;
-    color: maroon;
-    font-weight: 500;
-    border: none;
-    border-radius: 0;
-    height: 20px;
-    margin-left: 10px;
 }

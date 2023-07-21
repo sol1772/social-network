@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Address implements Serializable {
 
@@ -58,6 +59,20 @@ public class Address implements Serializable {
 
     public int getAccId() {
         return account.getId();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Address address = (Address) o;
+        return id == address.id && Objects.equals(account, address.account) &&
+                addr.equals(address.addr) && addrType == address.addrType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(account, addr, addrType, id);
     }
 
 }

@@ -1,9 +1,9 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
-import com.getjavajob.training.maksyutovs.socialnetwork.dao.Utils;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

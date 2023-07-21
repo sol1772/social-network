@@ -1,16 +1,10 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.listeners;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
-import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,9 +22,6 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         ServletContext sc = servletContextEvent.getServletContext();
-        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(sc);
-        sc.setAttribute("AccountService", Objects.requireNonNull(context).getBean(AccountService.class));
-        sc.setAttribute("GroupService", Objects.requireNonNull(context).getBean(GroupService.class));
         sc.setAttribute("ConfigProperties", properties);
         LOGGER.log(Level.CONFIG, "Database connection initialized for Application.");
     }

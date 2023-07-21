@@ -9,13 +9,14 @@
 <jsp:useBean id="groupsPages" scope="request" class="java.lang.String"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
 <jsp:useBean id="error" scope="request" class="java.lang.String"/>
+<c:set var="root" value="${pageContext.request.contextPath}"/>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Search</title>
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/search.css"/>
+    <link rel="stylesheet" type="text/css" href="${root}/css/search.css"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
@@ -25,7 +26,7 @@
     <p class="error" id="error">${error}</p>
     <c:choose>
         <c:when test="${requestScope.accountsTotal==0}">
-            <h4>Accounts not found by substring '${q}'</h4>
+            <h5>Accounts not found by substring '${q}'</h5>
         </c:when>
         <c:otherwise>
             <table class="table table-sm table-bordered table-hover">
@@ -48,20 +49,20 @@
                 </tr>
                 <c:forEach items="${requestScope.accounts}" var="account">
                     <tr>
-                        <td><a href="account?id=${account.id}">${account.id}</a></td>
-                        <td><a href="account?id=${account.id}">${account.lastName} ${account.firstName}</a></td>
-                        <td><a href="account?id=${account.id}">${account.email}</a></td>
+                        <td><a href="${root}/account/${account.id}">${account.id}</a></td>
+                        <td><a href="${root}/account/${account.id}">${account.lastName} ${account.firstName}</a></td>
+                        <td><a href="${root}/account/${account.id}">${account.email}</a></td>
                     </tr>
                 </c:forEach>
             </table>
-            <form action="search" method="get" name='accountsForm'>
-                <a href='search?q=${q}&page=1'>Page 1 ||</a>
+            <form action="${root}/search" method="get" name='accountsForm'>
+                <a href='${root}/search?q=${q}&page=1'>Page 1 ||</a>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page')==1}">
-                        <a href='search' class="disabled">Previous ||</a>
+                        <a href='${root}/search' class="disabled">Previous ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
+                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
                             Previous ||</a>
                     </c:otherwise>
                 </c:choose>
@@ -76,22 +77,21 @@
                        value="${pageContext.request.getParameter("page")}" min="1" max=${accountsPages}>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page').toString().equals(accountsPages)}">
-                        <a href='search' class="disabled">Next ||</a>
+                        <a href='${root}/search' class="disabled">Next ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
+                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
                             Next ||</a>
                     </c:otherwise>
                 </c:choose>
-                <a href='search?q=${q}&page=${accountsPages}'>Page ${accountsPages}</a>
+                <a href='${root}/search?q=${q}&page=${accountsPages}'>Page ${accountsPages}</a>
             </form>
         </c:otherwise>
     </c:choose>
-
-    <br><br>
+    <br>
     <c:choose>
         <c:when test="${requestScope.groupsTotal==0}">
-            <h4>Groups not found by substring '${q}'</h4>
+            <h5>Groups not found by substring '${q}'</h5>
         </c:when>
         <c:otherwise>
             <table class="table table-sm table-bordered table-hover">
@@ -114,20 +114,20 @@
                 </tr>
                 <c:forEach items="${requestScope.groups}" var="group">
                     <tr>
-                        <td><a href="group?id=${group.id}">${group.id}</a></td>
-                        <td><a href="group?id=${group.id}">${group.title}</a></td>
-                        <td><a href="group?id=${group.id}">${group.metaTitle}</a></td>
+                        <td><a href="${root}/group/${group.id}">${group.id}</a></td>
+                        <td><a href="${root}/group/${group.id}">${group.title}</a></td>
+                        <td><a href="${root}/group/${group.id}">${group.metaTitle}</a></td>
                     </tr>
                 </c:forEach>
             </table>
-            <form action="search" method="get" name='groupsForm'>
-                <a href='search?q=${q}&page=1'>Page 1 ||</a>
+            <form action="${root}/search" method="get" name='groupsForm'>
+                <a href='${root}/search?q=${q}&page=1'>Page 1 ||</a>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page')==1}">
-                        <a href='search' class="disabled">Previous ||</a>
+                        <a href='${root}/search' class="disabled">Previous ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
+                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
                             Previous ||</a>
                     </c:otherwise>
                 </c:choose>
@@ -142,14 +142,14 @@
                        value="${pageContext.request.getParameter("page")}" min="1" max=${groupsPages}>
                 <c:choose>
                     <c:when test="${pageContext.request.getParameter('page').toString().equals(groupsPages)}">
-                        <a href='search' class="disabled">Next ||</a>
+                        <a href='${root}/search' class="disabled">Next ||</a>
                     </c:when>
                     <c:otherwise>
-                        <a href='search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
+                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
                             Next ||</a>
                     </c:otherwise>
                 </c:choose>
-                <a href='search?q=${q}&page=${groupsPages}'>Page ${groupsPages}</a>
+                <a href='${root}/search?q=${q}&page=${groupsPages}'>Page ${groupsPages}</a>
             </form>
         </c:otherwise>
     </c:choose>

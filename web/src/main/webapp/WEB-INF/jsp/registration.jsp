@@ -1,15 +1,21 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <jsp:useBean id="firstName" scope="request" class="java.lang.String"/>
 <jsp:useBean id="lastName" scope="request" class="java.lang.String"/>
 <jsp:useBean id="middleName" scope="request" class="java.lang.String"/>
-<jsp:useBean id="username" scope="request" class="java.lang.String"/>
+<jsp:useBean id="userName" scope="request" class="java.lang.String"/>
 <jsp:useBean id="email" scope="request" class="java.lang.String"/>
+<jsp:useBean id="personalPhone" scope="request" class="java.lang.String"/>
+<jsp:useBean id="workPhone" scope="request" class="java.lang.String"/>
+<jsp:useBean id="homeAddress" scope="request" class="java.lang.String"/>
+<jsp:useBean id="workAddress" scope="request" class="java.lang.String"/>
 <jsp:useBean id="addInfo" scope="request" class="java.lang.String"/>
 <jsp:useBean id="dateOfBirth" scope="request" class="java.lang.String"/>
 <jsp:useBean id="gender" scope="request" class="java.lang.String"/>
 <jsp:useBean id="error" scope="request" class="java.lang.String"/>
 <jsp:useBean id="violations" scope="request" class="java.util.ArrayList"/>
+<c:set var="root" value="${pageContext.request.contextPath}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +29,7 @@
 <div class="container">
     <h2 style="color: darkgreen">Social network</h2>
     <h3 style="color: darkgreen">Account registration</h3>
-    <form id="reg_form" action="registration" method="post" novalidate>
+    <form id="reg_form" action="${root}/account/add" method="post" novalidate>
         <c:if test="${violations != null}">
             <c:forEach items="${violations}" var="violation">
                 <p id="violation">${violation}</p>
@@ -47,8 +53,8 @@
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="usernameLabel">Username *</span>
-            <input type="text" class="form-control" name="username" id="username" placeholder="Required" required
-                   aria-label="Username" value="${username}">
+            <input type="text" class="form-control" name="userName" id="userName" placeholder="Required" required
+                   aria-label="Username" value="${userName}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="emailLabel">E-mail *</span>
@@ -62,22 +68,23 @@
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="personalPhoneLabel">Home phone</span>
-            <input type="text" class="form-control" name="personalPhone" id="personalPhone"
-                   aria-label="Home phone">
+            <input type="text" class="form-control" name="personalPhone" id="personalPhone" aria-label="Home phone"
+                   value="${personalPhone}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="workPhoneLabel">Work phone</span>
-            <input type="text" class="form-control" name="workPhone" id=workPhone"" aria-label="Work phone">
+            <input type="text" class="form-control" name="workPhone" id=workPhone"" aria-label="Work phone"
+                   value="${workPhone}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="homeAddressLabel">Home address</span>
-            <input type="text" class="form-control" name="homeAddress" id="homeAddress"
-                   aria-label="Home address">
+            <input type="text" class="form-control" name="homeAddress" id="homeAddress" aria-label="Home address"
+                   value="${homeAddress}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="workAddressLabel">Work address</span>
-            <input type="text" class="form-control" name=workAddress"" id="workAddress"
-                   aria-label="Work address">
+            <input type="text" class="form-control" name="workAddress" id="workAddress" aria-label="Work address"
+                   value="${workAddress}">
         </div>
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="addInfoLabel">About</span>

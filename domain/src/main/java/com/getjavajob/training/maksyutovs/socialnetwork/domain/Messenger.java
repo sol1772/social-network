@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Messenger implements Serializable {
 
@@ -58,6 +59,20 @@ public class Messenger implements Serializable {
 
     public int getAccId() {
         return account.getId();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Messenger messenger = (Messenger) o;
+        return id == messenger.id && Objects.equals(account, messenger.account) &&
+                username.equals(messenger.username) && msgrType == messenger.msgrType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(account, username, msgrType, id);
     }
 
 }

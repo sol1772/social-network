@@ -126,7 +126,7 @@ public class GroupDao implements CrudDao<Group, Object> {
     public Group update(Group group) {
         String queryUpdate = UPDATE + "InterestGroup SET metaTitle =?, image=? WHERE title=?;";
         jdbcTemplate.update(queryUpdate, group.getMetaTitle(),
-                new ByteArrayInputStream(group.getImage()), group.getTitle());
+                group.getImage() == null ? null : new ByteArrayInputStream(group.getImage()), group.getTitle());
         return select(TITLE, group.getTitle());
     }
 
