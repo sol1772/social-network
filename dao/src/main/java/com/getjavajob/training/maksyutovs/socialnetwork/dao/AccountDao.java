@@ -7,7 +7,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -321,18 +320,7 @@ public class AccountDao implements CrudDao<Account, Object> {
     @Override
     public Account update(String field, Object value, Account account) {
         String queryUpdate = UPDATE + "Account SET " + field + "=? WHERE email=?;";
-        jdbcTemplate.update(con -> {
-            PreparedStatement pst = con.prepareStatement(queryUpdate);
-            if (value instanceof String) {
-                pst.setString(1, (String) value);
-            } else if (value instanceof Integer) {
-                pst.setInt(1, (int) value);
-            } else if (value instanceof InputStream) {
-                pst.setBinaryStream(1, (InputStream) value);
-            }
-            pst.setString(2, account.getEmail());
-            return pst;
-        });
+        jdbcTemplate.update(queryUpdate, value, account.getEmail());
         return select(EMAIL, account.getEmail());
     }
 

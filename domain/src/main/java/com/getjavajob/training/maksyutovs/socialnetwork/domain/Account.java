@@ -1,5 +1,6 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -7,7 +8,9 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class Account implements Serializable {
@@ -23,11 +26,13 @@ public class Account implements Serializable {
     private String middleName;
     private String lastName;
     private String userName;
+    @DateTimeFormat(pattern = Utils.DATE_PATTERN)
     private LocalDate dateOfBirth;
     private Gender gender;
     private String email;
     private String passwordHash;
     private String addInfo;
+    @DateTimeFormat(pattern = Utils.DATE_TIME_PATTERN)
     private LocalDateTime registeredAt;
     private byte[] image;
 
@@ -168,4 +173,24 @@ public class Account implements Serializable {
         return userName + " (" + email + ")";
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return id == account.id && Objects.equals(phones, account.phones) &&
+                Objects.equals(addresses, account.addresses) && Objects.equals(messengers, account.messengers) &&
+                Objects.equals(friends, account.friends) && Objects.equals(messages, account.messages) &&
+                firstName.equals(account.firstName) && Objects.equals(middleName, account.middleName) &&
+                lastName.equals(account.lastName) && userName.equals(account.userName) &&
+                dateOfBirth.equals(account.dateOfBirth) && gender == account.gender && email.equals(account.email) &&
+                Objects.equals(passwordHash, account.passwordHash) && Objects.equals(addInfo, account.addInfo) &&
+                Objects.equals(registeredAt, account.registeredAt) && Arrays.equals(image, account.image);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(phones, addresses, messengers, friends, messages, id, firstName, middleName, lastName,
+                userName, dateOfBirth, gender, email, passwordHash, addInfo, registeredAt);
+    }
 }

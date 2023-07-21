@@ -5,7 +5,7 @@
     <parent>
         <artifactId>social-network</artifactId>
         <groupId>com.getjavajob</groupId>
-        <version>1.22.0-SNAPSHOT</version>
+        <version>1.23.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -21,7 +21,7 @@
         <dependency>
             <groupId>com.getjavajob</groupId>
             <artifactId>domain</artifactId>
-            <version>1.22.0-SNAPSHOT</version>
+            <version>1.23.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -108,6 +108,11 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+            <version>5.3.28</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
             <version>5.3.28</version>
         </dependency>
         <dependency>

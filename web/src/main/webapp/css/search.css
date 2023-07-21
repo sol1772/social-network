@@ -17,6 +17,7 @@ h2 {
 h3, h4, h5 {
     text-align: center;
     padding-bottom: 1rem;
+    margin-bottom: 0 !important;
 }
 
 table {
@@ -35,7 +36,7 @@ caption {
 }
 
 td, th {
-    background-color: lightblue !important;
+    background-color: #86c5d8 !important;
     /*padding: 3px; !* Поля вокруг содержимого таблицы *!*/
     /*border: 1px solid black; !* Параметры рамки *!*/
 }

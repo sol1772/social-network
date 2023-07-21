@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class GroupMember implements Serializable {
 
@@ -57,6 +58,20 @@ public class GroupMember implements Serializable {
 
     public int getGroupId() {
         return group.getId();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GroupMember that = (GroupMember) o;
+        return id == that.id && Objects.equals(group, that.group) &&
+                Objects.equals(account, that.account) && role == that.role;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, account, role, id);
     }
 
 }

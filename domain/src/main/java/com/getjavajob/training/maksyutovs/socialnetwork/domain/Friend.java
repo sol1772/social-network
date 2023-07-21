@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Friend implements Serializable {
 
@@ -35,6 +36,19 @@ public class Friend implements Serializable {
 
     public Account getFriendAccount() {
         return friendAccount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Friend friend = (Friend) o;
+        return Objects.equals(account, friend.account) && Objects.equals(friendAccount, friend.friendAccount);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(account, friendAccount);
     }
 
 }

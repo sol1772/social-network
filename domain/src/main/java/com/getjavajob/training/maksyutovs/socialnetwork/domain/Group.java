@@ -5,7 +5,9 @@ import org.springframework.stereotype.Component;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class Group implements Serializable {
@@ -81,6 +83,21 @@ public class Group implements Serializable {
     @Override
     public String toString() {
         return title;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Group group = (Group) o;
+        return id == group.id && createdBy == group.createdBy && Objects.equals(members, group.members) &&
+                title.equals(group.title) && Objects.equals(metaTitle, group.metaTitle) &&
+                Objects.equals(createdAt, group.createdAt) && Arrays.equals(image, group.image);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(members, id, createdBy, title, metaTitle, createdAt);
     }
 
 }

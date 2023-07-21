@@ -49,6 +49,10 @@ public class AccountService {
         return true;
     }
 
+    public boolean accountExists(String email) {
+        return dao.selectByEmail(email);
+    }
+
     public Account getAccountByEmail(String email) {
         return dao.select(EMAIL, email);
     }
@@ -156,10 +160,42 @@ public class AccountService {
     }
 
     @Transactional
-    public <T> Account editAccountData(String value, T type, int id, Account account) {
+    public <T> Account editAccountData(Account account, String value, T type, int id) {
         Account dbAccount = null;
         if (checkAccount(account)) {
             dbAccount = dao.updateAccountData(value, type, id, account);
+        }
+        return dbAccount;
+    }
+
+    @Transactional
+    public Account editAccountData(Account dbAccount, Account account) {
+        // delete not actual numbers
+        for (Phone phone : dbAccount.getPhones()) {
+            Phone phoneFoundById = account.getPhones().stream().filter
+                    (p -> phone.getId() == p.getId()).findAny().orElse(null);
+            if (phoneFoundById == null) {
+                deleteAccountData(phone.getPhoneType(), phone.getId());
+            }
+        }
+        // update existing and write new numbers
+        for (Phone phone : account.getPhones()) {
+            if (phone.getId() == 0) {
+                dbAccount = addAccountData(account, phone.getNumber(), phone.getPhoneType());
+            } else {
+                dbAccount = editAccountData(account, phone.getNumber(), phone.getPhoneType(), phone.getId());
+            }
+        }
+        // update existing and write new addresses
+        for (Address addr : account.getAddresses()) {
+            if (addr.getAddrType() == null) {
+                continue;
+            }
+            if (addr.getId() == 0) {
+                dbAccount = addAccountData(account, addr.getAddr(), addr.getAddrType());
+            } else {
+                dbAccount = editAccountData(account, addr.getAddr(), addr.getAddrType(), addr.getId());
+            }
         }
         return dbAccount;
     }

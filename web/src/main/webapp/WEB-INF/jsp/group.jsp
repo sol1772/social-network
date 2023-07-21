@@ -6,6 +6,7 @@
 <jsp:useBean id="group" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Group"/>
 <jsp:useBean id="owner" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
+<c:set var="root" value="${pageContext.request.contextPath}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,7 +14,7 @@
     <meta charset="UTF-8">
     <title>Group</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/group.css"/>
+    <link rel="stylesheet" type="text/css" href="${root}/css/group.css"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
@@ -22,29 +23,44 @@
     <h3 style="color: darkgreen">Group info</h3>
     <div class="head">
         <div class="head-cont">
-            <h5>
-                <p><i>Title: </i>${group.title}</p>
-                <p><i>About: </i>${StringUtils.isEmpty(group.metaTitle)?"---" : group.metaTitle}</p>
-                <p><i>Owner: </i>${owner.firstName} ${owner.lastName}</p>
-                <fmt:parseDate value="${group.createdAt}" pattern="yyyy-MM-dd" var="createdAt" type="date"/>
-                <p><i>Date of creation: </i><fmt:formatDate pattern="dd.MM.yyyy" value="${createdAt}"/></p>
+            <table class="table table-sm" id="tbl_group">
+                <caption></caption>
+                <tr>
+                    <td><i>Title</i></td>
+                    <td>${group.title}</td>
+                </tr>
+                <tr>
+                    <td><i>About</i></td>
+                    <td>${StringUtils.isEmpty(group.metaTitle)?"---" : group.metaTitle}</td>
+                </tr>
+                <tr>
+                    <td><i>Owner</i></td>
+                    <td>${owner.firstName} ${owner.lastName}</td>
+                </tr>
+                <tr>
+                    <td><i>Date of creation</i></td>
+                    <fmt:parseDate value="${group.createdAt}" pattern="yyyy-MM-dd" var="createdAt" type="date"/>
+                    <td><fmt:formatDate pattern="dd.MM.yyyy" value="${createdAt}"/></td>
+                </tr>
                 <c:if test="${!group.members.isEmpty()}">
-                    <p><i>Members:</i></p>
-                    <c:forEach items="${group.members}" var="member">
-                        <p>${member.account.firstName} ${member.account.lastName}
-                            (${CaseUtils.toCamelCase(member.role.toString(), true, ' ')})</p><br>
-                    </c:forEach>
+                    <tr>
+                        <td><i>Members</i></td>
+                        <td><c:forEach items="${group.members}" var="member">
+                            <span>${member.account.firstName} ${member.account.lastName}
+                                (${CaseUtils.toCamelCase(member.role.toString(), true, ' ')})</span>
+                        </c:forEach></td>
+                    </tr>
                 </c:if>
-            </h5>
+            </table>
         </div>
         <div class="head-logo">
-            <img src="<c:url value="upload?command=group&id=${group.id}"/>" alt="Group image"/>
+            <img src="${root}/group/${group.id}/image" alt="Group image" width="150px">
             <c:if test="${username.equals(owner.userName)}">
-                <form action="upload" method="get">
+                <form action="${root}/upload" method="get">
                     <div class="btn-group d-block mx-auto">
-                        <button class="btn btn-outline-info btn-sm" name="submit" id="change" value="Change">Change
+                        <button class="btn btn-outline-info btn-sm" name="option" id="change" value="Change">Change
                         </button>
-                        <button class="btn btn-outline-info btn-sm" name="submit" id="delete"
+                        <button class="btn btn-outline-info btn-sm" name="option" id="delete"
                                 onclick="return confirm('Delete?')" value="Delete">Delete
                         </button>
                     </div>
@@ -58,19 +74,12 @@
     <c:if test="${username.equals(owner.userName)}">
         <ul class="nav justify-content-center">
             <li class="nav-item">
-                <a class="nav-link" href="group-edit?id=${group.id}">Edit</a>
+                <a class="nav-link" href="${root}/group/${group.id}/edit">Edit</a>
             </li>
         </ul>
     </c:if>
 </div>
 <jsp:include page="footer.jsp"/>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function confirmDelete() {
-        if (confirm("Delete?")) {
-            return true;
-        }
-    }
-</script>
 </body>
 </html>

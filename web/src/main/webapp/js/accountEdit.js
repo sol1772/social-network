@@ -56,19 +56,23 @@ function addTableRow(phoneNum, phoneType) {
         newCell1.style.width = "7rem";
 
         newCell2 = newRow.insertCell();
-        newCell2.innerHTML = "<td id='colPhoneNum'>" +
-            "<input type='tel' readonly name='phoneNum' id='phoneNum' value='" + phoneNum + "'></td>";
+        newCell2.innerHTML = "<td id='colPhoneNum'><input type='tel' readonly name='phones[" + rowsCounter() +
+            "].number' id='phoneNum' value='" + phoneNum + "'></td>";
         newCell2.style.fontSize = "small";
         newCell2.style.width = "15rem";
 
         newCell3 = newRow.insertCell();
-        newCell3.innerHTML = "<td><input type='hidden' name='phoneId' id='phoneId' value='0'></td>";
+        newCell3.innerHTML = "<td><input type='hidden' name='phones[" + rowsCounter() +
+            "].id' id='phoneId' value='0'></td>";
 
         newCell4 = newRow.insertCell();
-        newCell4.innerHTML = "<td><input type='hidden' name='phoneType' id='phoneType' value='" + phoneType + "'></td>";
+        newCell4.innerHTML = "<td><input type='hidden' name='phones[" + rowsCounter() +
+            "].phoneType' id='phoneType' value='" + phoneType.toUpperCase() + "'></td>";
 
         newCell5 = newRow.insertCell();
-        newCell5.innerHTML = "<td><button class='btn btn-sm btn-outline-info' type='button' id='delPhone'>x</button></td>";
+        newCell5.innerHTML = "<td id='colDelPhone'>" +
+            "<button class='btn btn-sm btn-outline-info' type='button' id='delPhone'>x</button></td>";
+        newCell5.style.textAlign = "right";
         newCell5.addEventListener('click', function () {
             const a = this.closest('tr');
             a.parentElement.removeChild(a);
@@ -77,6 +81,10 @@ function addTableRow(phoneNum, phoneType) {
         phone.style.border = '3px ridge red';
         error.innerHTML = "Max phone numbers = 3";
     }
+}
+
+function rowsCounter() {
+    return phoneTbl.rows.length - 1;
 }
 
 addPhoneBtn.addEventListener("click", function () {

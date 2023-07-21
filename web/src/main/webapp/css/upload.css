@@ -18,3 +18,22 @@ h3 {
     text-align: center;
     padding-bottom: 1rem;
 }
+
+p[id=error] {
+    color: red;
+}
+
+
+div.input-group {
+    margin-bottom: 0 !important;
+}
+
+button {
+    border-radius: 0.5rem !important;
+}
+
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
+}
+
