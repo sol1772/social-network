@@ -74,20 +74,18 @@
         </div>
         <div class="head-logo">
             <img src="${root}/account/${account.id}/image" alt="Account image" width="150px">
-            <c:if test="${username.equals(account.userName)}">
-                <form action="${root}/upload" method="get">
-                    <div class="btn-group d-block mx-auto">
-                        <button class="btn btn-outline-info btn-sm" name="option" id="change" value="Change">Change
-                        </button>
-                        <button class="btn btn-outline-info btn-sm" name="option" id="delete"
-                                onclick="return confirm('Delete?')" value="Delete">Delete
-                        </button>
-                    </div>
-                    <p style="color: darkgreen">${requestScope.message}</p>
-                    <input type="hidden" name="path" value="account">
-                    <input type="hidden" name="id" value="${account.id}">
-                </form>
-            </c:if>
+            <form action="${root}/upload" method="get">
+                <div class="btn-group d-block mx-auto">
+                    <button class="btn btn-outline-info btn-sm" name="option" id="change" value="Change">Change
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" name="option" id="delete"
+                            onclick="return confirm('Delete?')" value="Delete">Delete
+                    </button>
+                </div>
+                <p style="color: darkgreen">${requestScope.message}</p>
+                <input type="hidden" name="path" value="account">
+                <input type="hidden" name="id" value="${account.id}">
+            </form>
         </div>
     </div>
     <br>

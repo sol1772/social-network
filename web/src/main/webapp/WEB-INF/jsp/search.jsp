@@ -10,6 +10,7 @@
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
 <jsp:useBean id="error" scope="request" class="java.lang.String"/>
 <c:set var="root" value="${pageContext.request.contextPath}"/>
+<c:set var="currentPage" value="${pageContext.request.getParameter('page')}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -34,10 +35,10 @@
                     <h5>Accounts found by substring '${q}': ${accountsTotal},
                         <c:choose>
                             <c:when test="${fn:length(requestScope.accounts)==0}">
-                                page ${pageContext.request.getParameter("page")} exceeds number of pages ${accountsPages}
+                                page ${currentPage} exceeds number of pages ${accountsPages}
                             </c:when>
                             <c:otherwise>
-                                page ${pageContext.request.getParameter("page")} of ${accountsPages}
+                                page ${currentPage} of ${accountsPages}
                             </c:otherwise>
                         </c:choose>
                     </h5>
@@ -56,35 +57,42 @@
                 </c:forEach>
             </table>
             <form action="${root}/search" method="get" name='accountsForm'>
-                <a href='${root}/search?q=${q}&page=1'>Page 1 ||</a>
-                <c:choose>
-                    <c:when test="${pageContext.request.getParameter('page')==1}">
-                        <a href='${root}/search' class="disabled">Previous ||</a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
-                            Previous ||</a>
-                    </c:otherwise>
-                </c:choose>
-                <input type="hidden" name="q" value="${q}">
-                <label for="num"></label>
-                <input type="number" id="num" name="page" style="width: 50px"
-                       oninput="function submitForm() {
-                               const value = document.getElementById('page').value;
-                               return value <= ${accountsPages};
-                               }
-                               return submitForm()"
-                       value="${pageContext.request.getParameter("page")}" min="1" max=${accountsPages}>
-                <c:choose>
-                    <c:when test="${pageContext.request.getParameter('page').toString().equals(accountsPages)}">
-                        <a href='${root}/search' class="disabled">Next ||</a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
-                            Next ||</a>
-                    </c:otherwise>
-                </c:choose>
-                <a href='${root}/search?q=${q}&page=${accountsPages}'>Page ${accountsPages}</a>
+                <nav aria-label="...">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        <li class="page-item"><a class="page-link" href="${root}/search?q=${q}&page=1">1</a></li>
+                        <c:choose>
+                            <c:when test="${currentPage==1}">
+                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            </c:when>
+                            <c:otherwise>
+                                <li class="page-item"><a class="page-link" href=
+                                        "${root}/search?q=${q}&page=${(currentPage-1).toString()}">Previous</a>
+                                </li>
+                            </c:otherwise>
+                        </c:choose>
+                        <input type="hidden" name="q" value="${q}">
+                        <label for="num"></label>
+                        <input type="number" id="num" name="page"
+                               oninput="function submitForm() {
+                                       const value = document.getElementById('page').value;
+                                       return value <= ${accountsPages};
+                                       }
+                                       return submitForm()"
+                               value="${currentPage}" min="1" max=${accountsPages}>
+                        <c:choose>
+                            <c:when test="${currentPage.toString().equals(accountsPages)}">
+                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                            </c:when>
+                            <c:otherwise>
+                                <li class="page-item"><a class="page-link" href=
+                                        "${root}/search?q=${q}&page=${(currentPage+1).toString()}">Next</a>
+                                </li>
+                            </c:otherwise>
+                        </c:choose>
+                        <li class="page-item"><a class="page-link" href=
+                                "${root}/search?q=${q}&page=${accountsPages}">${accountsPages}</a></li>
+                    </ul>
+                </nav>
             </form>
         </c:otherwise>
     </c:choose>
@@ -99,10 +107,10 @@
                     <h5>Groups found by substring '${q}': ${groupsTotal},
                         <c:choose>
                             <c:when test="${fn:length(requestScope.groups)==0}">
-                                page ${pageContext.request.getParameter("page")} exceeds number of pages ${groupsPages}
+                                page ${currentPage} exceeds number of pages ${groupsPages}
                             </c:when>
                             <c:otherwise>
-                                page ${pageContext.request.getParameter("page")} of ${groupsPages}
+                                page ${currentPage} of ${groupsPages}
                             </c:otherwise>
                         </c:choose>
                     </h5>
@@ -121,35 +129,42 @@
                 </c:forEach>
             </table>
             <form action="${root}/search" method="get" name='groupsForm'>
-                <a href='${root}/search?q=${q}&page=1'>Page 1 ||</a>
-                <c:choose>
-                    <c:when test="${pageContext.request.getParameter('page')==1}">
-                        <a href='${root}/search' class="disabled">Previous ||</a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')-1).toString()}'>
-                            Previous ||</a>
-                    </c:otherwise>
-                </c:choose>
-                <input type="hidden" name="q" value="${q}">
-                <label for="numGr"></label>
-                <input type="number" id="numGr" name="page" style="width: 50px"
-                       oninput="function submitForm() {
-                               const value = document.getElementById('page').value;
-                               return value <= ${groupsPages};
-                               }
-                               return submitForm()"
-                       value="${pageContext.request.getParameter("page")}" min="1" max=${groupsPages}>
-                <c:choose>
-                    <c:when test="${pageContext.request.getParameter('page').toString().equals(groupsPages)}">
-                        <a href='${root}/search' class="disabled">Next ||</a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href='${root}/search?q=${q}&page=${(pageContext.request.getParameter('page')+1).toString()}'>
-                            Next ||</a>
-                    </c:otherwise>
-                </c:choose>
-                <a href='${root}/search?q=${q}&page=${groupsPages}'>Page ${groupsPages}</a>
+                <nav aria-label="...">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        <li class="page-item"><a class="page-link" href="${root}/search?q=${q}&page=1">1</a></li>
+                        <c:choose>
+                            <c:when test="${currentPage==1}">
+                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            </c:when>
+                            <c:otherwise>
+                                <li class="page-item"><a class="page-link" href=
+                                        "${root}/search?q=${q}&page=${(currentPage-1).toString()}">Previous</a>
+                                </li>
+                            </c:otherwise>
+                        </c:choose>
+                        <input type="hidden" name="q" value="${q}">
+                        <label for="numGr"></label>
+                        <input type="number" id="numGr" name="page"
+                               oninput="function submitForm() {
+                                       const value = document.getElementById('page').value;
+                                       return value <= ${groupsPages};
+                                       }
+                                       return submitForm()"
+                               value="${currentPage}" min="1" max=${groupsPages}>
+                        <c:choose>
+                            <c:when test="${currentPage.toString().equals(groupsPages)}">
+                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                            </c:when>
+                            <c:otherwise>
+                                <li class="page-item"><a class="page-link" href=
+                                        "${root}/search?q=${q}&page=${(currentPage+1).toString()}">Next</a>
+                                </li>
+                            </c:otherwise>
+                        </c:choose>
+                        <li class="page-item"><a class="page-link" href=
+                                "${root}/search?q=${q}&page=${groupsPages}">${groupsPages}</a></li>
+                    </ul>
+                </nav>
             </form>
         </c:otherwise>
     </c:choose>

@@ -1,4 +1,4 @@
-nav {
+nav[id=navbar_search] {
     width: 50%;
     margin-left: auto;
     margin-right: auto;

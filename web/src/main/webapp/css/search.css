@@ -41,6 +41,10 @@ td, th {
     /*border: 1px solid black; !* Параметры рамки *!*/
 }
 
+ul {
+    margin-bottom: 0 !important;
+}
+
 a.disabled {
     pointer-events: none; /* делаем элемент неактивным для взаимодействия */
     cursor: default; /*  курсор в виде стрелки */
@@ -48,7 +52,18 @@ a.disabled {
 }
 
 input[type=number] {
-    width: auto;
+    width: 4rem;
+    margin-left: 0.1rem;
+    margin-right: 0.2rem;
+}
+
+a[class=page-link] {
+    width: 4rem;
+    background-color: lightblue !important;
+}
+
+span[class=page-link] {
+    width: 4rem;
 }
 
 p[id=error] {

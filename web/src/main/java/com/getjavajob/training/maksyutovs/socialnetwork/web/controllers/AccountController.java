@@ -134,13 +134,12 @@ public class AccountController {
 
     @GetMapping("/{id}/image")
     @ResponseBody
-    public byte[] getImage(@PathVariable Integer id, @SessionAttribute("account") Account account) {
-        byte[] image;
-        if (account.getId() == id) {
-            image = account.getImage();
-        } else {
-            image = accountService.getAccountById(id).getImage();
+    public byte[] getImage(@PathVariable Integer id,
+                           @SessionAttribute(name = "account", required = false) Account account) {
+        if (account == null || account.getId() != id) {
+            account = accountService.getAccountById(id);
         }
+        byte[] image = account.getImage();
         if (image == null || image.length == 0) {
             try {
                 image = IOUtils.toByteArray(CommonController.getDefaultImage(account.getGender().toString()));

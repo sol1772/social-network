@@ -13,7 +13,7 @@
     <link rel="stylesheet" type="text/css" href="${root}/css/header.css"/>
 </head>
 <body>
-<nav class="navbar navbar-expand-sm navbar-light">
+<nav class="navbar navbar-expand-sm navbar-light" id="navbar_search">
     <div class="container-fluid">
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-sm-0">
