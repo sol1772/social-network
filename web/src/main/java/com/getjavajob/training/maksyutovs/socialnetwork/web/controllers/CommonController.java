@@ -6,12 +6,10 @@ import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -118,38 +116,46 @@ public class CommonController {
         return ERROR;
     }
 
-    @GetMapping("/search")
-    public ModelAndView viewSearch(@RequestParam("q") String q, @RequestParam("page") String p) {
+    @GetMapping("/search/accounts")
+    @ResponseBody
+    public List<Account> viewAccounts(@RequestParam(name = "q", required = false) String q,
+                                      @RequestParam(name = "page", required = false) Integer page) {
         final int recordsPerPage = 5;
-        var mvSearch = new ModelAndView("search");
+        String searchString = q == null ? "" : q;
+        int startRow = page == null ? 1 : (page - 1) * recordsPerPage + 1;
+        return accountService.getAccountsByString(searchString, startRow, recordsPerPage);
+    }
+
+    @GetMapping("/search/groups")
+    @ResponseBody
+    public List<Group> viewGroups(@RequestParam(name = "q", required = false) String q,
+                                  @RequestParam(name = "page", required = false) Integer page) {
+        final int recordsPerPage = 5;
+        String searchString = q == null ? "" : q;
+        int startRow = page == null ? 1 : (page - 1) * recordsPerPage + 1;
+        return groupService.getGroupsByString(searchString, startRow, recordsPerPage);
+    }
+
+    @GetMapping("/search")
+    public String viewSearch(@RequestParam(name = "q", required = false) String q,
+                             @RequestParam(name = "page", required = false) Integer page, Model model) {
         String searchString = q == null ? "" : q;
         int accountsTotal = accountService.getAccountsCountByString(searchString, 0, 0);
-        int accountsPages = accountsTotal % recordsPerPage == 0 ?
-                accountsTotal / recordsPerPage : accountsTotal / recordsPerPage + 1;
         int groupsTotal = groupService.getGroupsCountByString(searchString, 0, 0);
-        int groupsPages = groupsTotal % recordsPerPage == 0 ?
-                groupsTotal / recordsPerPage : groupsTotal / recordsPerPage + 1;
-        int maxCountPages = max(accountsPages, groupsPages);
-        int startRow = 1;
-        if (p != null) {
-            int page = Integer.parseInt(p);
-            if (maxCountPages > 0 && page > maxCountPages) {
-                mvSearch.addObject(ERROR, "Page " + p + " exceeds total max count of pages " + maxCountPages);
-            }
-            startRow = (page - 1) * recordsPerPage + 1;
+        final int recordsPerPage = 5;
+        int accountPages = (int) Math.ceil((double) accountsTotal / recordsPerPage);
+        int groupPages = (int) Math.ceil((double) groupsTotal / recordsPerPage);
+        model.addAttribute("q", searchString);
+        model.addAttribute("page", page == null ? 1 : page);
+        model.addAttribute("accountPages", accountPages);
+        model.addAttribute("groupPages", groupPages);
+        model.addAttribute("accountsTotal", accountsTotal);
+        model.addAttribute("groupsTotal", groupsTotal);
+        int maxCountPages = max(accountPages, groupPages);
+        if (page != null && page > maxCountPages) {
+            model.addAttribute(ERROR, "Page " + page + " exceeds total max count of pages " + maxCountPages);
         }
-
-        List<Account> accounts = accountService.getAccountsByString(searchString, startRow, recordsPerPage);
-        List<Group> groups = groupService.getGroupsByString(searchString, startRow, recordsPerPage);
-
-        mvSearch.addObject("accounts", accounts);
-        mvSearch.addObject("groups", groups);
-        mvSearch.addObject("q", searchString);
-        mvSearch.addObject("accountsTotal", Integer.toString(accountsTotal));
-        mvSearch.addObject("accountsPages", Integer.toString(accountsPages));
-        mvSearch.addObject("groupsTotal", Integer.toString(groupsTotal));
-        mvSearch.addObject("groupsPages", Integer.toString(groupsPages));
-        return mvSearch;
+        return "search";
     }
 
     @GetMapping("/error")

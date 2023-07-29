@@ -55,11 +55,14 @@ input[type=number] {
     width: 4rem;
     margin-left: 0.1rem;
     margin-right: 0.2rem;
+    font-size: small;
 }
 
-a[class=page-link] {
+button[class=page-link] {
     width: 4rem;
     background-color: lightblue !important;
+    display: flex;
+    justify-content: center;
 }
 
 span[class=page-link] {
