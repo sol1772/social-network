@@ -11,6 +11,7 @@
     <title>Common navigation bar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="${root}/css/header.css"/>
+    <link id="contextPathHolder" data-contextPath="${root}"/>
 </head>
 <body>
 <nav class="navbar navbar-expand-sm navbar-light" id="navbar_search">
@@ -34,9 +35,11 @@
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <form class="d-flex" action="${root}/search" method="get">
-                        <input class="form-control me-2" type="search" name="q" id="search" placeholder="Search...">
-                        <label for="search"></label>
+                    <form class="d-flex" action="${root}/search" method="get" autocomplete="off">
+                        <div class="autocomplete">
+                            <input class="form-control me-2" type="search" name="q" id="search" placeholder="Search..."
+                                   aria-label="">
+                        </div>
                         <button class="btn btn-outline-info" id="btn_search" type="submit">🔍</button>
                         <input type="hidden" name="page" value=1>
                     </form>
@@ -63,5 +66,6 @@
     </div>
 </nav>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<c:url value="/js/header.js"/>" type="module"></script>
 </body>
 </html>

@@ -1,23 +1,18 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
-<jsp:useBean id="q" scope="request" class="java.lang.String"/>
-<jsp:useBean id="accountsTotal" scope="request" class="java.lang.String"/>
-<jsp:useBean id="accountsPages" scope="request" class="java.lang.String"/>
-<jsp:useBean id="groupsTotal" scope="request" class="java.lang.String"/>
-<jsp:useBean id="groupsPages" scope="request" class="java.lang.String"/>
-<jsp:useBean id="username" scope="session" class="java.lang.String"/>
 <jsp:useBean id="error" scope="request" class="java.lang.String"/>
 <c:set var="root" value="${pageContext.request.contextPath}"/>
-<c:set var="currentPage" value="${pageContext.request.getParameter('page')}"/>
+<c:set var="requestPage" value="${pageContext.request.getParameter('page')}"/>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="${root}/css/search.css"/>
+    <link id="contextPathHolder" data-contextPath="${root}"/>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
@@ -25,150 +20,75 @@
     <h2 style="color: darkgreen">Social network</h2>
     <h3 style="color: darkgreen">Account / group search</h3>
     <p class="error" id="error">${error}</p>
-    <c:choose>
-        <c:when test="${requestScope.accountsTotal==0}">
-            <h5>Accounts not found by substring '${q}'</h5>
-        </c:when>
-        <c:otherwise>
-            <table class="table table-sm table-bordered table-hover">
-                <caption>
-                    <h5>Accounts found by substring '${q}': ${accountsTotal},
-                        <c:choose>
-                            <c:when test="${fn:length(requestScope.accounts)==0}">
-                                page ${currentPage} exceeds number of pages ${accountsPages}
-                            </c:when>
-                            <c:otherwise>
-                                page ${currentPage} of ${accountsPages}
-                            </c:otherwise>
-                        </c:choose>
-                    </h5>
-                </caption>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>E-mail</th>
-                </tr>
-                <c:forEach items="${requestScope.accounts}" var="account">
-                    <tr>
-                        <td><a href="${root}/account/${account.id}">${account.id}</a></td>
-                        <td><a href="${root}/account/${account.id}">${account.lastName} ${account.firstName}</a></td>
-                        <td><a href="${root}/account/${account.id}">${account.email}</a></td>
-                    </tr>
-                </c:forEach>
-            </table>
-            <form action="${root}/search" method="get" name='accountsForm'>
-                <nav aria-label="...">
-                    <ul class="pagination pagination-sm justify-content-center">
-                        <li class="page-item"><a class="page-link" href="${root}/search?q=${q}&page=1">1</a></li>
-                        <c:choose>
-                            <c:when test="${currentPage==1}">
-                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
-                            </c:when>
-                            <c:otherwise>
-                                <li class="page-item"><a class="page-link" href=
-                                        "${root}/search?q=${q}&page=${(currentPage-1).toString()}">Previous</a>
-                                </li>
-                            </c:otherwise>
-                        </c:choose>
-                        <input type="hidden" name="q" value="${q}">
-                        <label for="num"></label>
-                        <input type="number" id="num" name="page"
-                               oninput="function submitForm() {
-                                       const value = document.getElementById('page').value;
-                                       return value <= ${accountsPages};
-                                       }
-                                       return submitForm()"
-                               value="${currentPage}" min="1" max=${accountsPages}>
-                        <c:choose>
-                            <c:when test="${currentPage.toString().equals(accountsPages)}">
-                                <li class="page-item disabled"><span class="page-link">Next</span></li>
-                            </c:when>
-                            <c:otherwise>
-                                <li class="page-item"><a class="page-link" href=
-                                        "${root}/search?q=${q}&page=${(currentPage+1).toString()}">Next</a>
-                                </li>
-                            </c:otherwise>
-                        </c:choose>
-                        <li class="page-item"><a class="page-link" href=
-                                "${root}/search?q=${q}&page=${accountsPages}">${accountsPages}</a></li>
-                    </ul>
-                </nav>
-            </form>
-        </c:otherwise>
-    </c:choose>
+    <input type="hidden" name="q" value="${q}">
+    <input type="hidden" id="accountsTotal" name="accountsTotal" value="${accountsTotal}">
+    <input type="hidden" id="groupsTotal" name="groupsTotal" value="${groupsTotal}">
+    <input type="hidden" id="currentPage" name="currentPage" value="${param.currentPage}"/>
+    <table class="table table-sm table-bordered table-hover">
+        <caption><h5 id="tblAccCaption"></h5></caption>
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">E-mail</th>
+        </tr>
+        </thead>
+        <tbody id="accountData"></tbody>
+    </table>
+    <nav aria-label="...">
+        <ul class="pagination pagination-sm justify-content-center">
+            <li class="page-item">
+                <button class="page-link" id="firstPageA" value="1" onclick="pageA(this)">1</button>
+            </li>
+            <li class="page-item">
+                <button class="page-link" id="prevPageA" onclick="prevPage()">Previous</button>
+            </li>
+            <input type="number" id="pageA" name="pageA" aria-label="" onchange="pageA(this)"
+                   value="${requestPage}" min="1" max=${accountPages}>
+            <li class="page-item">
+                <button class="page-link" id="nextPageA" onclick="nextPageA()">Next</button>
+            </li>
+            <li class="page-item">
+                <button class="page-link" id="lastPageA" value="${accountPages}"
+                        onclick="pageA(this)">${accountPages}</button>
+            </li>
+        </ul>
+    </nav>
     <br>
-    <c:choose>
-        <c:when test="${requestScope.groupsTotal==0}">
-            <h5>Groups not found by substring '${q}'</h5>
-        </c:when>
-        <c:otherwise>
-            <table class="table table-sm table-bordered table-hover">
-                <caption>
-                    <h5>Groups found by substring '${q}': ${groupsTotal},
-                        <c:choose>
-                            <c:when test="${fn:length(requestScope.groups)==0}">
-                                page ${currentPage} exceeds number of pages ${groupsPages}
-                            </c:when>
-                            <c:otherwise>
-                                page ${currentPage} of ${groupsPages}
-                            </c:otherwise>
-                        </c:choose>
-                    </h5>
-                </caption>
-                <tr>
-                    <th>Id</th>
-                    <th>Title</th>
-                    <th>About</th>
-                </tr>
-                <c:forEach items="${requestScope.groups}" var="group">
-                    <tr>
-                        <td><a href="${root}/group/${group.id}">${group.id}</a></td>
-                        <td><a href="${root}/group/${group.id}">${group.title}</a></td>
-                        <td><a href="${root}/group/${group.id}">${group.metaTitle}</a></td>
-                    </tr>
-                </c:forEach>
-            </table>
-            <form action="${root}/search" method="get" name='groupsForm'>
-                <nav aria-label="...">
-                    <ul class="pagination pagination-sm justify-content-center">
-                        <li class="page-item"><a class="page-link" href="${root}/search?q=${q}&page=1">1</a></li>
-                        <c:choose>
-                            <c:when test="${currentPage==1}">
-                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
-                            </c:when>
-                            <c:otherwise>
-                                <li class="page-item"><a class="page-link" href=
-                                        "${root}/search?q=${q}&page=${(currentPage-1).toString()}">Previous</a>
-                                </li>
-                            </c:otherwise>
-                        </c:choose>
-                        <input type="hidden" name="q" value="${q}">
-                        <label for="numGr"></label>
-                        <input type="number" id="numGr" name="page"
-                               oninput="function submitForm() {
-                                       const value = document.getElementById('page').value;
-                                       return value <= ${groupsPages};
-                                       }
-                                       return submitForm()"
-                               value="${currentPage}" min="1" max=${groupsPages}>
-                        <c:choose>
-                            <c:when test="${currentPage.toString().equals(groupsPages)}">
-                                <li class="page-item disabled"><span class="page-link">Next</span></li>
-                            </c:when>
-                            <c:otherwise>
-                                <li class="page-item"><a class="page-link" href=
-                                        "${root}/search?q=${q}&page=${(currentPage+1).toString()}">Next</a>
-                                </li>
-                            </c:otherwise>
-                        </c:choose>
-                        <li class="page-item"><a class="page-link" href=
-                                "${root}/search?q=${q}&page=${groupsPages}">${groupsPages}</a></li>
-                    </ul>
-                </nav>
-            </form>
-        </c:otherwise>
-    </c:choose>
+
+    <table class="table table-sm table-bordered table-hover">
+        <caption><h5 id="tblGrpCaption"></h5></caption>
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Title</th>
+            <th scope="col">About</th>
+        </tr>
+        </thead>
+        <tbody id="groupData"></tbody>
+    </table>
+    <nav aria-label="...">
+        <ul class="pagination pagination-sm justify-content-center">
+            <li class="page-item">
+                <button class="page-link" id="firstPageG" value="1" onclick="pageG(this)">1</button>
+            </li>
+            <li class="page-item">
+                <button class="page-link" id="prevPageG" onclick="prevPage()">Previous</button>
+            </li>
+            <input type="number" id="pageG" name="pageA" aria-label="" onchange="pageG(this)"
+                   value="${requestPage}" min="1" max=${groupPages}>
+            <li class="page-item">
+                <button class="page-link" id="nextPageG" onclick="nextPageG()">Next</button>
+            </li>
+            <li class="page-item">
+                <button class="page-link" id="lastPageG" value="${groupPages}"
+                        onclick="pageG(this)">${groupPages}</button>
+            </li>
+        </ul>
+    </nav>
 </div>
 <jsp:include page="footer.jsp"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<c:url value="/js/search.js"/>"></script>
 </body>
 </html>
