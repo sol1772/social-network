@@ -20,11 +20,13 @@ async function getAccounts(val) {
 
 let currentFocus;
 /*execute a function when someone writes in the text field:*/
-inp.addEventListener("input", async function() {
+inp.addEventListener("input", async function () {
     let a, b, i, val = this.value;
     /*close any already open lists of autocompleted values*/
     closeAllLists();
-    if (!val) { return false;}
+    if (!val) {
+        return false;
+    }
     currentFocus = -1;
     /*create a DIV element that will contain the items (values):*/
     a = document.createElement("DIV");
@@ -46,7 +48,7 @@ inp.addEventListener("input", async function() {
             /*insert a input field that will hold the current array item's value:*/
             b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
             /*execute a function when someone clicks on the item value (DIV element):*/
-            b.addEventListener("click", function() {
+            b.addEventListener("click", function () {
                 /*insert the value for the autocomplete text field:*/
                 inp.value = this.getElementsByTagName("input")[0].value;
                 /*close the list of autocompleted values,
@@ -58,7 +60,7 @@ inp.addEventListener("input", async function() {
     }
 });
 /*execute a function presses a key on the keyboard:*/
-inp.addEventListener("keydown", function(e) {
+inp.addEventListener("keydown", function (e) {
     let x = document.getElementById(this.id + "autocomplete-list");
     if (x) x = x.getElementsByTagName("div");
     if (e.keyCode === 40) {
@@ -82,6 +84,7 @@ inp.addEventListener("keydown", function(e) {
         }
     }
 });
+
 function addActive(x) {
     /*a function to classify an item as "active":*/
     if (!x) return false;
@@ -92,12 +95,14 @@ function addActive(x) {
     /*add class "autocomplete-active":*/
     x[currentFocus].classList.add("autocomplete-active");
 }
+
 function removeActive(x) {
     /*a function to remove the "active" class from all autocomplete items:*/
     for (let i = 0; i < x.length; i++) {
         x[i].classList.remove("autocomplete-active");
     }
 }
+
 function closeAllLists(elmnt) {
     /*close all autocomplete lists in the document,
     except the one passed as an argument:*/
@@ -108,6 +113,7 @@ function closeAllLists(elmnt) {
         }
     }
 }
+
 /*execute a function when someone clicks in the document:*/
 document.addEventListener("click", function (e) {
     closeAllLists(e.target);

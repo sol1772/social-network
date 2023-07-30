@@ -38,7 +38,7 @@
                     <form class="d-flex" action="${root}/search" method="get" autocomplete="off">
                         <div class="autocomplete">
                             <input class="form-control me-2" type="search" name="q" id="search" placeholder="Search..."
-                                   aria-label="">
+                                   aria-label="" value="${requestScope.q}">
                         </div>
                         <button class="btn btn-outline-info" id="btn_search" type="submit">🔍</button>
                         <input type="hidden" name="page" value=1>
