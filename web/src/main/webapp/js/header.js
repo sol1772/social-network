@@ -45,7 +45,7 @@ inp.addEventListener("input", async function () {
             /*make the matching letters bold:*/
             b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
             b.innerHTML += arr[i].substr(val.length);
-            /*insert a input field that will hold the current array item's value:*/
+            /*insert an input field that will hold the current array item's value:*/
             b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
             /*execute a function when someone clicks on the item value (DIV element):*/
             b.addEventListener("click", function () {
@@ -103,12 +103,12 @@ function removeActive(x) {
     }
 }
 
-function closeAllLists(elmnt) {
+function closeAllLists(el) {
     /*close all autocomplete lists in the document,
     except the one passed as an argument:*/
     const x = document.getElementsByClassName("autocomplete-items");
     for (let i = 0; i < x.length; i++) {
-        if (elmnt !== x[i] && elmnt !== inp) {
+        if (el !== x[i] && el !== inp) {
             x[i].parentNode.removeChild(x[i]);
         }
     }

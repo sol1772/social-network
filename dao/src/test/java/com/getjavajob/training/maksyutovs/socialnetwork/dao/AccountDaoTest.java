@@ -7,13 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Persistence;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,15 +23,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = {"classpath:dao-context.xml", "classpath:dao-test-context.xml"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Transactional
 class AccountDaoTest {
 
     private static final Logger LOGGER = Logger.getLogger(AccountDaoTest.class.getName());
-    private static final String EMAIL = "email";
     private static final String DELIMITER = "----------------------------------";
     @Autowired
     private AccountDao dao;
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private FriendDao friendDao;
+    @Autowired
+    private MessageDao messageDao;
+    private EntityManager em;
 
     static String getQueryCreateTables() {
         return "CREATE TABLE if not exists Account (" +
@@ -113,6 +117,7 @@ class AccountDaoTest {
     void init() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.beforeAll");
+        em = Persistence.createEntityManagerFactory("test").createEntityManager();
         createTablesIfNotExist();
     }
 
@@ -123,23 +128,36 @@ class AccountDaoTest {
 
     void createTablesIfNotExist() {
         String query = getQueryCreateTables();
-        jdbcTemplate.execute(query);
+        try {
+            em.getTransaction().begin();
+            em.createNativeQuery(query).executeUpdate();
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        }
     }
 
+    @SuppressWarnings("unchecked")
     void truncateTables() {
-        // getting tables
-        String query = "SELECT Concat('TRUNCATE TABLE ',table_schema,'.',TABLE_NAME, ';') AS QueryText " +
-                "FROM INFORMATION_SCHEMA.TABLES where table_schema = 'PUBLIC'";
-        List<String> queries = jdbcTemplate.query(query, (rs, rowNum) -> rs.getObject("QueryText").toString());
+        try {
+            // getting tables
+            em.getTransaction().begin();
+            String query = "SELECT Concat('TRUNCATE TABLE ',table_schema,'.',TABLE_NAME, ';') AS QueryText " +
+                    "FROM INFORMATION_SCHEMA.TABLES where table_schema = 'PUBLIC'";
+            List<String> queries = dao.em.createNativeQuery(query).getResultList();
 
-        // truncating tables
-        for (String q : queries) {
-            jdbcTemplate.update(q);
-        }
-        if (queries.size() == 0) {
-            LOGGER.log(Level.CONFIG, "No tables to truncate");
-        } else {
-            LOGGER.log(Level.CONFIG, "All tables truncated");
+            // truncating tables
+            for (String q : queries) {
+                em.createNativeQuery(q).executeUpdate();
+            }
+            em.getTransaction().commit();
+            if (queries.size() == 0) {
+                LOGGER.log(Level.CONFIG, "No tables to truncate");
+            } else {
+                LOGGER.log(Level.CONFIG, "All tables truncated");
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
         }
     }
 
@@ -176,57 +194,49 @@ class AccountDaoTest {
     void insertContacts() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Contacts)");
-        Account dbAccount = dao.insert(getNewAccount());
+        Account account = getNewAccount();
+        account.getPhones().add(new Phone(account, 0, "+79161234567", PhoneType.PERSONAL));
+        account.getPhones().add(new Phone(account, 0, "+74951234567", PhoneType.WORK));
+        account.getAddresses().add(new Address(account, 0, "Kazan", AddressType.HOME));
+        account.getAddresses().add(new Address(account, 0, "Moscow", AddressType.WORK));
+        account.getMessengers().add(new Messenger(account, 0, "kamilavalieva", MessengerType.SKYPE));
+        account.getMessengers().add(new Messenger(account, 0, "@kamilavalieva26official", MessengerType.TELEGRAM));
+
+        Account dbAccount = dao.insert(account);
         assertNotNull(dbAccount);
-
-        List<Phone> phones = dbAccount.getPhones();
-        phones.add(new Phone(dbAccount, 0, "+79161234567", PhoneType.PERSONAL));
-        phones.add(new Phone(dbAccount, 0, "+74951234567", PhoneType.WORK));
-        dbAccount = dao.insert(phones);
-        assertEquals(phones.size(), dbAccount.getPhones().size());
-
-        List<Address> addresses = dbAccount.getAddresses();
-        addresses.add(new Address(dbAccount, 0, "Kazan", AddressType.HOME));
-        addresses.add(new Address(dbAccount, 0, "Moscow", AddressType.WORK));
-        dbAccount = dao.insert(addresses);
-        assertEquals(addresses.size(), dbAccount.getAddresses().size());
-
-        List<Messenger> messengers = dbAccount.getMessengers();
-        messengers.add(new Messenger(dbAccount, 0, "kamilavalieva", MessengerType.SKYPE));
-        messengers.add(new Messenger(dbAccount, 0, "@kamilavalieva26official", MessengerType.TELEGRAM));
-        dbAccount = dao.insert(messengers);
-        assertEquals(messengers.size(), dbAccount.getMessengers().size());
+        assertEquals(account.getPhones().size(), dbAccount.getPhones().size());
+        assertEquals(account.getAddresses().size(), dbAccount.getAddresses().size());
+        assertEquals(account.getMessengers().size(), dbAccount.getMessengers().size());
         System.out.println("Added contacts for account " + dbAccount);
     }
 
     @Test
-    void insertFriends() {
+    void insertFriend() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Friends)");
-        Account account = dao.insert(getNewAccount());
-        assertNotNull(account);
-        Account friendAccount = dao.insert(getNewTargetAccount());
-        assertNotNull(friendAccount);
-        List<Friend> friends = account.getFriends();
-        friends.add(new Friend(account, friendAccount));
-        Account dbAccount = dao.insert(friends);
-        assertEquals(friends.size(), dbAccount.getFriends().size());
-        System.out.println("Added friend " + friendAccount + " for account " + dbAccount);
+        Account account = getNewAccount();
+        Account friendAccount = getNewTargetAccount();
+        assertNotNull(dao.insert(account));
+        assertNotNull(dao.insert(friendAccount));
+        Friend friend = new Friend(account, friendAccount);
+        Friend dbFriend = friendDao.insert(friend);
+        assertNotNull(dbFriend);
+        assertEquals(1, friendDao.findAll().size());
+        System.out.println("Added friend " + friendAccount + " for account " + account);
     }
 
     @Test
-    void insertMessages() {
+    void insertMessage() {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.insert(Messages)");
-        Account account = dao.insert(getNewAccount());
-        assertNotNull(account);
-        Account targetAccount = dao.insert(getNewTargetAccount());
-        assertNotNull(targetAccount);
-        List<Message> messages = account.getMessages();
-        messages.add(new Message(account, targetAccount, MessageType.PERSONAL, "Hello! How are you?"));
-        Account dbAccount = dao.insert(messages);
-        assertEquals(messages.size(), dbAccount.getMessages().size());
-        System.out.println("Added " + dbAccount.getMessages().size() + " message(s) for account " + dbAccount);
+        Account account = getNewAccount();
+        Account targetAccount = getNewTargetAccount();
+        assertNotNull(dao.insert(account));
+        assertNotNull(dao.insert(targetAccount));
+        Message message = new Message(account, targetAccount, MessageType.PERSONAL, "Hello! How are you?");
+        Message dbMessage = messageDao.insert(message);
+        assertEquals(1, messageDao.findAll().size());
+        System.out.println("Added " + messageDao.findAll().size() + " message(s) for account " + account);
     }
 
     @Test
@@ -234,12 +244,22 @@ class AccountDaoTest {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.select()");
         String email = "info@valievakamila.ru";
-        Account account = dao.select(EMAIL, email);
+        Account account = dao.selectByEmail(email);
         assertNull(account);
         account = dao.insert(getNewAccount());
         assertNotNull(account);
-        account = dao.select(EMAIL, email);
-        assertEquals(email, account.getEmail());
+        assertEquals(account, dao.selectById(account.getId()));
+    }
+
+    @Test
+    void selectByString() {
+        System.out.println(DELIMITER);
+        System.out.println("Test AccountDAO.selectByString()");
+        String str = "mil";
+        assertEquals(0, dao.selectByString(str, 1, 5).size());
+        Account account = dao.insert(getNewAccount());
+        assertNotNull(account);
+        assertEquals(1, dao.selectByString(str, 1, 5).size());
     }
 
     @Test
@@ -250,62 +270,10 @@ class AccountDaoTest {
         assertNotNull(account);
         // updating a field
         String valueToChange = "Some info about Kamila Valieva";
-        Account dbAccount = dao.update("addInfo", valueToChange, account);
+        account.setAddInfo(valueToChange);
+        Account dbAccount = dao.update(account);
         assertEquals(valueToChange, dbAccount.getAddInfo());
         System.out.println("Updated field 'addInfo' of account " + dbAccount);
-
-        // updating contacts
-        List<Phone> phones = dbAccount.getPhones();
-        phones.add(new Phone(dbAccount, 0, "+79161234567", PhoneType.PERSONAL));
-        phones.add(new Phone(dbAccount, 0, "+74951234567", PhoneType.WORK));
-        dbAccount = dao.insert(phones);
-        Phone phone = (Phone) dao.selectByValueAndType("79161234567", PhoneType.PERSONAL, dbAccount);
-        Account updatedAccount = dao.updateAccountData("+79876543210", PhoneType.PERSONAL, phone.getId(), dbAccount);
-        assertEquals("+79876543210", Objects.requireNonNull(updatedAccount.getPhones().stream().filter(finalPhone ->
-                PhoneType.PERSONAL.equals(finalPhone.getPhoneType())).findAny().orElse(null)).getNumber());
-        System.out.println("Updated phones of account " + updatedAccount);
-    }
-
-    @Test
-    void deleteContacts() {
-        System.out.println(DELIMITER);
-        System.out.println("Test AccountDAO.delete(Contacts)");
-        Account account = dao.insert(getNewAccount());
-        assertNotNull(account);
-        List<Phone> phones = account.getPhones();
-        phones.add(new Phone(account, 0, "+79161234567", PhoneType.PERSONAL));
-        phones.add(new Phone(account, 0, "+74951234567", PhoneType.WORK));
-        Account dbAccount = dao.insert(phones);
-        assertEquals(phones.size(), dbAccount.getPhones().size());
-
-        phones = dbAccount.getPhones();
-        phones.clear();
-        phones.add(new Phone(account, 0, "+74951234567", PhoneType.WORK));
-        Account updatedAccount = dao.delete(phones);
-        assertEquals(1, updatedAccount.getPhones().size());
-        System.out.println("Deleted phones of account " + updatedAccount);
-    }
-
-    @Test
-    void deleteFriends() {
-        System.out.println(DELIMITER);
-        System.out.println("Test AccountDAO.delete(Friends)");
-        Account account = dao.insert(getNewAccount());
-        assertNotNull(account);
-        Account friendAccount = dao.insert(getNewTargetAccount());
-        assertNotNull(friendAccount);
-        List<Friend> friends = account.getFriends();
-        friends.add(new Friend(account, friendAccount));
-        Account dbAccount = dao.insert(friends);
-        assertEquals(friends.size(), dbAccount.getFriends().size());
-
-        friends = dbAccount.getFriends();
-        int initialQuantity = friends.size();
-        friends.clear();
-        friends.add(new Friend(account, friendAccount));
-        Account updatedAccount = dao.delete(friends);
-        assertEquals(initialQuantity - 1, updatedAccount.getFriends().size());
-        System.out.println("Deleted friends of account " + updatedAccount);
     }
 
     @Test
@@ -315,8 +283,7 @@ class AccountDaoTest {
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
 
-        Account dbAccount = dao.delete(account);
-        assertNull(dbAccount);
+        assertTrue(dao.delete(account.getId()));
         System.out.println("Deleted account " + account);
     }
 

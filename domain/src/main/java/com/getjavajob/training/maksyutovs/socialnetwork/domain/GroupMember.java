@@ -1,15 +1,30 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Entity
+@Table(name = "Group_member")
 public class GroupMember implements Serializable {
 
     private static final long serialVersionUID = 2405172041950252207L;
-    private Group group;
-    private Account account;
-    private Role role;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "groupId")
+    private Group group;
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "accId")
+    private Account account;
+    @Column(name = "roleType", columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public GroupMember() {
     }

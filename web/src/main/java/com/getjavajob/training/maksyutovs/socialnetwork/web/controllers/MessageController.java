@@ -75,8 +75,8 @@ public class MessageController {
             model.addAttribute(MESSAGES, accountService.getMessages(account, targetAccount, type));
         } else {
             Message message = new Message(account, targetAccount, type, messageStr);
-            boolean messageSent = accountService.sendMessage(message);
-            if (messageSent) {
+            Message dbMessage = accountService.sendMessage(message);
+            if (dbMessage != null) {
                 if (type == MessageType.PERSONAL) {
                     redirectAttrs.addAttribute("trgId", targetAccount.getId());
                     return REDIRECT_MSG;

@@ -7,13 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Persistence;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = {"classpath:dao-context.xml", "classpath:dao-test-context.xml"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Transactional
 class GroupDaoTest {
 
     private static final Logger LOGGER = Logger.getLogger(GroupDaoTest.class.getName());
@@ -30,13 +32,13 @@ class GroupDaoTest {
     private GroupDao dao;
     @Autowired
     private AccountDao accountDAO;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private EntityManager em;
 
     @BeforeAll
     void init() {
         System.out.println(DELIMITER);
         System.out.println("Test GroupDao.beforeAll");
+        em = Persistence.createEntityManagerFactory("test").createEntityManager();
         createTablesIfNotExist();
     }
 
@@ -77,12 +79,24 @@ class GroupDaoTest {
                 "    image BLOB," +
                 "    PRIMARY KEY(id)" +
                 ");";
-        jdbcTemplate.execute(query);
+        try {
+            em.getTransaction().begin();
+            em.createNativeQuery(query).executeUpdate();
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        }
     }
 
     void truncateTables() {
         String query = "TRUNCATE TABLE InterestGroup; TRUNCATE TABLE Group_member; TRUNCATE TABLE Account;";
-        jdbcTemplate.update(query);
+        try {
+            em.getTransaction().begin();
+            em.createNativeQuery(query).executeUpdate();
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        }
         LOGGER.log(Level.CONFIG, "'InterestGroup', 'Group_member' and 'Account' tables truncated");
     }
 
@@ -133,7 +147,7 @@ class GroupDaoTest {
 
         List<GroupMember> members = group.getMembers();
         // admin of the group
-        Account admin = accountDAO.select("id", group.getCreatedBy());
+        Account admin = accountDAO.select(group.getCreatedBy());
         assertNotNull(admin);
         members.add(new GroupMember(group, admin, Role.ADMIN));
         // member of the group
@@ -141,7 +155,7 @@ class GroupDaoTest {
         assertNotNull(member);
         members.add(new GroupMember(group, member, Role.MEMBER));
 
-        Group dbGroup = dao.insert(members);
+        Group dbGroup = dao.insert(group);
         assertEquals(members.size(), dbGroup.getMembers().size());
         System.out.println("Added members: " + admin + " and " + member);
     }
@@ -152,7 +166,7 @@ class GroupDaoTest {
         System.out.println("Test GroupDAO.select()");
         assertNotNull(dao.insert(getNewGroup()));
         String title = "Figure skating";
-        Group group = dao.select("title", title);
+        Group group = dao.selectByTitle(title);
         assertNotNull(group);
         assertEquals(title, group.getTitle());
     }
@@ -165,19 +179,17 @@ class GroupDaoTest {
         assertNotNull(group);
         // updating a field 'metaTitle'
         String valueToChange = "Figure skating fans group 2023";
-        Group dbGroup = dao.update("metaTitle", valueToChange, group);
+        group.setMetaTitle(valueToChange);
+        Group dbGroup = dao.update(group);
         assertEquals(valueToChange, dbGroup.getMetaTitle());
         System.out.println("Updated meta-title of the group " + group);
 
-        // updating role MEMBER -> MODER
+        // updating group member
         Account member = accountDAO.insert(getNewTargetAccount());
         assertNotNull(member);
         group.getMembers().add(new GroupMember(group, member, Role.MEMBER));
-        dbGroup = dao.insert(group.getMembers());
-        Group updatedGroup = dao.updateGroupMember(new GroupMember(dbGroup, member, Role.MODER));
-        assertEquals(Role.MODER, Objects.requireNonNull(updatedGroup.getMembers().stream().filter(finalMember ->
-                        Objects.equals(finalMember.getAccount().getEmail(), member.getEmail())).
-                findAny().orElse(null)).getRole());
+        dbGroup = dao.update(group);
+        assertEquals(1, dbGroup.getMembers().size());
         System.out.println("Updated member " + member + " of the group " + group);
     }
 
@@ -188,21 +200,19 @@ class GroupDaoTest {
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
 
-        Account admin = accountDAO.select("id", group.getCreatedBy());
+        Account admin = accountDAO.select(group.getCreatedBy());
         assertNotNull(admin);
         group.getMembers().add(new GroupMember(group, admin, Role.ADMIN));
         // member of the group
         Account member = accountDAO.insert(getNewTargetAccount());
         assertNotNull(member);
         group.getMembers().add(new GroupMember(group, member, Role.MEMBER));
-        Group dbGroup = dao.insert(group.getMembers());
-        int initialQuantity = dbGroup.getMembers().size();
+        Group dbGroup = dao.insert(group);
 
         dbGroup.getMembers().clear();
-        dbGroup.getMembers().add(new GroupMember(dbGroup, member, Role.MEMBER));
-        Group updatedGroup = dao.delete(dbGroup.getMembers());
-        assertEquals(initialQuantity - 1, updatedGroup.getMembers().size());
-        System.out.println("Deleted member " + member);
+        Group updatedGroup = dao.update(dbGroup);
+        assertEquals(0, updatedGroup.getMembers().size());
+        System.out.println("Deleted members of group " + updatedGroup);
     }
 
     @Test
@@ -212,8 +222,7 @@ class GroupDaoTest {
         Group group = dao.insert(getNewGroup());
         assertNotNull(group);
 
-        Group dbGroup = dao.delete(group);
-        assertNull(dbGroup);
+        assertTrue(dao.delete(group.getId()));
         System.out.println("Deleted group " + group);
     }
 

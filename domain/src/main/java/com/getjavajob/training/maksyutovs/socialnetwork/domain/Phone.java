@@ -1,15 +1,27 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Entity
 public class Phone implements Serializable {
 
     private static final long serialVersionUID = 1105122041958251257L;
-    private Account account;
-    private String number;
-    private PhoneType phoneType;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "accId")
+    private Account account;
+    @Column(name = "phoneNmr")
+    private String number;
+    @Column(columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
+    private PhoneType phoneType;
 
     public Phone() {
     }

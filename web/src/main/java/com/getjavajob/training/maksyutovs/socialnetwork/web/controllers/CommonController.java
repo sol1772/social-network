@@ -2,6 +2,7 @@ package com.getjavajob.training.maksyutovs.socialnetwork.web.controllers;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,6 @@ public class CommonController {
     private static final String OPTION = "option";
     private static final String PATH = "path";
     private static final String ID = "id";
-    private static final String IMAGE = "image";
     private static final String ERROR = "error";
     private static final String EXC_MSG = "exceptionMessage";
     private static final int MAX_FILE_SIZE = 65535;
@@ -89,12 +89,14 @@ public class CommonController {
         try (InputStream fileContent = file.getInputStream()) {
             if (path.equals(ACCOUNT)) {
                 Account account = (Account) session.getAttribute(ACCOUNT);
-                Account dbAccount = accountService.editAccount(account, IMAGE, fileContent);
+                account.setImage(fileContent.readAllBytes());
+                Account dbAccount = accountService.editAccount(account);
                 session.setAttribute(ACCOUNT, dbAccount);
                 return REDIRECT_ACC + account.getId();
             } else if (path.equals(GROUP) && (id != null)) {
                 Group group = groupService.getGroupById(id);
-                groupService.editGroup(group, IMAGE, fileContent);
+                group.setImage(fileContent.readAllBytes());
+                groupService.editGroup(group);
                 return REDIRECT_GRP + id;
             }
         } catch (IOException e) {
@@ -108,12 +110,14 @@ public class CommonController {
     private String deleteImage(Integer id, String path, HttpSession session) {
         if (path.equals(ACCOUNT)) {
             Account account = (Account) session.getAttribute(ACCOUNT);
-            Account dbAccount = accountService.editAccount(account, IMAGE, null);
+            account.setImage(null);
+            Account dbAccount = accountService.editAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
             return REDIRECT_ACC + account.getId();
         } else if (path.equals(GROUP)) {
             Group group = groupService.getGroupById(id);
-            groupService.editGroup(group, IMAGE, null);
+            group.setImage(null);
+            groupService.editGroup(group);
             return REDIRECT_GRP + id;
         }
         return ERROR;
@@ -121,8 +125,8 @@ public class CommonController {
 
     @GetMapping("/search/accounts")
     @ResponseBody
-    public List<Account> viewAccounts(@RequestParam(name = "q", required = false) String q,
-                                      @RequestParam(name = "page", required = false) Integer page) {
+    public List<AccountDto> viewAccounts(@RequestParam(name = "q", required = false) String q,
+                                         @RequestParam(name = "page", required = false) Integer page) {
         final int recordsPerPage = 5;
         String searchString = q == null ? "" : q;
         int startRow = page == null ? 1 : (page - 1) * recordsPerPage + 1;
@@ -143,8 +147,8 @@ public class CommonController {
     public String viewSearch(@RequestParam(name = "q", required = false) String q,
                              @RequestParam(name = "page", required = false) Integer page, Model model) {
         String searchString = q == null ? "" : q;
-        int accountsTotal = accountService.getAccountsCountByString(searchString, 0, 0);
-        int groupsTotal = groupService.getGroupsCountByString(searchString, 0, 0);
+        int accountsTotal = accountService.getAccountsCountByString(searchString);
+        int groupsTotal = groupService.getGroupsCountByString(searchString);
         final int recordsPerPage = 5;
         int accountPages = (int) Math.ceil((double) accountsTotal / recordsPerPage);
         int groupPages = (int) Math.ceil((double) groupsTotal / recordsPerPage);

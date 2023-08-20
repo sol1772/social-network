@@ -1,15 +1,26 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Entity
 public class Address implements Serializable {
 
     private static final long serialVersionUID = 1905133041950251207L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "accId")
     private Account account;
     private String addr;
+    @Column(columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
     private AddressType addrType;
-    private int id;
 
     public Address() {
     }

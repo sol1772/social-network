@@ -1,13 +1,17 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
-public interface CrudDao<T, V> {
+import java.util.List;
 
-    T insert(T type);
+public interface CrudDao<T> {
 
-    T select(String field, V value);
+    T insert(T object);
 
-    T update(String field, V value, T type);
+    T select(Object id);
 
-    T delete(T type);
+    T update(T object);
+
+    boolean delete(Object id);
+
+    List<T> findAll();
 
 }
