@@ -7,10 +7,11 @@ async function getAccounts(val) {
     if (response.status === 200) {
         let data = await response.json();
         for (let i = 0; i < data.length; i++) {
-            if (`${data[i].lastName}`.includes(val)) {
-                arr[i] = `${data[i].lastName}`;
-            } else {
-                arr[i] = `${data[i].firstName}`;
+            if (data[i].lastName.toLowerCase().includes(val.toLowerCase()) && !arr.includes(data[i].lastName)) {
+                arr.push(data[i].lastName);
+            }
+            if (data[i].firstName.toLowerCase().includes(val.toLowerCase()) && !arr.includes(data[i].firstName)) {
+                arr.push(data[i].firstName);
             }
         }
     } else {
