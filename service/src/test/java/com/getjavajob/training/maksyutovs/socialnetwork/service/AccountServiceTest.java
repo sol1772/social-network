@@ -1,39 +1,47 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.FriendDao;
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.MessageDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
 
     @Mock
-    private AccountDao mockDao;
+    private AccountDao accountDao;
+    @Mock
+    private FriendDao friendDao;
+    @Mock
+    private MessageDao messageDao;
+    @InjectMocks
     private AccountService accountService;
 
     @BeforeEach
     void initService() {
-        accountService = new AccountService(mockDao);
+        accountService = new AccountService(accountDao, friendDao, messageDao);
     }
 
     @Test
     void registerAccount() {
         Account account = new Account();
-        when(mockDao.insert(any(Account.class))).then(returnsFirstArg());
+        when(accountDao.insert(any(Account.class))).then(returnsFirstArg());
         Account savedAccount = accountService.registerAccount(account);
         assertNotNull(savedAccount);
     }
@@ -43,7 +51,7 @@ class AccountServiceTest {
         String email = "info@valievakamila.ru";
         Account account = new Account("Kamila", "Valieva", "kamila_valieva",
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), email);
-        when(mockDao.select(eq("email"), anyString())).thenReturn(account);
+        when(accountDao.selectByEmail(anyString())).thenReturn(account);
         Account savedAccount = accountService.getAccountByEmail(account.getEmail());
         assertEquals(email, savedAccount.getEmail());
     }
@@ -53,9 +61,8 @@ class AccountServiceTest {
         Account account = new Account("Kamila", "Valieva", "kamila_valieva",
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
         account.setAddInfo("Some info");
-        when(mockDao.selectByEmail(anyString())).thenReturn(true);
-        when(mockDao.update(anyString(), anyString(), any(Account.class))).thenReturn(account);
-        Account savedAccount = accountService.editAccount(account, "addInfo", "New info");
+        when(accountDao.update(any(Account.class))).thenReturn(account);
+        Account savedAccount = accountService.editAccount(account);
         assertEquals(account.getAddInfo(), savedAccount.getAddInfo());
     }
 
@@ -63,47 +70,38 @@ class AccountServiceTest {
     void deleteAccount() {
         Account account = new Account("Kamila", "Valieva", "kamila_valieva",
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
-        when(mockDao.selectByEmail(anyString())).thenReturn(true);
-        when(mockDao.delete(any(Account.class))).thenReturn(null);
-        Account deletedAccount = accountService.deleteAccount(account);
-        assertNull(deletedAccount);
+        account.setId(1);
+        when(accountDao.select(account.getId())).thenReturn(account);
+        when(accountDao.delete(account.getId())).thenReturn(true);
+        assertTrue(accountService.deleteAccount(account.getId()));
     }
 
     @Test
     void addFriend() {
         Account account = new Account("Kamila", "Valieva", "kamila_valieva",
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
-        Account friend = new Account("Alina", "Zagitova", "alina_zagitova",
+        Account friendAccount = new Account("Alina", "Zagitova", "alina_zagitova",
                 LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), "info@alinazagitova.ru");
-        List<Friend> friends = account.getFriends();
-        friends.add(new Friend(account, friend));
-
-        when(mockDao.select(eq("email"), anyString())).thenReturn(account);
-        when(mockDao.insert(friends)).thenReturn(account);
-        Account savedAccount = accountService.addFriend(account, friend);
-        assertEquals(friends.size(), savedAccount.getFriends().size());
+        when((accountDao.selectByEmail(account.getEmail()))).thenReturn(account);
+        when((accountDao.selectByEmail(friendAccount.getEmail()))).thenReturn(friendAccount);
+        Friend friend = new Friend(account, friendAccount);
+        when(friendDao.insert(friend)).thenReturn(friend);
+        Friend savedFriend = accountService.addFriend(account, friendAccount);
+        assertNotNull(savedFriend);
     }
 
     @Test
     void deleteFriend() {
-        Account account = new Account();
-        Account friend = new Account();
-        when(mockDao.select("email", account.getEmail())).thenReturn(account);
-        when(mockDao.delete(account.getFriends())).thenReturn(account);
-        assertNotNull(accountService.deleteFriend(account, friend));
-    }
-
-    @Test
-    void getFriends() {
         Account account = new Account("Kamila", "Valieva", "kamila_valieva",
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
-        Account friend = new Account("Alina", "Zagitova", "alina_zagitova",
+        Account friendAccount = new Account("Alina", "Zagitova", "alina_zagitova",
                 LocalDate.parse("2002-05-18", Utils.DATE_FORMATTER), "info@alinazagitova.ru");
-        List<Friend> friends = account.getFriends();
-        friends.add(new Friend(account, friend));
-
-        when(mockDao.select(anyString(), anyString())).thenReturn(account);
-        assertEquals(1, accountService.getFriends(account).size());
+        when((accountDao.selectByEmail(account.getEmail()))).thenReturn(account);
+        when((accountDao.selectByEmail(friendAccount.getEmail()))).thenReturn(friendAccount);
+        Friend friend = new Friend(account, friendAccount);
+        when((friendDao.selectFriend(account, friendAccount))).thenReturn(friend);
+        when(accountDao.delete(friend)).thenReturn(true);
+        assertTrue(accountService.deleteFriend(account, friendAccount));
     }
 
     @Test
@@ -112,10 +110,8 @@ class AccountServiceTest {
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), "info@valievakamila.ru");
         String password = "ComplicatedPassword_1";
         account.setPasswordHash(account.hashPassword(password));
-
-        when(mockDao.selectByEmail(anyString())).thenReturn(true);
-        when(mockDao.update(anyString(), anyString(), any(Account.class))).thenReturn(account);
-        Account savedAccount = accountService.editAccount(account, "passwordHash", password);
+        when(accountDao.update(any(Account.class))).thenReturn(account);
+        Account savedAccount = accountService.editAccount(account);
         assertTrue(accountService.passwordIsValid(password, savedAccount));
     }
 
@@ -126,9 +122,8 @@ class AccountServiceTest {
                 LocalDate.parse("2006-04-26", Utils.DATE_FORMATTER), email);
         String oldPassword = "ComplicatedPassword_1";
         String newPassword = "ComplicatedPassword_2";
-
-        when(mockDao.selectByEmail(anyString())).thenReturn(true);
-        when(mockDao.update(anyString(), anyString(), any(Account.class))).thenReturn(account);
+        when(accountDao.checkByEmail(anyString())).thenReturn(true);
+        when(accountDao.update(any(Account.class))).thenReturn(account);
         assertTrue(accountService.changePassword(oldPassword, newPassword, account));
     }
 

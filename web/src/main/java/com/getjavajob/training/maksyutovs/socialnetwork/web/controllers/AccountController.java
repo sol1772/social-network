@@ -1,10 +1,14 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.controllers;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.AddressType;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountValidator;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,30 +29,33 @@ public class AccountController {
     private static final Logger LOGGER = Logger.getLogger(AccountController.class.getName());
     private static final String REG = "registration";
     private static final String ACCOUNT = "account";
-    private static final String GENDER = "gender";
+    private static final String LOGIN = "login";
     private static final String ERROR = "error";
     private static final String EXC_MSG = "exceptionMessage";
     private static final String REDIRECT_ACC = "redirect:/account/";
     private final AccountService accountService;
     private final GroupService groupService;
+    private final AccountValidator accountValidator;
+    private final Mapper mapper = new Mapper();
 
     @Autowired
-    public AccountController(AccountService accountService, GroupService groupService) {
+    public AccountController(AccountService accountService, GroupService groupService, AccountValidator validator) {
         this.accountService = accountService;
         this.groupService = groupService;
+        this.accountValidator = validator;
     }
 
     @GetMapping("/{id}")
     public String viewAccount(@PathVariable Integer id, Model model) {
-        Account account = accountService.getAccountById(id);
-        if (account == null) {
-            model.addAttribute(EXC_MSG, "Account with id + " + id + " not found");
-            return ERROR;
-        } else {
+        Account account = accountService.getFullAccountById(id);
+        if (account != null) {
             model.addAttribute(ACCOUNT, account);
             model.addAttribute("groups", groupService.getGroupsByAccount(account));
             model.addAttribute("posts", accountService.getMessages(account, account, MessageType.POST));
             return ACCOUNT;
+        } else {
+            model.addAttribute(EXC_MSG, "Account with id " + id + " not found");
+            return ERROR;
         }
     }
 
@@ -58,50 +65,36 @@ public class AccountController {
     }
 
     @PostMapping("/add")
-    public String addAccount(@ModelAttribute Account account, @NotNull BindingResult result,
+    public String addAccount(@ModelAttribute AccountDto accountDto, @NotNull BindingResult result,
                              @RequestParam Map<String, String> p, HttpSession session, Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute(EXC_MSG, result.getAllErrors().get(0).toString());
-            return ERROR;
+        String option = p.get("submit");
+        if ("Cancel".equals(option)) {
+            return "redirect:/login";
         }
-        if ("Register".equals(p.get("submit"))) {
-            if (accountService.accountExists(account.getEmail())) {
-                model.addAllAttributes(p);
-                model.addAttribute(ERROR, "Account with email '" + account.getEmail() + "' already exists");
-                return REG;
-            }
-            fillAccount(account, p);
+        Account account = mapper.toNewAccount(accountDto);
+        accountValidator.validate(account, result);
+        if (result.hasErrors()) {
+            model.addAllAttributes(p);
+            model.addAttribute(ERROR, result.getAllErrors().get(0).getDefaultMessage());
+            return REG;
+        }
+        if ("Register".equals(option)) {
             Account dbAccount = accountService.registerAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
             session.setAttribute("username", dbAccount.getUserName());
             return REDIRECT_ACC + dbAccount.getId();
         }
-        return "login";
-    }
-
-    private void fillAccount(Account account, Map<String, String> p) {
-        account.setPasswordHash(account.hashPassword(p.get("password")));
-        if (!StringUtils.isEmpty(p.get("personalPhone"))) {
-            account.getPhones().add(new Phone(account, 0, p.get("personalPhone"), PhoneType.PERSONAL));
-        }
-        if (!StringUtils.isEmpty(p.get("workPhone"))) {
-            account.getPhones().add(new Phone(account, 0, p.get("workPhone"), PhoneType.WORK));
-        }
-        if (!StringUtils.isEmpty(p.get("homeAddress"))) {
-            account.getAddresses().add(new Address(account, 0, p.get("homeAddress"), AddressType.HOME));
-        }
-        if (!StringUtils.isEmpty(p.get("workAddress"))) {
-            account.getAddresses().add(new Address(account, 0, p.get("workAddress"), AddressType.WORK));
-        }
+        return LOGIN;
     }
 
     @GetMapping("/{id}/edit")
-    public String viewAccountEdit(@SessionAttribute(ACCOUNT) Account account, Model model) {
+    public String viewAccountEdit(@PathVariable Integer id, Model model) {
+        Account account = accountService.getFullAccountById(id);
         if (account == null) {
-            return "login";
+            return LOGIN;
         } else {
             model.addAttribute(ACCOUNT, account);
-            model.addAttribute(GENDER, String.valueOf(account.getGender() != null ?
+            model.addAttribute("gender", String.valueOf(account.getGender() != null ?
                     account.getGender().toString().charAt(0) : 'M'));
             model.addAttribute("homeAddress", account.getAddresses().stream().filter(addr ->
                     AddressType.HOME.equals(addr.getAddrType())).findAny().orElse(null));
@@ -112,15 +105,15 @@ public class AccountController {
     }
 
     @PostMapping("/{id}/edit")
-    public String saveAccount(@ModelAttribute("account") Account account, @NotNull BindingResult result,
+    public String saveAccount(@ModelAttribute("account") AccountDto accountDto, @NotNull BindingResult result,
                               @RequestParam("submit") String option, HttpSession session, Model model) {
         if (result.hasErrors()) {
             model.addAttribute(EXC_MSG, result.getAllErrors().get(0).toString());
             return ERROR;
         }
+        Account account = accountService.getFullAccountById(accountDto.getId());
         if (option.equals("Save")) {
-            Account dbAccount = accountService.editAccount(account);
-            dbAccount = accountService.editAccountData(dbAccount, account);
+            Account dbAccount = accountService.editAccount(mapper.toAccount(account, accountDto));
             session.setAttribute(ACCOUNT, dbAccount);
             session.setAttribute("username", dbAccount.getUserName());
             model.addAttribute(ACCOUNT, dbAccount);
@@ -134,8 +127,8 @@ public class AccountController {
 
     @GetMapping("/{id}/image")
     @ResponseBody
-    public byte[] getImage(@PathVariable Integer id,
-                           @SessionAttribute(name = "account", required = false) Account account) {
+    public byte[] getImage(@PathVariable Integer id, HttpSession session) {
+        Account account = (Account) session.getAttribute(ACCOUNT);
         if (account == null || account.getId() != id) {
             account = accountService.getAccountById(id);
         }

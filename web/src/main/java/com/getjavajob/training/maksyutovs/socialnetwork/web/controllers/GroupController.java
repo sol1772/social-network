@@ -4,6 +4,8 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.GroupMember;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Role;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.GroupDto;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.io.IOUtils;
@@ -28,11 +30,13 @@ public class GroupController {
     private static final Logger LOGGER = Logger.getLogger(GroupController.class.getName());
     private static final String GROUP = "group";
     private static final String TITLE = "title";
+    private static final String ACCOUNT = "account";
     private static final String ERROR = "error";
     private static final String EXC_MSG = "exceptionMessage";
     private static final String REDIRECT_GRP = "redirect:/group/";
     private final GroupService groupService;
     private final AccountService accountService;
+    private final Mapper mapper = new Mapper();
 
     @Autowired
     public GroupController(GroupService groupService, AccountService accountService) {
@@ -42,13 +46,13 @@ public class GroupController {
 
     @GetMapping("/{id}")
     public String viewGroup(@PathVariable Integer id, Model model) {
-        Group group = groupService.getGroupById(id);
+        Group group = groupService.getFullGroupById(id);
         if (group == null) {
             model.addAttribute(EXC_MSG, "Group with id + " + id + " not found");
             return ERROR;
         } else {
             model.addAttribute(GROUP, group);
-            model.addAttribute("owner", accountService.getAccountById(group.getCreatedBy()));
+            model.addAttribute(ACCOUNT, accountService.getFullAccountById(group.getCreatedBy()));
             return GROUP;
         }
     }
@@ -59,26 +63,34 @@ public class GroupController {
     }
 
     @PostMapping("/add")
-    public String addGroup(@ModelAttribute Group group, @NotNull BindingResult result,
+    public String addGroup(@ModelAttribute GroupDto groupDto, @NotNull BindingResult result,
                            @RequestParam Map<String, String> p, HttpSession session, Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute(EXC_MSG, result.getAllErrors().get(0).toString());
-            return ERROR;
-        }
-        Account account = (Account) session.getAttribute("account");
+        Account account = (Account) session.getAttribute(ACCOUNT);
         if (account == null) {
             return "login";
-        } else {
-            if ("Create".equals(p.get("submit"))) {
-                if (p.get(TITLE).isEmpty()) {
-                    model.addAttribute(ERROR, "Enter title");
-                    return "group-add";
-                }
-                group.setCreatedBy(account.getId());
-                group.getMembers().add(new GroupMember(group, account, Role.ADMIN));
-                Group dbGroup = groupService.createGroup(group);
-                return REDIRECT_GRP + dbGroup.getId();
-            }
+        }
+        String option = p.get("submit");
+        if ("Cancel".equals(option)) {
+            return "redirect:/account/" + account.getId();
+        }
+        if (result.hasErrors()) {
+            model.addAllAttributes(p);
+            model.addAttribute(ERROR, result.getAllErrors().get(0).getDefaultMessage());
+        }
+        if (p.get(TITLE).isEmpty()) {
+            model.addAttribute(ERROR, "Enter title");
+        } else if (groupService.getGroupByTitle(p.get(TITLE)) != null) {
+            model.addAttribute(ERROR, "Group with title '" + p.get(TITLE) + "' already exists");
+        }
+        if (model.getAttribute(ERROR) != null) {
+            return "group-add";
+        }
+        if ("Create".equals(option)) {
+            Group group = mapper.toNewGroup(groupDto);
+            group.setCreatedBy(account.getId());
+            group.getMembers().add(new GroupMember(group, account, Role.ADMIN));
+            Group dbGroup = groupService.createGroup(group);
+            return REDIRECT_GRP + dbGroup.getId();
         }
         return "redirect:/account/" + account.getId();
     }
@@ -90,31 +102,25 @@ public class GroupController {
     }
 
     @PostMapping("/{id}/edit")
-    public String editGroup(@ModelAttribute Group group, @NotNull BindingResult result,
+    public String editGroup(@ModelAttribute GroupDto groupDto, @NotNull BindingResult result,
                             HttpServletRequest req, HttpSession session, Model model) {
         if (result.hasErrors()) {
             model.addAttribute(EXC_MSG, result.getAllErrors().get(0).toString());
             return ERROR;
         }
-        Account account = (Account) session.getAttribute("account");
+        Account account = (Account) session.getAttribute(ACCOUNT);
         if (account == null) {
             return "login";
         } else {
             String option = req.getParameter("submit");
+            Group group = groupService.getFullGroupById(groupDto.getId());
             if (option.equals("Save")) {
-                if (group.getTitle().isEmpty()) {
-                    model.addAttribute(ERROR, "Enter title");
-                    return "group-edit";
-                }
-                group.setCreatedBy(account.getId());
-                group.getMembers().add(new GroupMember(group, account, Role.ADMIN));
-                Group dbGroup = groupService.editGroup(group);
+                Group dbGroup = groupService.editGroup(mapper.toGroup(group, groupDto));
                 return REDIRECT_GRP + dbGroup.getId();
-            } else if (option.equals("Cancel")) {
+            } else {
                 return REDIRECT_GRP + group.getId();
             }
         }
-        return REDIRECT_GRP + group.getId();
     }
 
     @GetMapping("/{id}/image")

@@ -1,7 +1,12 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
-import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,16 +14,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-@Component
+@Entity
+@Table(name = "InterestGroup")
 public class Group implements Serializable {
 
     private static final long serialVersionUID = 1905122041950251207L;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     private final List<GroupMember> members = new ArrayList<>();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private int createdBy;
+    @NaturalId
+    @Column(nullable = false, unique = true)
+    @NotEmpty(message = "Title should not be empty")
     private String title;
     private String metaTitle;
+    @CreationTimestamp
+    @DateTimeFormat(pattern = Utils.DATE_TIME_PATTERN)
     private LocalDateTime createdAt;
+    @Lob
+    @Column(columnDefinition = "blob", length = 65535)
     private byte[] image;
 
     public Group() {
@@ -26,6 +43,12 @@ public class Group implements Serializable {
 
     public Group(String title) {
         this.title = title;
+    }
+
+    public Group(int id, String title, String metaTitle) {
+        this.id = id;
+        this.title = title;
+        this.metaTitle = metaTitle;
     }
 
     public List<GroupMember> getMembers() {

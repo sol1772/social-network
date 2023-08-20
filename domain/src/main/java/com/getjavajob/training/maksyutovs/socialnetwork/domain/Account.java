@@ -1,9 +1,13 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Component;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,28 +16,44 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-@Component
+@Entity
 public class Account implements Serializable {
 
     private static final long serialVersionUID = 1905122041950251207L;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private final List<Phone> phones = new ArrayList<>();
+    @JsonManagedReference
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private final List<Address> addresses = new ArrayList<>();
+    @JsonManagedReference
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private final List<Messenger> messengers = new ArrayList<>();
-    private final List<Friend> friends = new ArrayList<>();
-    private final List<Message> messages = new ArrayList<>();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @NotEmpty(message = "First name should not be empty")
     private String firstName;
     private String middleName;
+    @NotEmpty(message = "Last name should not be empty")
     private String lastName;
     private String userName;
     @DateTimeFormat(pattern = Utils.DATE_PATTERN)
     private LocalDate dateOfBirth;
+    @Column(columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
     private Gender gender;
+    @NaturalId
+    @Column(nullable = false, unique = true)
+    @NotEmpty(message = "Email should not be empty")
     private String email;
     private String passwordHash;
     private String addInfo;
+    @CreationTimestamp
     @DateTimeFormat(pattern = Utils.DATE_TIME_PATTERN)
     private LocalDateTime registeredAt;
+    @Lob
+    @Column(columnDefinition = "blob", length = 65535)
     private byte[] image;
 
     public Account() {
@@ -65,14 +85,6 @@ public class Account implements Serializable {
 
     public List<Messenger> getMessengers() {
         return messengers;
-    }
-
-    public List<Friend> getFriends() {
-        return friends;
-    }
-
-    public List<Message> getMessages() {
-        return messages;
     }
 
     public String getFirstName() {
@@ -180,7 +192,6 @@ public class Account implements Serializable {
         Account account = (Account) o;
         return id == account.id && Objects.equals(phones, account.phones) &&
                 Objects.equals(addresses, account.addresses) && Objects.equals(messengers, account.messengers) &&
-                Objects.equals(friends, account.friends) && Objects.equals(messages, account.messages) &&
                 firstName.equals(account.firstName) && Objects.equals(middleName, account.middleName) &&
                 lastName.equals(account.lastName) && userName.equals(account.userName) &&
                 dateOfBirth.equals(account.dateOfBirth) && gender == account.gender && email.equals(account.email) &&
@@ -190,7 +201,8 @@ public class Account implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(phones, addresses, messengers, friends, messages, id, firstName, middleName, lastName,
+        return Objects.hash(phones, addresses, messengers, id, firstName, middleName, lastName,
                 userName, dateOfBirth, gender, email, passwordHash, addInfo, registeredAt);
     }
+
 }

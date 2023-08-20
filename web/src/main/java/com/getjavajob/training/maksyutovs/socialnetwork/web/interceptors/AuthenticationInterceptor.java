@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AuthenticationInterceptor implements HandlerInterceptor {
@@ -29,7 +28,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) throws Exception {
-        LOGGER.log(Level.INFO, () -> "[preHandle][" + req + "]" + "[" + req.getMethod() + "]" + req.getRequestURI());
+//        LOGGER.log(Level.INFO, () -> "[preHandle][" + req + "]" + "[" + req.getMethod() + "]" + req.getRequestURI());
         HttpSession session = req.getSession();
         Account account = (Account) session.getAttribute("account");
         String contextPath = req.getContextPath();

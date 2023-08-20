@@ -4,7 +4,7 @@
 <%@ page import="org.apache.commons.text.CaseUtils" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="group" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Group"/>
-<jsp:useBean id="owner" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
+<jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
 <c:set var="root" value="${pageContext.request.contextPath}"/>
 
@@ -35,7 +35,7 @@
                 </tr>
                 <tr>
                     <td><i>Owner</i></td>
-                    <td>${owner.firstName} ${owner.lastName}</td>
+                    <td>${account.firstName} ${account.lastName}</td>
                 </tr>
                 <tr>
                     <td><i>Date of creation</i></td>
@@ -55,7 +55,7 @@
         </div>
         <div class="head-logo">
             <img src="${root}/group/${group.id}/image" alt="Group image" width="150px">
-            <c:if test="${username.equals(owner.userName)}">
+            <c:if test="${username.equals(account.userName)}">
                 <form action="${root}/upload" method="get">
                     <div class="btn-group d-block mx-auto">
                         <button class="btn btn-outline-info btn-sm" name="option" id="change" value="Change">Change
@@ -71,7 +71,7 @@
             </c:if>
         </div>
     </div>
-    <c:if test="${username.equals(owner.userName)}">
+    <c:if test="${username.equals(account.userName)}">
         <ul class="nav justify-content-center">
             <li class="nav-item">
                 <a class="nav-link" href="${root}/group/${group.id}/edit">Edit</a>

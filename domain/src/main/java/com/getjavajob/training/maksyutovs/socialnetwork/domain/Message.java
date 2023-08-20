@@ -1,24 +1,43 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
-import org.springframework.stereotype.Component;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
-@Component
+@Entity
 public class Message implements Serializable {
 
     private static final long serialVersionUID = 6470090944414208496L;
-    private Account account;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "accId")
+    private Account account;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trgId")
     private Account targetAccount;
-    private transient Group targetGroup;
+    @Transient
+    private Group targetGroup;
+    @Column(columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
     private MessageType msgType;
+    @Column(name = "txtContent")
     private String textContent;
+    @Lob
+    @Column(columnDefinition = "blob", length = 65535)
     private byte[] mediaContent;
+    @CreationTimestamp
+    @DateTimeFormat(pattern = Utils.DATE_TIME_PATTERN)
     private LocalDateTime createdAt;
+    @UpdateTimestamp
+    @DateTimeFormat(pattern = Utils.DATE_TIME_PATTERN)
     private LocalDateTime updatedAt;
 
     public Message() {

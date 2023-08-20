@@ -1,14 +1,25 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Entity
 public class Messenger implements Serializable {
 
     private static final long serialVersionUID = 4505122041950251272L;
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "accId")
     private Account account;
     private String username;
+    @Column(columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
     private MessengerType msgrType;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     public Messenger() {
