@@ -10,25 +10,35 @@ import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountValidator
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Controller
 @RequestMapping("/account")
 public class AccountController {
 
-    private static final Logger LOGGER = Logger.getLogger(AccountController.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
     private static final String REG = "registration";
     private static final String ACCOUNT = "account";
+    private static final String ACCOUNT_EDIT = "account-edit";
     private static final String LOGIN = "login";
     private static final String ERROR = "error";
     private static final String EXC_MSG = "exceptionMessage";
@@ -82,6 +92,7 @@ public class AccountController {
             Account dbAccount = accountService.registerAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
             session.setAttribute("username", dbAccount.getUserName());
+            logger.info("Created account {}", dbAccount);
             return REDIRECT_ACC + dbAccount.getId();
         }
         return LOGIN;
@@ -100,7 +111,7 @@ public class AccountController {
                     AddressType.HOME.equals(addr.getAddrType())).findAny().orElse(null));
             model.addAttribute("workAddress", account.getAddresses().stream().filter(addr ->
                     AddressType.WORK.equals(addr.getAddrType())).findAny().orElse(null));
-            return "account-edit";
+            return ACCOUNT_EDIT;
         }
     }
 
@@ -117,12 +128,13 @@ public class AccountController {
             session.setAttribute(ACCOUNT, dbAccount);
             session.setAttribute("username", dbAccount.getUserName());
             model.addAttribute(ACCOUNT, dbAccount);
+            logger.info("Saved account {}", dbAccount);
             return REDIRECT_ACC + dbAccount.getId();
         } else if (option.equals("Cancel")) {
             model.addAttribute(ACCOUNT, account);
             return REDIRECT_ACC + account.getId();
         }
-        return "account-edit";
+        return ACCOUNT_EDIT;
     }
 
     @GetMapping("/{id}/image")
@@ -137,10 +149,54 @@ public class AccountController {
             try {
                 image = IOUtils.toByteArray(CommonController.getDefaultImage(account.getGender().toString()));
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getMessage());
+                logger.error(e.getMessage());
             }
         }
         return image;
+    }
+
+    @GetMapping("/{id}/toXml")
+    public void saveToXml(@PathVariable Integer id, HttpServletResponse response) throws JAXBException, IOException {
+        Account account = accountService.getFullAccountById(id);
+        JAXBContext context = JAXBContext.newInstance(Account.class);
+        Marshaller mar = context.createMarshaller();
+        mar.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        File file = new File(System.getProperty("java.io.tmpdir") + "/account.xml");
+        mar.marshal(account, file);
+
+        response.setContentType("text/xml");
+        // offers upload to file, not direct display in the browser
+        response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
+        final OutputStream out = response.getOutputStream();
+        try (FileInputStream fis = new FileInputStream(file)) {
+            final byte[] bytes = fis.readAllBytes();
+            out.write(bytes);
+            out.flush();
+            out.close();
+        }
+        Files.delete(file.toPath());
+        logger.info("Account {} saved to xml-file", account);
+    }
+
+    @GetMapping("/{id}/fromXml")
+    public String viewAccountFromXml(@PathVariable String id) {
+        return "xml-loader";
+    }
+
+    @PostMapping("/{id}/fromXml")
+    public String loadFromXml(@PathVariable Integer id, Model model,
+                              @RequestParam("file") MultipartFile file) throws JAXBException, IOException {
+        JAXBContext context = JAXBContext.newInstance(Account.class);
+        Account account = (Account) context.createUnmarshaller().unmarshal(file.getInputStream());
+        model.addAttribute(ACCOUNT, account);
+        model.addAttribute("gender", String.valueOf(account.getGender() != null ?
+                account.getGender().toString().charAt(0) : 'M'));
+        model.addAttribute("homeAddress", account.getAddresses().stream().filter(addr ->
+                AddressType.HOME.equals(addr.getAddrType())).findAny().orElse(null));
+        model.addAttribute("workAddress", account.getAddresses().stream().filter(addr ->
+                AddressType.WORK.equals(addr.getAddrType())).findAny().orElse(null));
+        logger.info("Account {} loaded from xml-file", account);
+        return ACCOUNT_EDIT;
     }
 
 }

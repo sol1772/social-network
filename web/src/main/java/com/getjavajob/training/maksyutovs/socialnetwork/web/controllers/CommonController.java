@@ -5,6 +5,8 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +27,7 @@ import static java.lang.Math.max;
 @Controller
 public class CommonController {
 
+    private static final Logger logger = LoggerFactory.getLogger(CommonController.class);
     private static final String ACCOUNT = "account";
     private static final String GROUP = "group";
     private static final String UPLOAD = "upload";
@@ -92,11 +95,13 @@ public class CommonController {
                 account.setImage(fileContent.readAllBytes());
                 Account dbAccount = accountService.editAccount(account);
                 session.setAttribute(ACCOUNT, dbAccount);
+                logger.info("Updated image of account {}", dbAccount);
                 return REDIRECT_ACC + account.getId();
             } else if (path.equals(GROUP) && (id != null)) {
                 Group group = groupService.getGroupById(id);
                 group.setImage(fileContent.readAllBytes());
                 groupService.editGroup(group);
+                logger.info("Updated image of group {}", group);
                 return REDIRECT_GRP + id;
             }
         } catch (IOException e) {
@@ -113,11 +118,13 @@ public class CommonController {
             account.setImage(null);
             Account dbAccount = accountService.editAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
+            logger.info("Deleted image of account {}", dbAccount);
             return REDIRECT_ACC + account.getId();
         } else if (path.equals(GROUP)) {
             Group group = groupService.getGroupById(id);
             group.setImage(null);
             groupService.editGroup(group);
+            logger.info("Deleted image of group {}", group);
             return REDIRECT_GRP + id;
         }
         return ERROR;

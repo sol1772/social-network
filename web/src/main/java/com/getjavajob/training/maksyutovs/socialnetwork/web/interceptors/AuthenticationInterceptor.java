@@ -3,6 +3,8 @@ package com.getjavajob.training.maksyutovs.socialnetwork.web.interceptors;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -12,11 +14,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.*;
-import java.util.logging.Logger;
 
 public class AuthenticationInterceptor implements HandlerInterceptor {
 
-    private static final Logger LOGGER = Logger.getLogger(AuthenticationInterceptor.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationInterceptor.class);
     private final AccountService accountService;
     @Autowired
     private ServletContext sc;
@@ -28,7 +29,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) throws Exception {
-//        LOGGER.log(Level.INFO, () -> "[preHandle][" + req + "]" + "[" + req.getMethod() + "]" + req.getRequestURI());
+        logger.info("[preHandle][{}] [{}] {}", req, req.getMethod(), req.getRequestURI());
         HttpSession session = req.getSession();
         Account account = (Account) session.getAttribute("account");
         String contextPath = req.getContextPath();

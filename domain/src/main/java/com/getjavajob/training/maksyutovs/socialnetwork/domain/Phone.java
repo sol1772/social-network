@@ -3,6 +3,7 @@ package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -61,6 +62,7 @@ public class Phone implements Serializable {
         this.phoneType = phoneType;
     }
 
+    @XmlTransient
     public Account getAccount() {
         return account;
     }

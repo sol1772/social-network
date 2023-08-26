@@ -8,6 +8,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+@XmlRootElement(name = "account")
+@XmlType(propOrder = {"id", "firstName", "middleName", "lastName", "userName", "dateOfBirth", "gender", "email",
+        "addInfo", "phones", "addresses", "messengers"})
 @Entity
 public class Account implements Serializable {
 
@@ -71,18 +76,22 @@ public class Account implements Serializable {
         return id;
     }
 
+    @XmlAttribute
     public void setId(int id) {
         this.id = id;
     }
 
+    @XmlElement
     public List<Phone> getPhones() {
         return phones;
     }
 
+    @XmlElement
     public List<Address> getAddresses() {
         return addresses;
     }
 
+    @XmlElement
     public List<Messenger> getMessengers() {
         return messengers;
     }
@@ -119,6 +128,7 @@ public class Account implements Serializable {
         this.userName = userName;
     }
 
+    @XmlJavaTypeAdapter(value = Utils.class)
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
@@ -155,6 +165,7 @@ public class Account implements Serializable {
         return registeredAt;
     }
 
+    @XmlTransient
     public void setRegisteredAt(LocalDateTime registeredAt) {
         this.registeredAt = registeredAt;
     }
@@ -163,6 +174,7 @@ public class Account implements Serializable {
         return image;
     }
 
+    @XmlTransient
     public void setImage(byte[] image) {
         this.image = image;
     }
@@ -171,6 +183,7 @@ public class Account implements Serializable {
         return passwordHash;
     }
 
+    @XmlTransient
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }

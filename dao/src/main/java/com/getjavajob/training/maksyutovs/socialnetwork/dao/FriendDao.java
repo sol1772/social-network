@@ -2,16 +2,16 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.NoResultException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Repository
 public class FriendDao extends AbstractCrudDao<Friend> {
 
-    private static final Logger logger = Logger.getLogger(FriendDao.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(FriendDao.class);
 
     public FriendDao() {
         super(Friend.class);
@@ -25,7 +25,7 @@ public class FriendDao extends AbstractCrudDao<Friend> {
                     .setParameter("friendAccount", friendAccount)
                     .getSingleResult();
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return null;
         }
     }

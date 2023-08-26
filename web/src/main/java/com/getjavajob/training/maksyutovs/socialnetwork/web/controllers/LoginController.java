@@ -2,6 +2,8 @@ package com.getjavajob.training.maksyutovs.socialnetwork.web.controllers;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import javax.servlet.http.HttpSession;
 @Controller
 public class LoginController {
 
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
     private static final String LOGIN = "login";
     private static final String EMAIL = "email";
     private static final String PASS = "password";
@@ -64,9 +67,11 @@ public class LoginController {
                 }
                 session.setAttribute("account", account);
                 session.setAttribute("username", account.getUserName());
+                logger.info("Account {} logged in", account);
                 return new ModelAndView(REDIRECT_ACC + account.getId());
             } else {
                 mvLogin.addObject(ERROR, "Wrong password");
+                logger.info("Wrong password entered for account {}", account);
                 return mvLogin;
             }
         }
@@ -74,12 +79,15 @@ public class LoginController {
 
     @GetMapping("/logout")
     public String viewLogout(HttpServletRequest req, HttpServletResponse resp) {
+        HttpSession session = req.getSession();
+        Account account = (Account) session.getAttribute("account");
         Cookie[] cookies = req.getCookies();
         for (Cookie cookie : cookies) {
             cookie.setMaxAge(0);
             resp.addCookie(cookie);
         }
-        req.getSession().invalidate();
+        session.invalidate();
+        logger.info("Account {} logged out", account);
         return ("redirect:/login");
     }
 

@@ -5,6 +5,8 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Message;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpSession;
 @Controller
 public class MessageController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MessageController.class);
     private static final String MESSAGES = "messages";
     private static final String MSG_ACC = "messages_account";
     private static final String ACCOUNT = "account";
@@ -76,6 +79,7 @@ public class MessageController {
         } else {
             Message message = new Message(account, targetAccount, type, messageStr);
             Message dbMessage = accountService.sendMessage(message);
+            logger.info("Sent message from {} to {}", account, targetAccount);
             if (dbMessage != null) {
                 if (type == MessageType.PERSONAL) {
                     redirectAttrs.addAttribute("trgId", targetAccount.getId());
@@ -85,6 +89,7 @@ public class MessageController {
                 }
             } else {
                 model.addAttribute(REPORT, "Message sending error!");
+                logger.info("Message sending error: account {}, targetAccount {}", account, targetAccount);
             }
         }
         return MSG_ACC;
@@ -103,6 +108,7 @@ public class MessageController {
             }
         } else {
             model.addAttribute(REPORT, "Message deleting error!");
+            logger.info("Message deleting error: account {}, targetAccount {}", account, targetAccount);
         }
         return MSG_ACC;
     }

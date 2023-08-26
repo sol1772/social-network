@@ -7,20 +7,20 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.QueryHints;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Repository
 public class AccountDao extends AbstractCrudDao<Account> {
 
-    private static final Logger logger = Logger.getLogger(AccountDao.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AccountDao.class);
     private final Mapper mapper = new Mapper();
 
     public AccountDao() {
@@ -49,7 +49,7 @@ public class AccountDao extends AbstractCrudDao<Account> {
             Hibernate.initialize(account.getMessengers());
             return account;
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return account;
         }
     }
@@ -65,7 +65,7 @@ public class AccountDao extends AbstractCrudDao<Account> {
                     .setMaxResults(total)
                     .getResultList().stream().map(mapper::toAccountDto).collect(Collectors.toList());
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -78,7 +78,7 @@ public class AccountDao extends AbstractCrudDao<Account> {
                     .setParameter("str", searchString)
                     .getSingleResult().intValue();
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return 0;
         }
     }

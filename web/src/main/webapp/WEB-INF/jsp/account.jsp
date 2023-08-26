@@ -87,6 +87,13 @@
                     <input type="hidden" name="path" value="account">
                     <input type="hidden" name="id" value="${account.id}">
                 </form>
+                <form action="${root}/account/${account.id}/fromXml" method="get">
+                    <div class="btn-group d-block mx-auto">
+                        <a href="${root}/account/${account.id}/toXml" class="btn btn-outline-info btn-sm">To XML</a>
+                        <button class="btn btn-outline-info btn-sm" id="loadXml">From XML</button>
+                    </div>
+                    <p style="color: darkgreen">${requestScope.message}</p>
+                </form>
             </c:if>
         </div>
     </div>

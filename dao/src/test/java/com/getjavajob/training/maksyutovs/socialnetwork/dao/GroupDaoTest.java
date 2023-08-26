@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -15,8 +17,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class GroupDaoTest {
 
-    private static final Logger LOGGER = Logger.getLogger(GroupDaoTest.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(GroupDaoTest.class);
     private static final String DELIMITER = "----------------------------------";
     @Autowired
     private GroupDao dao;
@@ -97,7 +97,7 @@ class GroupDaoTest {
         } catch (Exception e) {
             em.getTransaction().rollback();
         }
-        LOGGER.log(Level.CONFIG, "'InterestGroup', 'Group_member' and 'Account' tables truncated");
+        logger.info("'InterestGroup', 'Group_member' and 'Account' tables truncated");
     }
 
     Group getNewGroup() {

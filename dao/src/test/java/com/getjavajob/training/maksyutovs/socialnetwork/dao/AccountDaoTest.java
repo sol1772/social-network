@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -15,8 +17,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class AccountDaoTest {
 
-    private static final Logger LOGGER = Logger.getLogger(AccountDaoTest.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AccountDaoTest.class);
     private static final String DELIMITER = "----------------------------------";
     @Autowired
     private AccountDao dao;
@@ -152,9 +152,9 @@ class AccountDaoTest {
             }
             em.getTransaction().commit();
             if (queries.size() == 0) {
-                LOGGER.log(Level.CONFIG, "No tables to truncate");
+                logger.info("No tables to truncate");
             } else {
-                LOGGER.log(Level.CONFIG, "All tables truncated");
+                logger.info("All tables truncated");
             }
         } catch (Exception e) {
             em.getTransaction().rollback();

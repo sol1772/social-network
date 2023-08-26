@@ -23,7 +23,7 @@
         <div class="input-group input-group-sm mb-3">
             <input type="text" class="form-control" name="description" placeholder="file size up to 64 kb"
                    aria-label=""/>
-            <input type="file" class="form-control" name="file" id="image"/>
+            <input type="file" accept="image/*" class="form-control" name="file" id="image"/>
             <button class="btn btn-outline-info btn-sm" type="submit" name="submit" id="btn_send">Submit</button>
             <input type="hidden" name="option" value="${option}">
             <input type="hidden" name="path" value="${path}">

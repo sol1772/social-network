@@ -3,18 +3,18 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Message;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Repository
 public class MessageDao extends AbstractCrudDao<Message> {
 
-    private static final Logger logger = Logger.getLogger(MessageDao.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(MessageDao.class);
 
     public MessageDao() {
         super(Message.class);
@@ -32,7 +32,7 @@ public class MessageDao extends AbstractCrudDao<Message> {
                     .getResultList();
             return messages;
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return messages;
         }
     }

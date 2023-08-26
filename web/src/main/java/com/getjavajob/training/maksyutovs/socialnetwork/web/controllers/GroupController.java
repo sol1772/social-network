@@ -10,6 +10,8 @@ import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,14 +22,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Controller
 @RequestMapping("/group")
 public class GroupController {
 
-    private static final Logger LOGGER = Logger.getLogger(GroupController.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(GroupController.class);
     private static final String GROUP = "group";
     private static final String TITLE = "title";
     private static final String ACCOUNT = "account";
@@ -90,6 +90,7 @@ public class GroupController {
             group.setCreatedBy(account.getId());
             group.getMembers().add(new GroupMember(group, account, Role.ADMIN));
             Group dbGroup = groupService.createGroup(group);
+            logger.info("Created group {}", dbGroup);
             return REDIRECT_GRP + dbGroup.getId();
         }
         return "redirect:/account/" + account.getId();
@@ -116,6 +117,7 @@ public class GroupController {
             Group group = groupService.getFullGroupById(groupDto.getId());
             if (option.equals("Save")) {
                 Group dbGroup = groupService.editGroup(mapper.toGroup(group, groupDto));
+                logger.info("Saved group {}", dbGroup);
                 return REDIRECT_GRP + dbGroup.getId();
             } else {
                 return REDIRECT_GRP + group.getId();
@@ -131,7 +133,7 @@ public class GroupController {
             try {
                 image = IOUtils.toByteArray(CommonController.getDefaultImage("G"));
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getMessage());
+                logger.error(e.getMessage());
             }
         }
         return image;

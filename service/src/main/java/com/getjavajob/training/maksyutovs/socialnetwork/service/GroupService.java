@@ -4,6 +4,8 @@ import com.getjavajob.training.maksyutovs.socialnetwork.dao.DaoRuntimeException;
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.GroupDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class GroupService {
 
+    private static final Logger logger = LoggerFactory.getLogger(GroupService.class);
     private GroupDao dao;
 
     public GroupService() {
@@ -61,7 +64,9 @@ public class GroupService {
         Group dbGroup;
         try {
             dbGroup = dao.insert(group);
+            logger.info("Created group {}", dbGroup);
         } catch (DaoRuntimeException e) {
+            logger.error("Error when creating a group {}", group);
             throw new DaoRuntimeException(e.getMessage(), e);
         }
         return dbGroup;
@@ -69,13 +74,23 @@ public class GroupService {
 
     @Transactional
     public Group editGroup(Group group) {
-        return dao.update(group);
+        Group dbGroup = dao.update(group);
+        logger.info("Updated group {}", dbGroup);
+        return dbGroup;
+
     }
 
     @Transactional
     public boolean deleteGroup(int id) {
         if (dao.select(id) != null) {
-            return dao.delete(id);
+            boolean deleted = dao.delete(id);
+            if (deleted) {
+                logger.info("Deleted group with id {}", id);
+                return true;
+            } else {
+                logger.error("Error when deleting the group with id {}", id);
+                return false;
+            }
         }
         return false;
     }

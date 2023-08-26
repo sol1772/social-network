@@ -2,6 +2,8 @@ package com.getjavajob.training.maksyutovs.socialnetwork.service;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import org.springframework.validation.Validator;
 @Transactional(readOnly = true)
 public class AccountValidator implements Validator {
 
+    private static final Logger logger = LoggerFactory.getLogger(AccountValidator.class);
     private AccountDao dao;
 
     public AccountValidator() {
@@ -40,8 +43,9 @@ public class AccountValidator implements Validator {
     public void validate(@NonNull Object target, @NonNull Errors errors) {
         Account account = (Account) target;
         if (dao.selectByEmail(account.getEmail()) != null) {
-            errors.rejectValue("email", "",
-                    "Account with email '" + account.getEmail() + "'already exists");
+            String str = "Account with email '" + account.getEmail() + "'already exists";
+            errors.rejectValue("email", "", str);
+            logger.warn(str);
         }
     }
 

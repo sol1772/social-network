@@ -6,19 +6,19 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.QueryHints;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Repository
 public class GroupDao extends AbstractCrudDao<Group> {
 
-    private static final Logger logger = Logger.getLogger(GroupDao.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(GroupDao.class);
     private final Mapper mapper = new Mapper();
 
     public GroupDao() {
@@ -42,7 +42,7 @@ public class GroupDao extends AbstractCrudDao<Group> {
             Hibernate.initialize(group.getMembers());
             return group;
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return group;
         }
     }
@@ -57,7 +57,7 @@ public class GroupDao extends AbstractCrudDao<Group> {
                     .getResultList();
             return groups;
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return groups;
         }
     }
@@ -72,7 +72,7 @@ public class GroupDao extends AbstractCrudDao<Group> {
                     .setMaxResults(total)
                     .getResultList().stream().map(mapper::toGroup).collect(Collectors.toList());
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -84,7 +84,7 @@ public class GroupDao extends AbstractCrudDao<Group> {
                     .setParameter("str", searchString)
                     .getSingleResult().intValue();
         } catch (NoResultException e) {
-            logger.log(Level.WARNING, e.getMessage());
+            logger.error(e.getMessage());
             return 0;
         }
     }

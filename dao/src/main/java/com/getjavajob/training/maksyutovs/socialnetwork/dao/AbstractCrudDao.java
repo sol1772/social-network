@@ -1,5 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -8,13 +10,11 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Repository
 public abstract class AbstractCrudDao<T> implements CrudDao<T> {
 
-    private static final Logger logger = Logger.getLogger(AbstractCrudDao.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractCrudDao.class);
     @PersistenceContext
     EntityManager em;
     private Class<T> tClass;
@@ -29,6 +29,7 @@ public abstract class AbstractCrudDao<T> implements CrudDao<T> {
     @Override
     public T insert(final T object) {
         em.persist(object);
+        LOGGER.info("Inserted object {}", object);
         return object;
     }
 
@@ -46,9 +47,10 @@ public abstract class AbstractCrudDao<T> implements CrudDao<T> {
     public boolean delete(final Object id) {
         try {
             em.remove(em.getReference(tClass, id));
+            LOGGER.info("Deleted object of {} with id {}", tClass, id);
             return true;
         } catch (Exception e) {
-            logger.log(Level.WARNING, e.getMessage());
+            LOGGER.error(e.getMessage());
             return false;
         }
     }
