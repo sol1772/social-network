@@ -95,13 +95,17 @@ public class CommonController {
                 account.setImage(fileContent.readAllBytes());
                 Account dbAccount = accountService.editAccount(account);
                 session.setAttribute(ACCOUNT, dbAccount);
-                logger.info("Updated image of account {}", dbAccount);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Updated image of account {}", dbAccount);
+                }
                 return REDIRECT_ACC + account.getId();
             } else if (path.equals(GROUP) && (id != null)) {
                 Group group = groupService.getGroupById(id);
                 group.setImage(fileContent.readAllBytes());
                 groupService.editGroup(group);
-                logger.info("Updated image of group {}", group);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Updated image of group {}", group);
+                }
                 return REDIRECT_GRP + id;
             }
         } catch (IOException e) {
@@ -118,13 +122,17 @@ public class CommonController {
             account.setImage(null);
             Account dbAccount = accountService.editAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
-            logger.info("Deleted image of account {}", dbAccount);
+            if (logger.isInfoEnabled()) {
+                logger.info("Deleted image of account {}", dbAccount);
+            }
             return REDIRECT_ACC + account.getId();
         } else if (path.equals(GROUP)) {
             Group group = groupService.getGroupById(id);
             group.setImage(null);
             groupService.editGroup(group);
-            logger.info("Deleted image of group {}", group);
+            if (logger.isInfoEnabled()) {
+                logger.info("Deleted image of group {}", group);
+            }
             return REDIRECT_GRP + id;
         }
         return ERROR;

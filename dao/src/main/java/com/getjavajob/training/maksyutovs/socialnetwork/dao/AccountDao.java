@@ -49,7 +49,9 @@ public class AccountDao extends AbstractCrudDao<Account> {
             Hibernate.initialize(account.getMessengers());
             return account;
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return account;
         }
     }
@@ -65,7 +67,9 @@ public class AccountDao extends AbstractCrudDao<Account> {
                     .setMaxResults(total)
                     .getResultList().stream().map(mapper::toAccountDto).collect(Collectors.toList());
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return new ArrayList<>();
         }
     }
@@ -78,7 +82,9 @@ public class AccountDao extends AbstractCrudDao<Account> {
                     .setParameter("str", searchString)
                     .getSingleResult().intValue();
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return 0;
         }
     }

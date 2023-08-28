@@ -25,7 +25,9 @@ public class FriendDao extends AbstractCrudDao<Friend> {
                     .setParameter("friendAccount", friendAccount)
                     .getSingleResult();
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return null;
         }
     }

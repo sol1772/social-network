@@ -90,7 +90,8 @@
                 <form action="${root}/account/${account.id}/fromXml" method="get">
                     <div class="btn-group d-block mx-auto">
                         <a href="${root}/account/${account.id}/toXml" class="btn btn-outline-info btn-sm">To XML</a>
-                        <button class="btn btn-outline-info btn-sm" id="loadXml">From XML</button>
+                        <a href="${root}/account/${account.id}/toJson" class="btn btn-outline-info btn-sm">To JSON</a>
+                        <button class="btn btn-outline-info btn-sm" id="loadXml">From XML/JSON</button>
                     </div>
                     <p style="color: darkgreen">${requestScope.message}</p>
                 </form>

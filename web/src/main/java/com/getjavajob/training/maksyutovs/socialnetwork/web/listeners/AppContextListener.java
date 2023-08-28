@@ -24,19 +24,25 @@ public class AppContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         ServletContext sc = servletContextEvent.getServletContext();
         sc.setAttribute("ConfigProperties", properties);
-        logger.info("Database connection initialized for Application.");
+        if (logger.isInfoEnabled()) {
+            logger.info("Database connection initialized for Application.");
+        }
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        logger.info("Database connections closed for Application.");
+        if (logger.isInfoEnabled()) {
+            logger.info("Database connections closed for Application.");
+        }
     }
 
     private void loadConfigProperties() {
         try (InputStream is = getClass().getResourceAsStream(RESOURCE_NAME)) {
             properties.load(is);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
         }
     }
 

@@ -20,8 +20,11 @@
     </div>
     <form id="login_form" action="${root}/login" method="post">
         <div class="input-group input-group-sm mb-3">
-            <span class="input-group-text">E-mail and password</span>
+            <span class="input-group-text">E-mail</span>
             <input type="email" id="email" name="email" aria-label="E-mail" class="form-control">
+        </div>
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text">Password</span>
             <input type="password" id="password" name="password" aria-label="Password" class="form-control">
         </div>
         <div class="form-check">

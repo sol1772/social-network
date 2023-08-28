@@ -67,11 +67,15 @@ public class LoginController {
                 }
                 session.setAttribute("account", account);
                 session.setAttribute("username", account.getUserName());
-                logger.info("Account {} logged in", account);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Account {} logged in", account);
+                }
                 return new ModelAndView(REDIRECT_ACC + account.getId());
             } else {
                 mvLogin.addObject(ERROR, "Wrong password");
-                logger.info("Wrong password entered for account {}", account);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Wrong password entered for account {}", account);
+                }
                 return mvLogin;
             }
         }
@@ -87,7 +91,9 @@ public class LoginController {
             resp.addCookie(cookie);
         }
         session.invalidate();
-        logger.info("Account {} logged out", account);
+        if (logger.isInfoEnabled()) {
+            logger.info("Account {} logged out", account);
+        }
         return ("redirect:/login");
     }
 

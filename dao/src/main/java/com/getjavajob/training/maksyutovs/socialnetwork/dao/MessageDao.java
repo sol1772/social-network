@@ -32,7 +32,9 @@ public class MessageDao extends AbstractCrudDao<Message> {
                     .getResultList();
             return messages;
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return messages;
         }
     }

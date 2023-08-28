@@ -21,7 +21,7 @@
         <p class="error" id="error">${error}</p>
         <div class="input-group input-group-sm mb-3">
             <input type="text" class="form-control" name="description" placeholder="choose xml-file" aria-label=""/>
-            <input type="file" accept=".xml" class="form-control" name="file" id="xmlFile"/>
+            <input type="file" accept=".xml,.json" class="form-control" name="file" id="xmlFile"/>
             <button class="btn btn-outline-info btn-sm" type="submit" name="submit" id="btn_loadXml">Load from XML
             </button>
         </div>
@@ -33,8 +33,8 @@
         const xmlFile = document.getElementById("xmlFile").value;
         if (xmlFile !== '') {
             const check_img = xmlFile.toLowerCase();
-            if (!check_img.match(/(\.xml|\.XML)$/)) {
-                document.getElementById("error").innerText = "Please choose xml-file";
+            if (!check_img.match(/(\.xml|\.XML|\.json|\.JSON)$/)) {
+                document.getElementById("error").innerText = "Please choose xml/json-file";
                 document.getElementById("xmlFile").focus();
                 return false;
             }

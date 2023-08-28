@@ -151,10 +151,12 @@ class AccountDaoTest {
                 em.createNativeQuery(q).executeUpdate();
             }
             em.getTransaction().commit();
-            if (queries.size() == 0) {
-                logger.info("No tables to truncate");
-            } else {
-                logger.info("All tables truncated");
+            if (logger.isInfoEnabled()) {
+                if (queries.size() == 0) {
+                    logger.info("No tables to truncate");
+                } else {
+                    logger.info("All tables truncated");
+                }
             }
         } catch (Exception e) {
             em.getTransaction().rollback();

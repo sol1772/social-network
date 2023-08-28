@@ -42,7 +42,9 @@ public class GroupDao extends AbstractCrudDao<Group> {
             Hibernate.initialize(group.getMembers());
             return group;
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return group;
         }
     }
@@ -57,7 +59,9 @@ public class GroupDao extends AbstractCrudDao<Group> {
                     .getResultList();
             return groups;
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return groups;
         }
     }
@@ -72,7 +76,9 @@ public class GroupDao extends AbstractCrudDao<Group> {
                     .setMaxResults(total)
                     .getResultList().stream().map(mapper::toGroup).collect(Collectors.toList());
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return new ArrayList<>();
         }
     }
@@ -84,7 +90,9 @@ public class GroupDao extends AbstractCrudDao<Group> {
                     .setParameter("str", searchString)
                     .getSingleResult().intValue();
         } catch (NoResultException e) {
-            logger.error(e.getMessage());
+            if (logger.isErrorEnabled()) {
+                logger.error(e.getMessage());
+            }
             return 0;
         }
     }

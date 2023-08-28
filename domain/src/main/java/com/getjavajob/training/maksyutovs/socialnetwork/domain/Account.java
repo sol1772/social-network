@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.domain;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.NaturalId;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -175,6 +176,7 @@ public class Account implements Serializable {
     }
 
     @XmlTransient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public void setImage(byte[] image) {
         this.image = image;
     }

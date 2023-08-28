@@ -64,9 +64,13 @@ public class GroupService {
         Group dbGroup;
         try {
             dbGroup = dao.insert(group);
-            logger.info("Created group {}", dbGroup);
+            if (logger.isInfoEnabled()) {
+                logger.info("Created group {}", dbGroup);
+            }
         } catch (DaoRuntimeException e) {
-            logger.error("Error when creating a group {}", group);
+            if (logger.isErrorEnabled()) {
+                logger.error("Error when creating a group {}", group);
+            }
             throw new DaoRuntimeException(e.getMessage(), e);
         }
         return dbGroup;
@@ -75,7 +79,9 @@ public class GroupService {
     @Transactional
     public Group editGroup(Group group) {
         Group dbGroup = dao.update(group);
-        logger.info("Updated group {}", dbGroup);
+        if (logger.isInfoEnabled()) {
+            logger.info("Updated group {}", dbGroup);
+        }
         return dbGroup;
 
     }
@@ -85,10 +91,14 @@ public class GroupService {
         if (dao.select(id) != null) {
             boolean deleted = dao.delete(id);
             if (deleted) {
-                logger.info("Deleted group with id {}", id);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Deleted group with id {}", id);
+                }
                 return true;
             } else {
-                logger.error("Error when deleting the group with id {}", id);
+                if (logger.isErrorEnabled()) {
+                    logger.error("Error when deleting the group with id {}", id);
+                }
                 return false;
             }
         }

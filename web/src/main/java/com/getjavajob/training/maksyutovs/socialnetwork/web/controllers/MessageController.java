@@ -79,7 +79,9 @@ public class MessageController {
         } else {
             Message message = new Message(account, targetAccount, type, messageStr);
             Message dbMessage = accountService.sendMessage(message);
-            logger.info("Sent message from {} to {}", account, targetAccount);
+            if (logger.isInfoEnabled()) {
+                logger.info("Sent message from {} to {}", account, targetAccount);
+            }
             if (dbMessage != null) {
                 if (type == MessageType.PERSONAL) {
                     redirectAttrs.addAttribute("trgId", targetAccount.getId());
@@ -89,7 +91,9 @@ public class MessageController {
                 }
             } else {
                 model.addAttribute(REPORT, "Message sending error!");
-                logger.info("Message sending error: account {}, targetAccount {}", account, targetAccount);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Message sending error: account {}, targetAccount {}", account, targetAccount);
+                }
             }
         }
         return MSG_ACC;
@@ -108,7 +112,9 @@ public class MessageController {
             }
         } else {
             model.addAttribute(REPORT, "Message deleting error!");
-            logger.info("Message deleting error: account {}, targetAccount {}", account, targetAccount);
+            if (logger.isInfoEnabled()) {
+                logger.info("Message deleting error: account {}, targetAccount {}", account, targetAccount);
+            }
         }
         return MSG_ACC;
     }

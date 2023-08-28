@@ -90,7 +90,9 @@ public class GroupController {
             group.setCreatedBy(account.getId());
             group.getMembers().add(new GroupMember(group, account, Role.ADMIN));
             Group dbGroup = groupService.createGroup(group);
-            logger.info("Created group {}", dbGroup);
+            if (logger.isInfoEnabled()) {
+                logger.info("Created group {}", dbGroup);
+            }
             return REDIRECT_GRP + dbGroup.getId();
         }
         return "redirect:/account/" + account.getId();
@@ -117,7 +119,9 @@ public class GroupController {
             Group group = groupService.getFullGroupById(groupDto.getId());
             if (option.equals("Save")) {
                 Group dbGroup = groupService.editGroup(mapper.toGroup(group, groupDto));
-                logger.info("Saved group {}", dbGroup);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Saved group {}", dbGroup);
+                }
                 return REDIRECT_GRP + dbGroup.getId();
             } else {
                 return REDIRECT_GRP + group.getId();
@@ -133,7 +137,9 @@ public class GroupController {
             try {
                 image = IOUtils.toByteArray(CommonController.getDefaultImage("G"));
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                if (logger.isErrorEnabled()) {
+                    logger.error(e.getMessage());
+                }
             }
         }
         return image;

@@ -97,7 +97,9 @@ class GroupDaoTest {
         } catch (Exception e) {
             em.getTransaction().rollback();
         }
-        logger.info("'InterestGroup', 'Group_member' and 'Account' tables truncated");
+        if (logger.isInfoEnabled()) {
+            logger.info("'InterestGroup', 'Group_member' and 'Account' tables truncated");
+        }
     }
 
     Group getNewGroup() {

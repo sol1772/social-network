@@ -70,7 +70,9 @@ public class AccountService {
     public Account validateAccount(Account account) {
         Account dbAccount = accountDao.selectByEmail(account.getEmail());
         if (dbAccount == null) {
-            logger.info("Error when validating an account {}", account);
+            if (logger.isWarnEnabled()) {
+                logger.warn("Error when validating an account {}", account);
+            }
             throw new ValidationRuntimeException("Account with email '" + account.getEmail() + "' does not exist");
         }
         return dbAccount;
@@ -78,7 +80,9 @@ public class AccountService {
 
     public boolean checkAccount(Account account) {
         if (!accountDao.checkByEmail(account.getEmail())) {
-            logger.info("Error when validating an account {}", account);
+            if (logger.isWarnEnabled()) {
+                logger.warn("Error when validating an account {}", account);
+            }
             throw new ValidationRuntimeException("Account with email '" + account.getEmail() + "' does not exist");
         }
         return true;
@@ -105,10 +109,14 @@ public class AccountService {
     public boolean deleteMessage(int id) {
         boolean deleted = messageDao.delete(id);
         if (deleted) {
-            logger.info("Deleted message with id {}", id);
+            if (logger.isInfoEnabled()) {
+                logger.info("Deleted message with id {}", id);
+            }
             return true;
         } else {
-            logger.error("Error when deleting the message with id {}", id);
+            if (logger.isErrorEnabled()) {
+                logger.error("Error when deleting the message with id {}", id);
+            }
             return false;
         }
     }
@@ -118,9 +126,13 @@ public class AccountService {
         Account dbAccount;
         try {
             dbAccount = accountDao.insert(account);
-            logger.info("Registered account {}", dbAccount);
+            if (logger.isInfoEnabled()) {
+                logger.info("Registered account {}", dbAccount);
+            }
         } catch (DaoRuntimeException e) {
-            logger.error("Error when registering an account {}", account);
+            if (logger.isErrorEnabled()) {
+                logger.error("Error when registering an account {}", account);
+            }
             throw new DaoRuntimeException(e.getMessage(), e);
         }
         return dbAccount;
@@ -129,7 +141,9 @@ public class AccountService {
     @Transactional
     public Account editAccount(Account account) {
         Account dbAccount = accountDao.update(account);
-        logger.info("Updated account {}", dbAccount);
+        if (logger.isInfoEnabled()) {
+            logger.info("Updated account {}", dbAccount);
+        }
         return dbAccount;
     }
 
@@ -138,10 +152,14 @@ public class AccountService {
         if (accountDao.select(id) != null) {
             boolean deleted = accountDao.delete(id);
             if (deleted) {
-                logger.info("Deleted account with id {}", id);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Deleted account with id {}", id);
+                }
                 return true;
             } else {
-                logger.error("Error when deleting the account with id {}", id);
+                if (logger.isErrorEnabled()) {
+                    logger.error("Error when deleting the account with id {}", id);
+                }
                 return false;
             }
         }
@@ -153,7 +171,9 @@ public class AccountService {
         Account dbAccount = validateAccount(account);
         Account dbFriend = validateAccount(friendAccount);
         Friend friend = friendDao.insert(new Friend(dbAccount, dbFriend));
-        logger.info("Added friend {}", friend);
+        if (logger.isInfoEnabled()) {
+            logger.info("Added friend {}", friend);
+        }
         return friend;
     }
 
@@ -164,7 +184,9 @@ public class AccountService {
         Friend friend = friendDao.selectFriend(dbAccount, dbFriend);
         if (friend != null) {
             accountDao.delete(friend);
-            logger.info("Deleted friend {}", friend);
+            if (logger.isInfoEnabled()) {
+                logger.info("Deleted friend {}", friend);
+            }
             return true;
         } else {
             return false;
@@ -185,9 +207,13 @@ public class AccountService {
                 account.setPasswordHash(account.hashPassword(newPassword));
                 Account dbAccount = accountDao.update(account);
                 passwordChanged = Objects.equals(dbAccount.getPasswordHash(), account.getPasswordHash());
-                logger.info("Password changed for account {}", dbAccount);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Password changed for account {}", dbAccount);
+                }
             } else {
-                logger.info("Password change error for account {} (old password is not valid)", account);
+                if (logger.isWarnEnabled()) {
+                    logger.warn("Password change error for account {} (old password is not valid)", account);
+                }
                 throw new DaoRuntimeException("Old password is not valid!");
             }
         }

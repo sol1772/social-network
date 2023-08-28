@@ -6,6 +6,7 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountStorage;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountValidator;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
 import org.apache.commons.io.IOUtils;
@@ -21,14 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.util.Map;
 
 @Controller
@@ -47,6 +42,7 @@ public class AccountController {
     private final GroupService groupService;
     private final AccountValidator accountValidator;
     private final Mapper mapper = new Mapper();
+    private final AccountStorage storage = new AccountStorage();
 
     @Autowired
     public AccountController(AccountService accountService, GroupService groupService, AccountValidator validator) {
@@ -92,7 +88,9 @@ public class AccountController {
             Account dbAccount = accountService.registerAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
             session.setAttribute("username", dbAccount.getUserName());
-            logger.info("Created account {}", dbAccount);
+            if (logger.isInfoEnabled()) {
+                logger.info("Created account {}", dbAccount);
+            }
             return REDIRECT_ACC + dbAccount.getId();
         }
         return LOGIN;
@@ -128,7 +126,9 @@ public class AccountController {
             session.setAttribute(ACCOUNT, dbAccount);
             session.setAttribute("username", dbAccount.getUserName());
             model.addAttribute(ACCOUNT, dbAccount);
-            logger.info("Saved account {}", dbAccount);
+            if (logger.isInfoEnabled()) {
+                logger.info("Saved account {}", dbAccount);
+            }
             return REDIRECT_ACC + dbAccount.getId();
         } else if (option.equals("Cancel")) {
             model.addAttribute(ACCOUNT, account);
@@ -149,33 +149,37 @@ public class AccountController {
             try {
                 image = IOUtils.toByteArray(CommonController.getDefaultImage(account.getGender().toString()));
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                if (logger.isErrorEnabled()) {
+                    logger.error(e.getMessage());
+                }
             }
         }
         return image;
     }
 
     @GetMapping("/{id}/toXml")
-    public void saveToXml(@PathVariable Integer id, HttpServletResponse response) throws JAXBException, IOException {
+    public void saveToXml(@PathVariable Integer id, HttpServletResponse response) throws IOException {
         Account account = accountService.getFullAccountById(id);
-        JAXBContext context = JAXBContext.newInstance(Account.class);
-        Marshaller mar = context.createMarshaller();
-        mar.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        File file = new File(System.getProperty("java.io.tmpdir") + "/account.xml");
-        mar.marshal(account, file);
-
+        File file = storage.store(account, "xml");
         response.setContentType("text/xml");
         // offers upload to file, not direct display in the browser
         response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
-        final OutputStream out = response.getOutputStream();
-        try (FileInputStream fis = new FileInputStream(file)) {
-            final byte[] bytes = fis.readAllBytes();
-            out.write(bytes);
-            out.flush();
-            out.close();
+        storage.writeFileToOutputStream(file, response.getOutputStream());
+        if (logger.isInfoEnabled()) {
+            logger.info("Account {} saved to xml-file", account);
         }
-        Files.delete(file.toPath());
-        logger.info("Account {} saved to xml-file", account);
+    }
+
+    @GetMapping("/{id}/toJson")
+    public void saveToJson(@PathVariable Integer id, HttpServletResponse response) throws IOException {
+        Account account = accountService.getFullAccountById(id);
+        File file = storage.store(account, "json");
+        response.setContentType("application/json");
+        response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
+        storage.writeFileToOutputStream(file, response.getOutputStream());
+        if (logger.isInfoEnabled()) {
+            logger.info("Account {} saved to json-file", account);
+        }
     }
 
     @GetMapping("/{id}/fromXml")
@@ -185,9 +189,10 @@ public class AccountController {
 
     @PostMapping("/{id}/fromXml")
     public String loadFromXml(@PathVariable Integer id, Model model,
-                              @RequestParam("file") MultipartFile file) throws JAXBException, IOException {
-        JAXBContext context = JAXBContext.newInstance(Account.class);
-        Account account = (Account) context.createUnmarshaller().unmarshal(file.getInputStream());
+                              @RequestParam("file") MultipartFile multipartFile) throws IOException {
+        File file = new File(System.getProperty("java.io.tmpdir") + multipartFile.getOriginalFilename());
+        multipartFile.transferTo(file);
+        Account account = storage.load(file);
         model.addAttribute(ACCOUNT, account);
         model.addAttribute("gender", String.valueOf(account.getGender() != null ?
                 account.getGender().toString().charAt(0) : 'M'));
@@ -195,7 +200,9 @@ public class AccountController {
                 AddressType.HOME.equals(addr.getAddrType())).findAny().orElse(null));
         model.addAttribute("workAddress", account.getAddresses().stream().filter(addr ->
                 AddressType.WORK.equals(addr.getAddrType())).findAny().orElse(null));
-        logger.info("Account {} loaded from xml-file", account);
+        if (logger.isInfoEnabled()) {
+            logger.info("Account {} loaded from xml-file", account);
+        }
         return ACCOUNT_EDIT;
     }
 
