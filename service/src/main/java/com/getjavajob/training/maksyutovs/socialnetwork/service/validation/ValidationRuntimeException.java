@@ -1,4 +1,4 @@
-package com.getjavajob.training.maksyutovs.socialnetwork.service;
+package com.getjavajob.training.maksyutovs.socialnetwork.service.validation;
 
 /**
  * The class ValidationRuntimeException is an unchecked exception for object validation purposes

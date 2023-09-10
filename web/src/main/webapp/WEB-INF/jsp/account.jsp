@@ -87,7 +87,7 @@
                     <input type="hidden" name="path" value="account">
                     <input type="hidden" name="id" value="${account.id}">
                 </form>
-                <form action="${root}/account/${account.id}/fromXml" method="get">
+                <form action="${root}/account/${account.id}/fromFile" method="get">
                     <div class="btn-group d-block mx-auto">
                         <a href="${root}/account/${account.id}/toXml" class="btn btn-outline-info btn-sm">To XML</a>
                         <a href="${root}/account/${account.id}/toJson" class="btn btn-outline-info btn-sm">To JSON</a>

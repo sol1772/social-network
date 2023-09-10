@@ -1,4 +1,4 @@
-package com.getjavajob.training.maksyutovs.socialnetwork.service;
+package com.getjavajob.training.maksyutovs.socialnetwork.service.validation;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;

@@ -9,6 +9,7 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Friend;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Message;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.validation.ValidationRuntimeException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

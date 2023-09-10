@@ -15,27 +15,26 @@
 <jsp:include page="header.jsp"/>
 <div class="container">
     <h2 style="color: darkgreen">Social network</h2>
-    <h3 style="color: darkgreen">XML Loader</h3>
-    <form action="${root}/account/${id}/fromXml" method="post" enctype="multipart/form-data"
+    <h3 style="color: darkgreen">File Loader</h3>
+    <form action="${root}/account/${id}/fromFile" method="post" enctype="multipart/form-data"
           onSubmit="return Validate();">
         <p class="error" id="error">${error}</p>
         <div class="input-group input-group-sm mb-3">
-            <input type="text" class="form-control" name="description" placeholder="choose xml-file" aria-label=""/>
-            <input type="file" accept=".xml,.json" class="form-control" name="file" id="xmlFile"/>
-            <button class="btn btn-outline-info btn-sm" type="submit" name="submit" id="btn_loadXml">Load from XML
-            </button>
+            <input type="text" class="form-control" name="description" placeholder="choose file" aria-label=""/>
+            <input type="file" accept=".xml,.json" class="form-control" name="file" id="file"/>
+            <button class="btn btn-outline-info btn-sm" type="submit" name="submit" id="btn_fileLoad">Load</button>
         </div>
     </form>
 </div>
 <jsp:include page="footer.jsp"/>
 <script>
     function Validate() {
-        const xmlFile = document.getElementById("xmlFile").value;
-        if (xmlFile !== '') {
-            const check_img = xmlFile.toLowerCase();
+        const file = document.getElementById("file").value;
+        if (file !== '') {
+            const check_img = file.toLowerCase();
             if (!check_img.match(/(\.xml|\.XML|\.json|\.JSON)$/)) {
-                document.getElementById("error").innerText = "Please choose xml/json-file";
-                document.getElementById("xmlFile").focus();
+                document.getElementById("error").innerText = "Please choose xml/json file";
+                document.getElementById("file").focus();
                 return false;
             }
         }

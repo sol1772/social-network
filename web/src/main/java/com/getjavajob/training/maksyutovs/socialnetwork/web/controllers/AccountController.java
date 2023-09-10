@@ -6,9 +6,11 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
-import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountStorage;
-import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountValidator;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.storage.FileStorage;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.storage.JsonStorage;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.storage.XmlStorage;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.validation.AccountValidator;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Map;
 
 @Controller
@@ -42,7 +45,8 @@ public class AccountController {
     private final GroupService groupService;
     private final AccountValidator accountValidator;
     private final Mapper mapper = new Mapper();
-    private final AccountStorage storage = new AccountStorage();
+    private final FileStorage<Account> xmlStorage = new XmlStorage<>(Account.class);
+    private final FileStorage<Account> jsonStorage = new JsonStorage<>(Account.class);
 
     @Autowired
     public AccountController(AccountService accountService, GroupService groupService, AccountValidator validator) {
@@ -160,11 +164,11 @@ public class AccountController {
     @GetMapping("/{id}/toXml")
     public void saveToXml(@PathVariable Integer id, HttpServletResponse response) throws IOException {
         Account account = accountService.getFullAccountById(id);
-        File file = storage.store(account, "xml");
+        File file = xmlStorage.store(account);
         response.setContentType("text/xml");
         // offers upload to file, not direct display in the browser
         response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
-        storage.writeFileToOutputStream(file, response.getOutputStream());
+        xmlStorage.writeFileToOutputStream(file, response.getOutputStream());
         if (logger.isInfoEnabled()) {
             logger.info("Account {} saved to xml-file", account);
         }
@@ -173,35 +177,43 @@ public class AccountController {
     @GetMapping("/{id}/toJson")
     public void saveToJson(@PathVariable Integer id, HttpServletResponse response) throws IOException {
         Account account = accountService.getFullAccountById(id);
-        File file = storage.store(account, "json");
+        File file = jsonStorage.store(account);
         response.setContentType("application/json");
         response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
-        storage.writeFileToOutputStream(file, response.getOutputStream());
+        jsonStorage.writeFileToOutputStream(file, response.getOutputStream());
         if (logger.isInfoEnabled()) {
             logger.info("Account {} saved to json-file", account);
         }
     }
 
-    @GetMapping("/{id}/fromXml")
-    public String viewAccountFromXml(@PathVariable String id) {
-        return "xml-loader";
+    @GetMapping("/{id}/fromFile")
+    public String viewAccountFromFile(@PathVariable String id) {
+        return "file-loader";
     }
 
-    @PostMapping("/{id}/fromXml")
-    public String loadFromXml(@PathVariable Integer id, Model model,
-                              @RequestParam("file") MultipartFile multipartFile) throws IOException {
+    @PostMapping("/{id}/fromFile")
+    public String loadFromFile(@PathVariable Integer id, Model model,
+                               @RequestParam("file") MultipartFile multipartFile) throws IOException {
         File file = new File(System.getProperty("java.io.tmpdir") + multipartFile.getOriginalFilename());
         multipartFile.transferTo(file);
-        Account account = storage.load(file);
+        String mimeType = Files.probeContentType(file.toPath());
+        Account account = null;
+        if ("text/xml".equals(mimeType)) {
+            account = xmlStorage.load(file);
+        } else if ("application/json".equals(mimeType)) {
+            account = jsonStorage.load(file);
+        }
         model.addAttribute(ACCOUNT, account);
-        model.addAttribute("gender", String.valueOf(account.getGender() != null ?
-                account.getGender().toString().charAt(0) : 'M'));
-        model.addAttribute("homeAddress", account.getAddresses().stream().filter(addr ->
-                AddressType.HOME.equals(addr.getAddrType())).findAny().orElse(null));
-        model.addAttribute("workAddress", account.getAddresses().stream().filter(addr ->
-                AddressType.WORK.equals(addr.getAddrType())).findAny().orElse(null));
+        if (account != null) {
+            model.addAttribute("gender", String.valueOf(account.getGender() != null ?
+                    account.getGender().toString().charAt(0) : 'M'));
+            model.addAttribute("homeAddress", account.getAddresses().stream().filter(addr ->
+                    AddressType.HOME.equals(addr.getAddrType())).findAny().orElse(null));
+            model.addAttribute("workAddress", account.getAddresses().stream().filter(addr ->
+                    AddressType.WORK.equals(addr.getAddrType())).findAny().orElse(null));
+        }
         if (logger.isInfoEnabled()) {
-            logger.info("Account {} loaded from xml-file", account);
+            logger.info("Account {} loaded from file", account);
         }
         return ACCOUNT_EDIT;
     }
