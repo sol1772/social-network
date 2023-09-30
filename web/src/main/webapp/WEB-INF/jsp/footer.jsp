@@ -11,9 +11,8 @@
             margin-right: auto;
             border-radius: 0 0 0.5rem 0.5rem;
             background-color: lightblue;
-            border-left: solid 1px #25cff2;
-            border-right: solid 1px #25cff2;
-            border-bottom: solid 1px #25cff2;
+            box-shadow: 0 0 8px 2px lightgray;
+            clip-path: inset(0px -8px -8px -8px);
         }
     </style>
 </head>

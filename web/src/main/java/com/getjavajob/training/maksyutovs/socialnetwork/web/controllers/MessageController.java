@@ -1,6 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.controllers;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.domain.ChatMessage;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Message;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
@@ -8,6 +9,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
+import java.util.Objects;
 
 @Controller
 public class MessageController {
@@ -126,6 +132,27 @@ public class MessageController {
         model.addAttribute(ACCOUNT, account);
         model.addAttribute(TRG_ACCOUNT, targetAccount);
         return "message";
+    }
+
+    @GetMapping("/chat")
+    public String viewChat(HttpSession session, Model model) {
+        Account account = (Account) session.getAttribute(ACCOUNT);
+        model.addAttribute(ACCOUNT, account);
+        model.addAttribute("username", account.getUserName());
+        return "chat";
+    }
+
+    @MessageMapping("/chat.sendMessage")
+    @SendTo("/topic/public")
+    public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
+        return chatMessage;
+    }
+
+    @MessageMapping("/chat.addUser")
+    @SendTo("/topic/public")
+    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+        Objects.requireNonNull(headerAccessor.getSessionAttributes()).put("username", chatMessage.getSender());
+        return chatMessage;
     }
 
 }

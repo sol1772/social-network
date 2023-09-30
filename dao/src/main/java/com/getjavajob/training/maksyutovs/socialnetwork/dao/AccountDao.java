@@ -2,8 +2,6 @@ package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
-import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.Mapper;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.QueryHints;
@@ -13,15 +11,12 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class AccountDao extends AbstractCrudDao<Account> {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountDao.class);
-    private final Mapper mapper = new Mapper();
 
     public AccountDao() {
         super(Account.class);
@@ -54,43 +49,6 @@ public class AccountDao extends AbstractCrudDao<Account> {
             }
             return account;
         }
-    }
-
-    public List<AccountDto> selectByString(String substring, int start, int total) {
-        String searchString = "%" + substring + "%";
-        String q = "SELECT a.id, a.firstName, a.lastName, a.userName, a.email FROM Account a " +
-                "WHERE a.firstName LIKE :str OR a.lastName LIKE :str ORDER BY a.lastName";
-        try {
-            return em.createQuery(q, Object[].class)
-                    .setParameter("str", searchString)
-                    .setFirstResult(total > 0 ? start - 1 : total)
-                    .setMaxResults(total)
-                    .getResultList().stream().map(mapper::toAccountDto).collect(Collectors.toList());
-        } catch (NoResultException e) {
-            if (logger.isErrorEnabled()) {
-                logger.error(e.getMessage());
-            }
-            return new ArrayList<>();
-        }
-    }
-
-    public int selectCountByString(String substring) {
-        String searchString = "%" + substring + "%";
-        String q = "SELECT COUNT(*) FROM Account a WHERE a.firstName LIKE :str OR a.lastName LIKE :str";
-        try {
-            return em.createQuery(q, Long.class)
-                    .setParameter("str", searchString)
-                    .getSingleResult().intValue();
-        } catch (NoResultException e) {
-            if (logger.isErrorEnabled()) {
-                logger.error(e.getMessage());
-            }
-            return 0;
-        }
-    }
-
-    public boolean checkByEmail(String email) {
-        return selectByEmail(email) != null;
     }
 
     @SuppressWarnings("unchecked")

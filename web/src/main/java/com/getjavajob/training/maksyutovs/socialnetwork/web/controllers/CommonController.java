@@ -5,9 +5,11 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -37,6 +39,7 @@ public class CommonController {
     private static final String ERROR = "error";
     private static final String EXC_MSG = "exceptionMessage";
     private static final int MAX_FILE_SIZE = 65535;
+    private static final int ITEMS_PER_PAGE = 5;
     private static final String REDIRECT_ACC = "redirect:/account/";
     private static final String REDIRECT_GRP = "redirect:/group/";
     private final AccountService accountService;
@@ -142,31 +145,31 @@ public class CommonController {
     @ResponseBody
     public List<AccountDto> viewAccounts(@RequestParam(name = "q", required = false) String q,
                                          @RequestParam(name = "page", required = false) Integer page) {
-        final int recordsPerPage = 5;
         String searchString = q == null ? "" : q;
-        int startRow = page == null ? 1 : (page - 1) * recordsPerPage + 1;
-        return accountService.getAccountsByString(searchString, startRow, recordsPerPage);
+        int currentPage = page == null ? 0 : page - 1;
+        return accountService.getAccountsByString(searchString, currentPage, ITEMS_PER_PAGE);
     }
 
     @GetMapping("/search/groups")
     @ResponseBody
     public List<Group> viewGroups(@RequestParam(name = "q", required = false) String q,
                                   @RequestParam(name = "page", required = false) Integer page) {
-        final int recordsPerPage = 5;
         String searchString = q == null ? "" : q;
-        int startRow = page == null ? 1 : (page - 1) * recordsPerPage + 1;
-        return groupService.getGroupsByString(searchString, startRow, recordsPerPage);
+        int startRow = page == null ? 1 : (page - 1) * ITEMS_PER_PAGE + 1;
+        return groupService.getGroupsByString(searchString, startRow, ITEMS_PER_PAGE);
     }
 
     @GetMapping("/search")
     public String viewSearch(@RequestParam(name = "q", required = false) String q,
                              @RequestParam(name = "page", required = false) Integer page, Model model) {
         String searchString = q == null ? "" : q;
-        int accountsTotal = accountService.getAccountsCountByString(searchString);
+        int currentPage = page == null ? 0 : page - 1;
+        Page<Account> pageAccounts = accountService.getPageAccountsByString(searchString, currentPage, ITEMS_PER_PAGE);
+        int accountsTotal = (int) pageAccounts.getTotalElements();
+        int accountPages = pageAccounts.getTotalPages();
         int groupsTotal = groupService.getGroupsCountByString(searchString);
-        final int recordsPerPage = 5;
-        int accountPages = (int) Math.ceil((double) accountsTotal / recordsPerPage);
-        int groupPages = (int) Math.ceil((double) groupsTotal / recordsPerPage);
+        int groupPages = (int) Math.ceil((double) groupsTotal / ITEMS_PER_PAGE);
+
         model.addAttribute("q", searchString);
         model.addAttribute("page", page == null ? 1 : page);
         model.addAttribute("accountPages", accountPages);
@@ -181,7 +184,28 @@ public class CommonController {
     }
 
     @GetMapping("/error")
-    public String handleError() {
+    public String handleError(@RequestParam(name = "status", required = false) String statusCode, Model model) {
+        if (!StringUtils.isEmpty(statusCode)) {
+            String exceptionMessage;
+            switch (statusCode) {
+                case "401":
+                    exceptionMessage = "Bad Request";
+                    break;
+                case "403":
+                    exceptionMessage = "Sorry, you do not have permission to perform this action";
+                    break;
+                case "404":
+                    exceptionMessage = "Page not found";
+                    break;
+                case "500":
+                    exceptionMessage = "Internal Server Error";
+                    break;
+                default:
+                    exceptionMessage = "Error";
+                    break;
+            }
+            model.addAttribute(EXC_MSG, exceptionMessage);
+        }
         return ERROR;
     }
 

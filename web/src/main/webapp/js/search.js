@@ -89,7 +89,7 @@ async function getGroups() {
     if (response.status === 200) {
         let data = await response.json();
         groupData = data;
-        console.log(data);
+        // console.log(data);
         return data;
     } else {
         throw new Error(response.status.toString());

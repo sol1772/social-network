@@ -50,6 +50,7 @@ class AccountDaoTest {
                 "    passwordHash VARCHAR(128)," +
                 "    registeredAt DATETIME," +
                 "    image BLOB," +
+                "    role ENUM('ADMIN', 'USER')," +
                 "    PRIMARY KEY(id)" +
                 "); " +
                 "CREATE TABLE if not exists Phone (" +
@@ -251,17 +252,6 @@ class AccountDaoTest {
         account = dao.insert(getNewAccount());
         assertNotNull(account);
         assertEquals(account, dao.selectById(account.getId()));
-    }
-
-    @Test
-    void selectByString() {
-        System.out.println(DELIMITER);
-        System.out.println("Test AccountDAO.selectByString()");
-        String str = "mil";
-        assertEquals(0, dao.selectByString(str, 1, 5).size());
-        Account account = dao.insert(getNewAccount());
-        assertNotNull(account);
-        assertEquals(1, dao.selectByString(str, 1, 5).size());
     }
 
     @Test

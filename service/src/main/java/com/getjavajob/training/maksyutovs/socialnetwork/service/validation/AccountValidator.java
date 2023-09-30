@@ -1,7 +1,7 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.service.validation;
 
-import com.getjavajob.training.maksyutovs.socialnetwork.dao.AccountDao;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
+import com.getjavajob.training.maksyutovs.socialnetwork.repositories.AccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,22 +16,14 @@ import org.springframework.validation.Validator;
 public class AccountValidator implements Validator {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountValidator.class);
-    private AccountDao dao;
+    private AccountRepository accountRepository;
 
     public AccountValidator() {
     }
 
     @Autowired
-    public AccountValidator(AccountDao dao) {
-        this.dao = dao;
-    }
-
-    public AccountDao getDao() {
-        return dao;
-    }
-
-    public void setDao(AccountDao dao) {
-        this.dao = dao;
+    public AccountValidator(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -42,7 +34,7 @@ public class AccountValidator implements Validator {
     @Override
     public void validate(@NonNull Object target, @NonNull Errors errors) {
         Account account = (Account) target;
-        if (dao.selectByEmail(account.getEmail()) != null) {
+        if (accountRepository.findByEmail(account.getEmail()) != null) {
             String str = "Account with email '" + account.getEmail() + "'already exists";
             errors.rejectValue("email", "", str);
             logger.warn(str);

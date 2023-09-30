@@ -1,5 +1,6 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.web.controllers;
 
+import com.getjavajob.training.maksyutovs.socialnetwork.dao.DaoRuntimeException;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.Account;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.AddressType;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.MessageType;
@@ -11,6 +12,7 @@ import com.getjavajob.training.maksyutovs.socialnetwork.service.storage.FileStor
 import com.getjavajob.training.maksyutovs.socialnetwork.service.storage.JsonStorage;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.storage.XmlStorage;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.validation.AccountValidator;
+import com.getjavajob.training.maksyutovs.socialnetwork.service.validation.ValidationRuntimeException;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -25,7 +27,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Map;
 
@@ -38,6 +42,7 @@ public class AccountController {
     private static final String ACCOUNT = "account";
     private static final String ACCOUNT_EDIT = "account-edit";
     private static final String LOGIN = "login";
+    private static final String USERNAME = "username";
     private static final String ERROR = "error";
     private static final String EXC_MSG = "exceptionMessage";
     private static final String REDIRECT_ACC = "redirect:/account/";
@@ -60,6 +65,7 @@ public class AccountController {
         Account account = accountService.getFullAccountById(id);
         if (account != null) {
             model.addAttribute(ACCOUNT, account);
+            model.addAttribute(USERNAME, account.getUserName());
             model.addAttribute("groups", groupService.getGroupsByAccount(account));
             model.addAttribute("posts", accountService.getMessages(account, account, MessageType.POST));
             return ACCOUNT;
@@ -91,7 +97,7 @@ public class AccountController {
         if ("Register".equals(option)) {
             Account dbAccount = accountService.registerAccount(account);
             session.setAttribute(ACCOUNT, dbAccount);
-            session.setAttribute("username", dbAccount.getUserName());
+            session.setAttribute(USERNAME, dbAccount.getUserName());
             if (logger.isInfoEnabled()) {
                 logger.info("Created account {}", dbAccount);
             }
@@ -103,9 +109,7 @@ public class AccountController {
     @GetMapping("/{id}/edit")
     public String viewAccountEdit(@PathVariable Integer id, Model model) {
         Account account = accountService.getFullAccountById(id);
-        if (account == null) {
-            return LOGIN;
-        } else {
+        if (account != null) {
             model.addAttribute(ACCOUNT, account);
             model.addAttribute("gender", String.valueOf(account.getGender() != null ?
                     account.getGender().toString().charAt(0) : 'M'));
@@ -114,6 +118,8 @@ public class AccountController {
             model.addAttribute("workAddress", account.getAddresses().stream().filter(addr ->
                     AddressType.WORK.equals(addr.getAddrType())).findAny().orElse(null));
             return ACCOUNT_EDIT;
+        } else {
+            return LOGIN;
         }
     }
 
@@ -125,18 +131,20 @@ public class AccountController {
             return ERROR;
         }
         Account account = accountService.getFullAccountById(accountDto.getId());
-        if (option.equals("Save")) {
-            Account dbAccount = accountService.editAccount(mapper.toAccount(account, accountDto));
-            session.setAttribute(ACCOUNT, dbAccount);
-            session.setAttribute("username", dbAccount.getUserName());
-            model.addAttribute(ACCOUNT, dbAccount);
-            if (logger.isInfoEnabled()) {
-                logger.info("Saved account {}", dbAccount);
+        if (account != null) {
+            if (option.equals("Save")) {
+                Account dbAccount = accountService.editAccount(mapper.toAccount(account, accountDto));
+                session.setAttribute(ACCOUNT, dbAccount);
+                session.setAttribute(USERNAME, dbAccount.getUserName());
+                model.addAttribute(ACCOUNT, dbAccount);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Saved account {}", dbAccount);
+                }
+                return REDIRECT_ACC + dbAccount.getId();
+            } else if (option.equals("Cancel")) {
+                model.addAttribute(ACCOUNT, account);
+                return REDIRECT_ACC + account.getId();
             }
-            return REDIRECT_ACC + dbAccount.getId();
-        } else if (option.equals("Cancel")) {
-            model.addAttribute(ACCOUNT, account);
-            return REDIRECT_ACC + account.getId();
         }
         return ACCOUNT_EDIT;
     }
@@ -164,25 +172,29 @@ public class AccountController {
     @GetMapping("/{id}/toXml")
     public void saveToXml(@PathVariable Integer id, HttpServletResponse response) throws IOException {
         Account account = accountService.getFullAccountById(id);
-        File file = xmlStorage.store(account);
-        response.setContentType("text/xml");
-        // offers upload to file, not direct display in the browser
-        response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
-        xmlStorage.writeFileToOutputStream(file, response.getOutputStream());
-        if (logger.isInfoEnabled()) {
-            logger.info("Account {} saved to xml-file", account);
+        if (account != null) {
+            File file = xmlStorage.store(account);
+            response.setContentType("text/xml");
+            // offers upload to file, not direct display in the browser
+            response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
+            writeFileToOutputStream(file, response.getOutputStream());
+            if (logger.isInfoEnabled()) {
+                logger.info("Account {} saved to xml-file", account);
+            }
         }
     }
 
     @GetMapping("/{id}/toJson")
     public void saveToJson(@PathVariable Integer id, HttpServletResponse response) throws IOException {
         Account account = accountService.getFullAccountById(id);
-        File file = jsonStorage.store(account);
-        response.setContentType("application/json");
-        response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
-        jsonStorage.writeFileToOutputStream(file, response.getOutputStream());
-        if (logger.isInfoEnabled()) {
-            logger.info("Account {} saved to json-file", account);
+        if (account != null) {
+            File file = jsonStorage.store(account);
+            response.setContentType("application/json");
+            response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
+            writeFileToOutputStream(file, response.getOutputStream());
+            if (logger.isInfoEnabled()) {
+                logger.info("Account {} saved to json-file", account);
+            }
         }
     }
 
@@ -203,6 +215,9 @@ public class AccountController {
         } else if ("application/json".equals(mimeType)) {
             account = jsonStorage.load(file);
         }
+        if (account != null && account.getId() != id) {
+            account.setId(id);
+        }
         model.addAttribute(ACCOUNT, account);
         if (account != null) {
             model.addAttribute("gender", String.valueOf(account.getGender() != null ?
@@ -216,6 +231,104 @@ public class AccountController {
             logger.info("Account {} loaded from file", account);
         }
         return ACCOUNT_EDIT;
+    }
+
+    private void writeFileToOutputStream(File file, OutputStream out) {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            final byte[] bytes = fis.readAllBytes();
+            out.write(bytes);
+            out.flush();
+            out.close();
+            Files.delete(file.toPath());
+        } catch (IOException e) {
+            throw new DaoRuntimeException(e);
+        }
+    }
+
+    @GetMapping("/{id}/settings")
+    public String viewAccountSettings(@PathVariable Integer id, Model model) {
+        Account account = accountService.getFullAccountById(id);
+        if (account != null) {
+            model.addAttribute(ACCOUNT, account);
+            return "settings";
+        } else {
+            return LOGIN;
+        }
+    }
+
+    @PostMapping("/{id}/settings")
+    public String saveAccountSettings(@PathVariable Integer id, @RequestParam("submit") String option,
+                                      @RequestParam(name = "oldPassword", required = false) String oldPassword,
+                                      @RequestParam(name = "newPassword", required = false) String newPassword,
+                                      HttpSession session, Model model) {
+        Account account = accountService.getFullAccountById(id);
+        if (account != null) {
+            if (option.equals("Change")) {
+                boolean passwordChanged = false;
+                String error = "";
+                try {
+                    passwordChanged = accountService.changePassword(oldPassword, newPassword, account);
+                } catch (ValidationRuntimeException e) {
+                    error = e.getMessage();
+                }
+                if (passwordChanged) {
+                    Account dbAccount = accountService.getFullAccountById(id);
+                    session.setAttribute(ACCOUNT, dbAccount);
+                    session.setAttribute(USERNAME, dbAccount.getUserName());
+                    model.addAttribute(ACCOUNT, dbAccount);
+                    model.addAttribute("message", "Password changed successfully");
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Changed password for {}", dbAccount);
+                    }
+                } else {
+                    model.addAttribute(ACCOUNT, account);
+                    model.addAttribute(ERROR, error.isEmpty() ? "Password change error!" : error);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Password change error for {}", account);
+                    }
+                }
+            } else if (option.equals("Cancel")) {
+                model.addAttribute(ACCOUNT, account);
+                return REDIRECT_ACC + account.getId();
+            }
+        }
+        return "settings";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteAccount(@PathVariable Integer id, @RequestParam("submit") String option,
+                                HttpSession session, Model model) {
+        Account sessionAccount = (Account) session.getAttribute(ACCOUNT);
+        Account account = accountService.getFullAccountById(id);
+        if (account != null) {
+            if (option.equals("Delete")) {
+                boolean accountDeleted;
+                accountDeleted = accountService.deleteAccount(id);
+                if (accountDeleted) {
+                    model.addAttribute("message", "Account " + account + " deleted successfully");
+                    if (logger.isInfoEnabled()) {
+                        logger.info("deleted account {}", account);
+                    }
+                    if (sessionAccount.getId() == account.getId()) {
+                        session.setAttribute(ACCOUNT, null);
+                        session.setAttribute(USERNAME, "");
+                        model.addAttribute(ACCOUNT, null);
+                    } else {
+                        model.addAttribute(ACCOUNT, sessionAccount);
+                    }
+                } else {
+                    model.addAttribute(ACCOUNT, account);
+                    model.addAttribute(ERROR, "Account deletion error!");
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Account deletion error for {}", account);
+                    }
+                }
+            } else if (option.equals("Cancel")) {
+                model.addAttribute(ACCOUNT, account);
+                return REDIRECT_ACC + account.getId();
+            }
+        }
+        return "settings";
     }
 
 }

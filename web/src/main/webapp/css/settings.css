@@ -1,0 +1,43 @@
+div.container {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    background-color: lightblue;
+    box-shadow: 0 0 8px 2px lightgray;
+}
+
+h2 {
+    text-align: center;
+    text-transform: uppercase;
+    padding-top: 1rem;
+}
+
+h3 {
+    text-align: center;
+    padding-bottom: 1rem;
+    margin-bottom: 0 !important;
+}
+
+form[id=set_form], [id=del_form], [id=storage_form] {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+span[class=input-group-text] {
+    width: 7rem;
+}
+
+button:not([id=loadXml]) {
+    width: 5rem;
+}
+
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
+}
+
+p[id=error], [id=message] {
+    margin-bottom: 0 !important;
+}

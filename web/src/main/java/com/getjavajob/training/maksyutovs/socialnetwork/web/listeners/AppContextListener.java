@@ -13,7 +13,7 @@ import java.util.Properties;
 public class AppContextListener implements ServletContextListener {
 
     private static final Logger logger = LoggerFactory.getLogger(AppContextListener.class);
-    private static final String RESOURCE_NAME = "/config.properties";
+    private static final String RESOURCE_NAME = "/application.properties";
     private final Properties properties = new Properties();
 
     public AppContextListener() {

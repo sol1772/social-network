@@ -4,8 +4,7 @@ div.container {
     margin-right: auto;
     text-align: center;
     background-color: lightblue;
-    border-left: solid 1px #25cff2;
-    border-right: solid 1px #25cff2;
+    box-shadow: 0 0 8px 2px lightgray;
 }
 
 h2 {
@@ -59,7 +58,7 @@ button[id=change], [id=delete] {
     border-radius: 0.5rem;
 }
 
-a {
+a[id=edit_group] {
     display: block;
     text-align: center;
 }
