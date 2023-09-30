@@ -87,14 +87,6 @@
                     <input type="hidden" name="path" value="account">
                     <input type="hidden" name="id" value="${account.id}">
                 </form>
-                <form action="${root}/account/${account.id}/fromFile" method="get">
-                    <div class="btn-group d-block mx-auto">
-                        <a href="${root}/account/${account.id}/toXml" class="btn btn-outline-info btn-sm">To XML</a>
-                        <a href="${root}/account/${account.id}/toJson" class="btn btn-outline-info btn-sm">To JSON</a>
-                        <button class="btn btn-outline-info btn-sm" id="loadXml">From XML/JSON</button>
-                    </div>
-                    <p style="color: darkgreen">${requestScope.message}</p>
-                </form>
             </c:if>
         </div>
     </div>
@@ -109,10 +101,13 @@
                                    type="both"/>
                     <td id="msg_date"><i><fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${parsedDateTime}"/></i></td>
                     <td><c:out value="${msg.textContent}"/></td>
-                    <td id="msg_del">
-                        <input type="hidden" name="msgId_" id="msgId_" value="${msg.id}">
-                        <button class="btn btn-outline-info btn-sm" name="submit" value="delMsg" id="delMsg">x</button>
-                    </td>
+                    <c:if test="${username.equals(account.userName)}">
+                        <td id="msg_del">
+                            <input type="hidden" name="msgId_" id="msgId_" value="${msg.id}">
+                            <button class="btn btn-outline-info btn-sm" name="submit" value="delMsg" id="delMsg">x
+                            </button>
+                        </td>
+                    </c:if>
                 </tr>
             </c:forEach>
             <input type="hidden" name="accId" value="${account.id}">

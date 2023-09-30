@@ -154,6 +154,10 @@ public class Message implements Serializable {
         return targetAccount.getId();
     }
 
+    public String getEmail() {
+        return account.getEmail();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

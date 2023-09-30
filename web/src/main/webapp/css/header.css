@@ -4,9 +4,12 @@ nav[id=navbar_search] {
     margin-right: auto;
     border-radius: 0.5rem 0.5rem 0 0;
     background-color: lightblue;
-    border-top: solid 1px #25cff2;
-    border-left: solid 1px #25cff2;
-    border-right: solid 1px #25cff2;
+    box-shadow: -2px -8px 8px lightgray, 2px -8px 8px lightgray;
+}
+
+.nav-link {
+    font-size: 0.9rem !important;
+    padding: 0.3rem;
 }
 
 .nav-link:hover {
@@ -17,10 +20,14 @@ nav[id=navbar_search] {
 
 input[id=search] {
     width: 15rem;
+    font-size: 0.9rem !important;
+    padding: 0.3rem 0.5rem;
 }
 
 button[id=btn_search] {
-    width: 3rem;
+    width: 2.3rem;
+    font-size: 0.9rem !important;
+    padding: 0.3rem;
 }
 
 /* Autocomplete */

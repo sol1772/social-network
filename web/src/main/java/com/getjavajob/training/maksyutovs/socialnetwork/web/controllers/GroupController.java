@@ -58,7 +58,9 @@ public class GroupController {
     }
 
     @GetMapping("/add")
-    public String viewAddGroup() {
+    public String viewAddGroup(HttpSession session, Model model) {
+        Account account = (Account) session.getAttribute(ACCOUNT);
+        model.addAttribute(ACCOUNT, account);
         return "group-add";
     }
 

@@ -61,6 +61,9 @@ public class Account implements Serializable {
     @Lob
     @Column(columnDefinition = "blob", length = 65535)
     private byte[] image;
+    @Column(columnDefinition = "enum")
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public Account() {
     }
@@ -179,6 +182,15 @@ public class Account implements Serializable {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public void setImage(byte[] image) {
         this.image = image;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    @XmlTransient
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public String getPasswordHash() {

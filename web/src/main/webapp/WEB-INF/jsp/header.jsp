@@ -19,17 +19,17 @@
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-sm-0">
                 <c:if test="${!StringUtils.isEmpty(sessionScope.username)}">
-                    <li class="nav-item">
-                        <a class="nav-link" href="${root}/messages?id=${account.id}">Messages</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="${root}/message/?trgId=${account.id}">New post</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="${root}/group/add">New group</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="${root}/account/${account.id}/edit">Edit</a>
+                    <li class='nav-item dropdown'>
+                        <a class='nav-link dropdown-toggle' href='#' id='navbarDropdownAbout' role='button'
+                           data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Menu</a>
+                        <div class='dropdown-menu' aria-labelledby='navbarDropdownAbout'>
+                            <a class="nav-link" href="${root}/messages?id=${account.id}">Messages</a>
+                            <a class="nav-link" href="${root}/chat">Chat</a>
+                            <a class="nav-link" href="${root}/message/?trgId=${account.id}">New post</a>
+                            <a class="nav-link" href="${root}/group/add">New group</a>
+                            <a class="nav-link" href="${root}/account/${account.id}/edit">Edit</a>
+                            <a class="nav-link" href="${root}/account/${account.id}/settings">Settings</a>
+                        </div>
                     </li>
                 </c:if>
             </ul>
@@ -65,7 +65,6 @@
         </div>
     </div>
 </nav>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<c:url value="/js/header.js"/>" type="module"></script>
 </body>
 </html>

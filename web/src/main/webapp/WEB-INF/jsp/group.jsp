@@ -74,7 +74,7 @@
     <c:if test="${username.equals(account.userName)}">
         <ul class="nav justify-content-center">
             <li class="nav-item">
-                <a class="nav-link" href="${root}/group/${group.id}/edit">Edit</a>
+                <a class="nav-link" id="edit_group" href="${root}/group/${group.id}/edit">Edit</a>
             </li>
         </ul>
     </c:if>

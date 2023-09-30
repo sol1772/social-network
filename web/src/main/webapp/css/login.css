@@ -3,8 +3,7 @@ div.container {
     margin-left: auto;
     margin-right: auto;
     background-color: lightblue;
-    border-left: solid 1px #25cff2;
-    border-right: solid 1px #25cff2;
+    box-shadow: 0 0 8px 2px lightgray;
 }
 
 h2 {

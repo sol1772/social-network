@@ -27,6 +27,7 @@ public class Mapper {
         if (!StringUtils.isEmpty(dto.getWorkAddress())) {
             account.getAddresses().add(new Address(account, 0, dto.getWorkAddress(), AddressType.WORK));
         }
+        account.setRole(Role.USER);
         return account;
     }
 
