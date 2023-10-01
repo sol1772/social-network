@@ -9,5 +9,4 @@ public class SecurityWebApplicationInitializer extends AbstractSecurityWebApplic
         return true;
     }
 
-
 }
