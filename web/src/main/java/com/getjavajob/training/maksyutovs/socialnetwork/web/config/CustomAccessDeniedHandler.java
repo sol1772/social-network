@@ -22,7 +22,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         if (auth != null) {
             logger.warn("User: {} attempted to access the protected URL: {}", auth.getName(), req.getRequestURI());
         }
-        resp.sendRedirect(req.getContextPath() + "/error?status=403");
+        resp.sendRedirect(req.getContextPath() + "/error/403");
     }
 
 }

@@ -1,7 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%--<jsp:useBean id="title" scope="request" class="java.lang.String"/>--%>
-<%--<jsp:useBean id="metaTitle" scope="request" class="java.lang.String"/>--%>
 <jsp:useBean id="group" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Group"/>
 <jsp:useBean id="error" scope="request" class="java.lang.String"/>
 <c:set var="root" value="${pageContext.request.contextPath}"/>

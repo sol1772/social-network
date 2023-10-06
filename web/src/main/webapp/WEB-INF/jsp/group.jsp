@@ -2,7 +2,6 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="org.apache.commons.text.CaseUtils" %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="group" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Group"/>
 <jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
@@ -31,7 +30,7 @@
                 </tr>
                 <tr>
                     <td><i>About</i></td>
-                    <td>${StringUtils.isEmpty(group.metaTitle)?"---" : group.metaTitle}</td>
+                    <td>${empty group.metaTitle ? "---" : group.metaTitle}</td>
                 </tr>
                 <tr>
                     <td><i>Owner</i></td>

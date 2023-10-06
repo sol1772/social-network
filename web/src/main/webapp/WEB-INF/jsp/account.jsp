@@ -2,7 +2,6 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="org.apache.commons.text.CaseUtils" %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
 <c:set var="root" value="${pageContext.request.contextPath}"/>
@@ -62,7 +61,7 @@
                 </c:forEach>
                 <tr>
                     <td><i>About</i></td>
-                    <td>${StringUtils.isEmpty(account.addInfo)?"---" : account.addInfo}</td>
+                    <td>${empty account.addInfo ? "---" : account.addInfo}</td>
                 </tr>
                 <tr>
                     <td><i>Groups</i></td>
@@ -74,7 +73,7 @@
         </div>
         <div class="head-logo">
             <img src="${root}/account/${account.id}/image" alt="Account image" width="150px">
-            <c:if test="${username.equals(account.userName)}">
+            <c:if test="${sessionScope.username.equals(account.userName)}">
                 <form action="${root}/upload" method="get">
                     <div class="btn-group d-block mx-auto">
                         <button class="btn btn-outline-info btn-sm" name="option" id="change" value="Change">Change
@@ -101,7 +100,7 @@
                                    type="both"/>
                     <td id="msg_date"><i><fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${parsedDateTime}"/></i></td>
                     <td><c:out value="${msg.textContent}"/></td>
-                    <c:if test="${username.equals(account.userName)}">
+                    <c:if test="${sessionScope.username.equals(account.userName)}">
                         <td id="msg_del">
                             <input type="hidden" name="msgId_" id="msgId_" value="${msg.id}">
                             <button class="btn btn-outline-info btn-sm" name="submit" value="delMsg" id="delMsg">x
@@ -118,7 +117,7 @@
     <br>
     <div class="links">
         <c:choose>
-            <c:when test="${!(StringUtils.isEmpty(username) || username.equals(account.userName))}">
+            <c:when test="${!(empty sessionScope.username || sessionScope.username.equals(account.userName))}">
                 <a class="link" href="${root}/message?trgId=${account.id}">Send message</a>
             </c:when>
         </c:choose>

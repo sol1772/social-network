@@ -5,7 +5,7 @@
     <parent>
         <artifactId>social-network</artifactId>
         <groupId>com.getjavajob</groupId>
-        <version>1.26.0-SNAPSHOT</version>
+        <version>1.27.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -23,36 +23,27 @@
         <dependency>
             <groupId>com.getjavajob</groupId>
             <artifactId>domain</artifactId>
-            <version>1.26.0-SNAPSHOT</version>
+            <version>1.27.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.getjavajob</groupId>
             <artifactId>dao</artifactId>
-            <version>1.26.0-SNAPSHOT</version>
+            <version>1.27.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.getjavajob</groupId>
             <artifactId>service</artifactId>
-            <version>1.26.0-SNAPSHOT</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-            <version>2.2</version>
-            <scope>provided</scope>
+            <version>1.27.0-SNAPSHOT</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/javax.servlet.jsp.jstl/jstl -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
             <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -68,41 +59,12 @@
 
     <build>
         <finalName>${project.name}</finalName>
-        <pluginManagement>
-            <!-- lock down plugins' versions to avoid using Maven defaults (may be moved to parent pom) -->
-            <plugins>
-                <plugin>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.3.1</version>
-                </plugin>
-                <!-- see http://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_war_packaging
-                 -->
-                <plugin>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.1.2</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-war-plugin</artifactId>
-                    <version>3.4.0</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>3.1.1</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>3.1.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

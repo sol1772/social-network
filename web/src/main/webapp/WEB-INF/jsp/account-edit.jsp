@@ -1,6 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ page import="org.apache.commons.text.CaseUtils" %>
 <jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
 <jsp:useBean id="homeAddress" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Address"/>

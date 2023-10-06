@@ -239,7 +239,7 @@ public class AccountController {
             out.write(bytes);
             out.flush();
             out.close();
-            Files.delete(file.toPath());
+//            Files.delete(file.toPath());
         } catch (IOException e) {
             throw new DaoRuntimeException(e);
         }
@@ -307,11 +307,11 @@ public class AccountController {
                 if (accountDeleted) {
                     model.addAttribute("message", "Account " + account + " deleted successfully");
                     if (logger.isInfoEnabled()) {
-                        logger.info("deleted account {}", account);
+                        logger.info("Deleted account {}", account);
                     }
                     if (sessionAccount.getId() == account.getId()) {
                         session.setAttribute(ACCOUNT, null);
-                        session.setAttribute(USERNAME, "");
+                        session.setAttribute(USERNAME, null);
                         model.addAttribute(ACCOUNT, null);
                     } else {
                         model.addAttribute(ACCOUNT, sessionAccount);
