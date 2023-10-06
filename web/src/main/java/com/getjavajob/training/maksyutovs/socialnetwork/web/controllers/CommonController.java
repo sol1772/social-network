@@ -5,7 +5,6 @@ import com.getjavajob.training.maksyutovs.socialnetwork.domain.Group;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.dto.AccountDto;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.AccountService;
 import com.getjavajob.training.maksyutovs.socialnetwork.service.GroupService;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -181,32 +180,6 @@ public class CommonController {
             model.addAttribute(ERROR, "Page " + page + " exceeds total max count of pages " + maxCountPages);
         }
         return "search";
-    }
-
-    @GetMapping("/error")
-    public String handleError(@RequestParam(name = "status", required = false) String statusCode, Model model) {
-        if (!StringUtils.isEmpty(statusCode)) {
-            String exceptionMessage;
-            switch (statusCode) {
-                case "401":
-                    exceptionMessage = "Bad Request";
-                    break;
-                case "403":
-                    exceptionMessage = "Sorry, you do not have permission to perform this action";
-                    break;
-                case "404":
-                    exceptionMessage = "Page not found";
-                    break;
-                case "500":
-                    exceptionMessage = "Internal Server Error";
-                    break;
-                default:
-                    exceptionMessage = "Error";
-                    break;
-            }
-            model.addAttribute(EXC_MSG, exceptionMessage);
-        }
-        return ERROR;
     }
 
 }

@@ -1,6 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <jsp:useBean id="account" scope="request" class="com.getjavajob.training.maksyutovs.socialnetwork.domain.Account"/>
 <jsp:useBean id="username" scope="session" class="java.lang.String"/>
 <c:set var="root" value="${pageContext.request.contextPath}"/>
@@ -18,7 +17,7 @@
     <div class="container-fluid">
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-sm-0">
-                <c:if test="${!StringUtils.isEmpty(sessionScope.username)}">
+                <c:if test="${!empty sessionScope.account}">
                     <li class='nav-item dropdown'>
                         <a class='nav-link dropdown-toggle' href='#' id='navbarDropdownAbout' role='button'
                            data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Menu</a>
@@ -44,7 +43,7 @@
                         <input type="hidden" name="page" value=1>
                     </form>
                 </li>
-                <c:if test="${!StringUtils.isEmpty(sessionScope.username)}">
+                <c:if test="${!empty sessionScope.account}">
                     <li class="nav-item">
                         <a class="nav-link"
                            href="${root}/account/${sessionScope.account.id}">User: ${sessionScope.username}</a>
@@ -53,7 +52,7 @@
                         <a class="nav-link" href="${root}/logout">Logout</a>
                     </li>
                 </c:if>
-                <c:if test="${StringUtils.isEmpty(sessionScope.username)}">
+                <c:if test="${empty sessionScope.account}">
                     <li class="nav-item">
                         <a class="nav-link" href="${root}/login">Login</a>
                     </li>
