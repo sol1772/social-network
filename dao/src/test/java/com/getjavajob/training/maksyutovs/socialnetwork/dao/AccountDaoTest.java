@@ -1,167 +1,54 @@
 package com.getjavajob.training.maksyutovs.socialnetwork.dao;
 
+import com.getjavajob.training.maksyutovs.socialnetwork.DaoTestConfig;
 import com.getjavajob.training.maksyutovs.socialnetwork.domain.*;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Persistence;
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(locations = {"classpath:dao-context.xml", "classpath:dao-test-context.xml"})
+@SpringBootTest
+@ContextConfiguration(classes = DaoTestConfig.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Sql(scripts = "/truncate_tables.sql", executionPhase = BEFORE_TEST_METHOD)
 @Transactional
 class AccountDaoTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(AccountDaoTest.class);
     private static final String DELIMITER = "----------------------------------";
     @Autowired
-    private AccountDao dao;
+    @Qualifier("accountDao")
+    private CrudDao<Account> dao;
     @Autowired
-    private FriendDao friendDao;
+    @Qualifier("friendDao")
+    private CrudDao<Friend> friendDao;
     @Autowired
-    private MessageDao messageDao;
-    private EntityManager em;
-
-    static String getQueryCreateTables() {
-        return "CREATE TABLE if not exists Account (" +
-                "    id INT AUTO_INCREMENT," +
-                "    firstName VARCHAR(30) NOT NULL," +
-                "    lastName VARCHAR(30) NOT NULL," +
-                "    middleName VARCHAR(30)," +
-                "    username VARCHAR(15) NOT NULL," +
-                "    email VARCHAR(50) NOT NULL UNIQUE," +
-                "    dateOfBirth DATE NOT NULL," +
-                "    gender ENUM('M', 'F')," +
-                "    addInfo VARCHAR(100)," +
-                "    passwordHash VARCHAR(128)," +
-                "    registeredAt DATETIME," +
-                "    image BLOB," +
-                "    role ENUM('ADMIN', 'USER')," +
-                "    PRIMARY KEY(id)" +
-                "); " +
-                "CREATE TABLE if not exists Phone (" +
-                "    id INT AUTO_INCREMENT," +
-                "    accId INT," +
-                "    phoneNmr VARCHAR (15) NOT NULL," +
-                "    phoneType ENUM('PERSONAL', 'WORK')," +
-                "    PRIMARY KEY(id)," +
-                "    CONSTRAINT Uq_phones UNIQUE (accId, phoneNmr, phoneType)" +
-                "); " +
-                "CREATE TABLE if not exists Address (" +
-                "    id INT AUTO_INCREMENT," +
-                "    accId INT," +
-                "    addr VARCHAR (100) NOT NULL," +
-                "    addrType ENUM('HOME', 'WORK')," +
-                "    PRIMARY KEY(id)," +
-                "    CONSTRAINT Uq_addresses UNIQUE (accId, addr, addrType)" +
-                "); " +
-                "CREATE TABLE if not exists Messenger (" +
-                "    id INT AUTO_INCREMENT," +
-                "    accId INT," +
-                "    username VARCHAR (50) NOT NULL," +
-                "    msgrType ENUM('SKYPE', 'TELEGRAM', 'WHATSAPP', 'ICQ')," +
-                "    PRIMARY KEY(id)," +
-                "    CONSTRAINT Uq_messengers UNIQUE (accId, username, msgrType)" +
-                "); " +
-                "CREATE TABLE if not exists Friend (" +
-                "    id INT AUTO_INCREMENT," +
-                "    accId INT NOT NULL," +
-                "    friendID INT NOT NULL," +
-                "    PRIMARY KEY(id)," +
-                "    CONSTRAINT Uq_friends UNIQUE (accId, friendID)" +
-                "); " +
-                "CREATE TABLE if not exists InterestGroup (" +
-                "    id INT AUTO_INCREMENT," +
-                "    createdBy INT, " +
-                "    title VARCHAR(50) NOT NULL UNIQUE, " +
-                "    metaTitle VARCHAR(100), " +
-                "    createdAt DATETIME," +
-                "    image BLOB," +
-                "    PRIMARY KEY(id)" +
-                "); " +
-                "CREATE TABLE if not exists Group_member (" +
-                "    id INT AUTO_INCREMENT," +
-                "    accId INT NOT NULL," +
-                "    groupId INT NOT NULL, " +
-                "    roleType ENUM('ADMIN', 'MODER', 'MEMBER')," +
-                "    PRIMARY KEY(id)," +
-                "    CONSTRAINT Uq_members UNIQUE (accId, groupId)" +
-                ");" +
-                "CREATE TABLE if not exists Message (" +
-                "    id INT AUTO_INCREMENT," +
-                "    accId INT," +
-                "    trgId INT," +
-                "    txtContent VARCHAR (500) NOT NULL," +
-                "    mediaContent BLOB," +
-                "    msgType ENUM('PERSONAL', 'POST', 'GROUP')," +
-                "    createdAt DATETIME NOT NULL," +
-                "    updatedAt DATETIME," +
-                "    PRIMARY KEY(id)" +
-                ");";
-    }
+    @Qualifier("messageDao")
+    private CrudDao<Message> messageDao;
+    @Autowired
+    private DataSource dataSource;
 
     @BeforeAll
-    void init() {
+    void init() throws SQLException {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.beforeAll");
-        em = Persistence.createEntityManagerFactory("test").createEntityManager();
-        createTablesIfNotExist();
-    }
-
-    @BeforeEach
-    void truncate() {
-        truncateTables();
-    }
-
-    void createTablesIfNotExist() {
-        String query = getQueryCreateTables();
-        try {
-            em.getTransaction().begin();
-            em.createNativeQuery(query).executeUpdate();
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            em.getTransaction().rollback();
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    void truncateTables() {
-        try {
-            // getting tables
-            em.getTransaction().begin();
-            String query = "SELECT Concat('TRUNCATE TABLE ',table_schema,'.',TABLE_NAME, ';') AS QueryText " +
-                    "FROM INFORMATION_SCHEMA.TABLES where table_schema = 'PUBLIC'";
-            List<String> queries = dao.em.createNativeQuery(query).getResultList();
-
-            // truncating tables
-            for (String q : queries) {
-                em.createNativeQuery(q).executeUpdate();
-            }
-            em.getTransaction().commit();
-            if (logger.isInfoEnabled()) {
-                if (queries.size() == 0) {
-                    logger.info("No tables to truncate");
-                } else {
-                    logger.info("All tables truncated");
-                }
-            }
-        } catch (Exception e) {
-            em.getTransaction().rollback();
-        }
+        ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("create_tables.sql"));
     }
 
     Account getNewAccount() {
@@ -237,7 +124,7 @@ class AccountDaoTest {
         assertNotNull(dao.insert(account));
         assertNotNull(dao.insert(targetAccount));
         Message message = new Message(account, targetAccount, MessageType.PERSONAL, "Hello! How are you?");
-        Message dbMessage = messageDao.insert(message);
+        messageDao.insert(message);
         assertEquals(1, messageDao.findAll().size());
         System.out.println("Added " + messageDao.findAll().size() + " message(s) for account " + account);
     }
@@ -247,11 +134,12 @@ class AccountDaoTest {
         System.out.println(DELIMITER);
         System.out.println("Test AccountDAO.select()");
         String email = "info@valievakamila.ru";
-        Account account = dao.selectByEmail(email);
+        AccountDao accountDao = (AccountDao) DaoTestConfig.unProxyBean(dao);
+        Account account = accountDao.selectByEmail(email);
         assertNull(account);
         account = dao.insert(getNewAccount());
         assertNotNull(account);
-        assertEquals(account, dao.selectById(account.getId()));
+        assertEquals(account, accountDao.selectById(account.getId()));
     }
 
     @Test
@@ -274,7 +162,6 @@ class AccountDaoTest {
         System.out.println("Test AccountDAO.delete(Account)");
         Account account = dao.insert(getNewAccount());
         assertNotNull(account);
-
         assertTrue(dao.delete(account.getId()));
         System.out.println("Deleted account " + account);
     }
