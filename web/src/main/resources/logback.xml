@@ -2,7 +2,7 @@
 <configuration>
 
     <!-- Setting up log path and log file name -->
-    <property name="base.folder" value="${catalina.home:-./target}"/>
+    <property name="base.folder" value="${catalina.base:-./target}"/>
     <property name="LOG_PATH" value="${base.folder}/logs"/>
     <property name="LOG_FILE_NAME" value="socnet"/>
 

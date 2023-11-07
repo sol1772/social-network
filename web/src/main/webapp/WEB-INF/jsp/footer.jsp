@@ -5,7 +5,7 @@
     <title>Footer</title>
     <style>
         .footer {
-            width: 50%;
+            width: 65%;
             height: 1rem;
             margin-left: auto;
             margin-right: auto;
