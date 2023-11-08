@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <Resource name="jdbc/socnet" auth="Container"
+              type="javax.sql.DataSource"
+              driverClassName="com.mysql.cj.jdbc.Driver"
+              maxTotal="5" maxIdle="3" maxWaitMillis="10000"
+              username="root" password="Db171122+"
+              url="jdbc:mysql://localhost:3306/socialnetwork"/>
+</Context>

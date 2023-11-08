@@ -1,0 +1,68 @@
+div.container {
+    width: 65%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    background-color: lightblue;
+    box-shadow: 0 0 8px 2px lightgray;
+}
+
+h2 {
+    text-align: center;
+    text-transform: uppercase;
+    padding-top: 1rem;
+}
+
+h3 {
+    text-align: center;
+    padding-bottom: 1rem;
+}
+
+form[id=acc_edit_form] {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+span[class=input-group-text] {
+    width: 7rem;
+}
+
+[id=colPhoneType] {
+    width: 7rem;
+    font-size: small;
+    border-right: solid 1px lightgrey;
+}
+
+[id=colPhoneNum] {
+    font-size: small;
+}
+
+[id=phoneNum] {
+    border: none;
+}
+
+[id=delPhone] {
+    width: 2rem;
+}
+
+button:not([id=addPhone]):not([id=delPhone]):not([id=btn_search]) {
+    width: 5rem;
+}
+
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
+}
+
+p[id=error] {
+    color: red;
+}
+
+td {
+    text-align: left;
+}
+
+td[id=colDelPhone] {
+    text-align: right;
+}

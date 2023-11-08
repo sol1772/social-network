@@ -1,0 +1,10 @@
+2023-08-25 19:29:42 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@56cc2657] [GET] /socnet/account/1023/image
+2023-08-25 19:29:44 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@56cc2657] [GET] /socnet/account/1023/edit
+2023-08-25 19:30:10 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@228b0194] [POST] /socnet/account/1023/edit
+2023-08-25 19:30:10 INFO  AccountService - Updated account test17 (test17@mail.com)
+2023-08-25 19:30:10 INFO  AccountController - Saved account test17 (test17@mail.com)
+2023-08-25 19:30:10 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@228b0194] [GET] /socnet/account/1023
+2023-08-25 19:30:10 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@406e9742] [GET] /socnet/account/1023/image
+2023-08-25 19:30:26 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@406e9742] [GET] /socnet/logout
+2023-08-25 19:30:26 INFO  LoginController - Account test17 (test17@mail.com) logged out
+2023-08-25 19:30:26 INFO  AuthenticationInterceptor - [preHandle][org.apache.catalina.connector.RequestFacade@406e9742] [GET] /socnet/login

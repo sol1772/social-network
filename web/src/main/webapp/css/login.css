@@ -1,0 +1,44 @@
+div.container {
+    width: 65%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: lightblue;
+    box-shadow: 0 0 8px 2px lightgray;
+}
+
+h2 {
+    text-align: center;
+    color: darkgreen;
+    text-transform: uppercase;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+form[id=login_form] {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div.input-group {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+span.input-group-text {
+    width: 7rem;
+}
+
+button[id=button_ok] {
+    width: 6rem;
+}
+
+.btn-outline-info:hover {
+    color: #fff !important;
+    border-radius: 0.5rem;
+}
+
+p[id=error] {
+    text-align: center;
+    color: red;
+}
